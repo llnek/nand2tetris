@@ -1,17 +1,17 @@
-# nand2tetris
+# tecs
 
-[![Build Status](https://travis-ci.org/llnek/nand2tetris.svg?branch=master)](https://travis-ci.org/llnek/nand2tetris)
+[![Build Status](https://travis-ci.org/llnek/tecs.svg?branch=master)](https://travis-ci.org/llnek/tecs)
 
 
 ## Installation
 
 Add the following dependency to your `project.clj` file:
 
-    [io.czlab/nand2tetris "1.0.0"]
+    [io.czlab/tecs "1.0.0"]
 
 ## Documentation
 
-* [API Docs](https://llnek.github.io/nand2tetris/)
+* [API Docs](https://llnek.github.io/tecs/)
 
 ## Usage
 
@@ -29,9 +29,9 @@ Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
 
 <!--- links (repos) -->
-[CHANGELOG]: https://github.com/llnek/nand2tetris/releases
-[GitHub issues page]: https://github.com/llnek/nand2tetris/issues
-[GitHub contributors page]: https://github.com/llnek/nand2tetris/graphs/contributors
+[CHANGELOG]: https://github.com/llnek/tecs/releases
+[GitHub issues page]: https://github.com/llnek/tecs/issues
+[GitHub contributors page]: https://github.com/llnek/tecs/graphs/contributors
 
 
 
