@@ -8,8 +8,7 @@
   :description "Solutions to the NAND to Tetris course."
   :url "https://github.com/llnek/tecs"
 
-  :dependencies [[org.clojure/tools.logging "0.3.1"]
-                 [io.czlab/basal "1.0.3"]]
+  :dependencies [[io.czlab/basal "1.0.3"]]
 
   :plugins [[cider/cider-nrepl "0.14.0"]
             [lein-cprint "1.2.0"]
@@ -22,6 +21,8 @@
   :global-vars {*warn-on-reflection* true}
   :target-path "out/%s"
   :aot :all
+
+  :main  czlab.tecs.asm.core
 
   :coordinate! "czlab"
   :omit-source true

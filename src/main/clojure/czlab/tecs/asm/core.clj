@@ -15,31 +15,36 @@
             [czlab.basal.core :as c]
             [clojure.java.io :as io]
             [czlab.basal.str :as s]
-            [clojure.string :as cs])
+            [clojure.string :as cs]
+            [czlab.tecs.asm.fline :as fl]
+            [czlab.tecs.asm.codes :as co])
 
-  (:import [java.io File LineNumberReader]))
+  (:import [java.net URL]
+           [java.io File LineNumberReader]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;(set! *warn-on-reflection* true)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (def ^:private _builtins_
-  {"SP" 0
-   "LCL" 1
-   "ARG" 2
-   "THIS"  3
-   "THAT"  4
-   "SCREEN"  16384
-   "KBD" 24576})
+  (into {}
+        (map (fn [[k v]] [k (int v)])
+             {"SP"  0
+              "LCL" 1
+              "ARG" 2
+              "THIS"  3
+              "THAT"  4
+              "SCREEN"  16384
+              "KBD" 24576})))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- builtinSymbols "" [syms s]
+(defn- builtinSymbols?? "" [syms s]
   (let [v1 (get _builtins_ s)
         [_ v2]
         (if (nil? v1)
           (re-matches #"^R([0-9]|1[0-5])" s))
-        v (or (if (s/hgl? v2) (Long/parseLong v2) v1) -1)]
+        v (or (if (s/hgl? v2) (Integer/parseInt v2) v1) (int -1))]
     (if-not (neg? v)
       (assoc syms s v) syms)))
 
@@ -50,12 +55,14 @@
          syms {}
          rampos 16]
     (if (some? ln)
-      (let [a? (:instructionA? ln)
-            s (:symbol ln)
-            syms (if (and a? (s/hgl? s))
+      (let [s (:symbol ln)
+            ok? (and (fl/isAInstruction? ln)
+                     (s/hgl? s))
+            syms (if ok?
                    (builtinSymbols?? syms s) syms)
             [s' r']
-            (when (and a? (s/hgl? s))
+            (if-not ok?
+              [syms rampos]
               (cond
                 ;; if symbol refers to a label, get the label address
                 (c/in? jpts s)
@@ -69,23 +76,24 @@
                 :else
                 (do (c/setf! ln :value (str rampos))
                     [(assoc syms s rampos) (inc rampos)])))]
-        (recur more s' r')))))
+        (recur more s' (long r'))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- writeAInstruction "" [ln ^StringBuilder out]
 
-  (let [w (bit16Word<>)
-        v (:value ln)
+  (let [^String v (:value @ln)
+        w (co/bit16Word<>)
+        ^String
         vs
         (if (s/hgl? v)
-          (-> v Integer/parseInt Integer/toBinaryString .reverse) "")
-        len (Math/min 16 (.length vs))]
+          (-> v Integer/parseInt Integer/toBinaryString cs/reverse) "")
+        len (Math/min (int 16) (.length vs))]
     (doseq [pos (range len)]
-      (->> (if (= '0' (.charAt vs pos)) 0 1)
-           (.setBit w pos)))
+      (->> (if (= \0 (.charAt vs pos)) 0 1)
+           (co/setBit! w pos)))
     ;; its an a-instruction
-    (.setBit w 15 0)
+    (co/setBit! w 15 0)
     (doto out
       (.append (str w))
       (.append "\n"))))
@@ -97,103 +105,96 @@
   (let [{:keys [destCode
                 jumpCode
                 compCode]}
-        ln
-        rom (bit16Word<>)]
+        @ln
+        rom (co/bit16Word<>)]
     (doto rom
       ;; it's a c-instruction
-      (.setBit 15 1)
-      (.setBit 14 1)
-      (.setBit 13 1))
+      (co/setBit! 15 1)
+      (co/setBit! 14 1)
+      (co/setBit! 13 1))
     (let [dw
           (if (s/hgl? destCode)
-            (doto (destOut<>)
-              (.convertToBits destCode))
-            (bit16Word<>))
+            (co/code->destBits destCode)
+            (co/bit16Word<>))
           jw
-          (if (s/hgl? jmpCode)
-            (doto (jumpCode<>)
-              (.convertToBits jmpCode))
-            (bit16Word<>))
+          (if (s/hgl? jumpCode)
+            (co/code->jumpBits jumpCode)
+            (co/bit16Word<>))
           cw
           (if (s/hgl? compCode)
-            (doto (compCode<>)
-              (.convertToBits compCode))
-            (bit16Word<>))
-          s (-> rom
-                (.or cw) (.or dw) (.or jw) str)]
+            (co/code->compBits compCode)
+            (co/bit16Word<>))
+          w (-> rom
+                (co/or?? cw) (co/or?? dw) (co/or?? jw))]
       (doto out
-        (.append s)
+        (.append (str w))
         (.append "\n")))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- syntaxError! "" [ln]
-  (trap! Exception
-         "Syntax error near line: %s" (:fileline ln)))
+  (c/trap! Exception
+           (format "Syntax error near line: %s" (:line @ln))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- pass2 "" [lines]
-  ;;def me=this, out= new StringBuilder(1024);
-  (c/sreduce
+  (c/sreduce<>
     #(cond
-       (:instructionA? %2)
-       (do (writeAInstruction %2 %1) %1)
-       (:instructionC? %2)
-       (do (writeCInstruction %2 %1) %1)
+       (fl/isAInstruction? %2)
+       (writeAInstruction %2 %1)
+       (fl/isCInstruction? %2)
+       (writeCInstruction %2 %1)
        :else %1)
     lines))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- pass1 "" [^URL furl]
-  ;;def me=this, fl, s, cur=0, mempos=0, lbls=[], jpts=[:];
   (with-open [inp (-> (.openStream furl)
                       io/reader
                       LineNumberReader. )]
     (loop [total []
            lbls []
            jpts {}
-           rdr inp
+           mempos 0
            cur 1
+           rdr inp
            line (.readLine rdr)]
       (if (nil? line)
-        (do
-          (findSymbols total jpts)
-          total)
-        (let [fl (fileLine<> cur line)]
+        (do (findSymbols total jpts) total)
+        (let [fl (fl/fileLine<> cur line)
+              total (conj total fl)]
           (cond
-            (:blank? fl)
-            (recur total lbls jpts rdr (inc cur) (.readLine rdr))
-            (:label? fl)
-            (recur (conj total fl)
+            (:blank? @fl)
+            (recur total lbls jpts mempos (inc cur) rdr (.readLine rdr))
+            (fl/isLabel? fl)
+            (recur total
                    (conj lbls fl)
-                   jpts rdr (inc cur) (.readLine rdr))
-            (:validCodeLine? fl)
+                   jpts mempos (inc cur) rdr (.readLine rdr))
+            (fl/isValidCodeLine? fl)
             (let
               [;store the position as raw ROM address
-               _ (c/setf! fl :rompos mempos)
+               _ (c/setf! fl :romPtr mempos)
                jpts (reduce
-                      #(let [s (:label %2)]
+                      #(let [s (:label (deref %2))]
                          (when (c/in? %1 s) (syntaxError! %2))
                          (assoc %1 s mempos))
                       jpts lbls)
                lbls []
                mempos (inc mempos)]
-              (recur ))
+              (recur total lbls jpts mempos
+                     (inc cur) rdr (.readLine rdr)))
             :else
             (syntaxError! fl)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- scanFile "" [^File fp ^File fout]
+(defn- scanFile "" [fp fout]
 
-  (c/prn!! "Processing file: %s" (.getName fp))
-  (let [lines (pass1 fp [])
-        out (pass2 lines)]
-    (c/prn!! "Writing file: %s" (.getName fout))
-    (spit fout out)))
+  (c/prn!! "Processing file: %s" fp)
+  (c/prn!! "Writing file: %s" fout)
+  (->> (-> fp io/as-url pass1 pass2) (spit fout)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -204,7 +205,8 @@
              (some? des)
              (empty? more))
       (try
-        (scanFile (io/file src) (io/file des))
+        (scanFile (io/file src)
+                  (io/file des))
         (catch Throwable e
           (.printStackTrace e)))
       (c/prn!! "Usage: asm <asm-file> <output-file>"))))

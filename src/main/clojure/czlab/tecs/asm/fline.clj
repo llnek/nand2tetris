@@ -9,7 +9,7 @@
 (ns ^{:doc "Represent a line in the ASM file."
       :author "Kenneth Leung"}
 
-  czlab.tecs.asm.fileline
+  czlab.tecs.asm.fline
 
   (:require [czlab.basal.log :as log]
             [czlab.basal.core :as c]
@@ -18,6 +18,12 @@
             [clojure.string :as cs])
 
   (:import [java.io File]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- syntaxError! "" [obj]
+  (c/trap! Exception
+           (format "Syntax error near line: %s" (:line @obj))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -31,24 +37,25 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- scanLine "" [obj]
-  (let [line (:text @obj)
+  (let [^String line (:text @obj)
         pos (.indexOf line "//")
         line (if-not (neg? pos)
                (.substring line 0 pos) line)
-        line (strim line)
+        line (s/strim line)
         len (.length line)]
     (cond
       (= 0 len)
       (c/setf! obj :blank? true)
       (.startsWith line "@")
       (let
-        [s1 (if (= 1 len)
+        [^String
+         s1 (if (= 1 len)
               (syntaxError! obj)
               (.substring line 1))]
         (c/setf! obj
                  (if-not (Character/isDigit (.charAt s1 0))
                    :symbol :value) s1)
-        (c/setf! obj :instKey :a))
+        (c/setf! obj :instKey :A))
       (and (.startsWith line "(")
            (.endsWith line ")"))
       (let [pos (.lastIndexOf line ")")]
@@ -60,7 +67,7 @@
             line
             (if (pos? pos)
               (do (c/setf! obj
-                           :jmpCode
+                           :jumpCode
                            (.substring line (inc pos)))
                   (.substring line 0 pos))
               line)
@@ -68,25 +75,21 @@
             line
             (if (pos? pos)
               (do (c/setf! obj :destCode
-                           (.substring line (inc pos)))
-                  (.substring line 0 pos))
+                           (.substring line 0 pos))
+                  (.substring line (inc pos)))
               line)]
         (c/setf! obj :compCode line)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- syntaxError! "" [obj]
-  (c/trap! Exception
-           "Syntax error near line: %s" (:line @obj)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(decl-mutable FileLineObj
+(c/decl-mutable FileLineObj
   FileLine
   (isCInstruction? [me] (and (not (.isLabel? me))
+                             (not (:blank? @me))
                              (not (.isAInstruction? me))))
   (isAInstruction? [me] (and (not (.isLabel? me))
-                             (= :a (:instKey @me))))
+                             (not (:blank? @me))
+                             (= :A (:instKey @me))))
   (isLabel? [me] (s/hgl? (:label @me)))
   (isValidCodeLine? [me] (or (.isAInstruction? me)
                              (.isCInstruction? me))))
@@ -95,7 +98,7 @@
 ;;
 (defn fileLine<> "" [lineNum lineStr]
   (doto
-    (c/mutable<> FileLine
+    (c/mutable<> FileLineObj
                  {:text (str lineStr)
                   :line lineNum
                   :blank? false
@@ -103,10 +106,10 @@
                   :symbol nil
                   :label nil
                   :value nil
-                  :impCode nil
+                  :jumpCode nil
                   :destCode nil
                   :compCode nil
-                  :romPos -1})
+                  :romPtr -1})
     scanLine ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
