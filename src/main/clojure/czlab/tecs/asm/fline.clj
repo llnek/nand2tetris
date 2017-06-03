@@ -43,6 +43,7 @@
                (.substring line 0 pos) line)
         line (s/strim line)
         len (.length line)]
+    (c/setf! obj :text "")
     (cond
       (= 0 len)
       (c/setf! obj :blank? true)

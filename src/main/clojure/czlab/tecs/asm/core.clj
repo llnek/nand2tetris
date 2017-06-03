@@ -39,44 +39,45 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- builtinSymbols?? "" [syms s]
+(defn- builtinSymbols?? "" [s]
   (let [v1 (get _builtins_ s)
         [_ v2]
         (if (nil? v1)
-          (re-matches #"^R([0-9]|1[0-5])" s))
-        v (or (if (s/hgl? v2) (Integer/parseInt v2) v1) (int -1))]
-    (if-not (neg? v)
-      (assoc syms s v) syms)))
+          (re-matches #"^R([0-9]|1[0-5])" s))]
+    (if (s/hgl? v2) (Integer/parseInt v2) v1)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- findSymbols "" [lines jpts]
+(defn- resolveSymbols "" [lines jpts]
   (loop [[ln & more] lines
          syms {}
          rampos 16]
     (if (some? ln)
-      (let [s (:symbol ln)
+      (let [{:keys [symbol value]}
+            @ln
             ok? (and (fl/isAInstruction? ln)
-                     (s/hgl? s))
-            syms (if ok?
-                   (builtinSymbols?? syms s) syms)
+                     (s/hgl? symbol))
+            sv (if ok?
+                 (builtinSymbols?? symbol))
             [s' r']
-            (if-not ok?
-              [syms rampos]
+            (if ok?
               (cond
-                ;; if symbol refers to a label, get the label address
-                (c/in? jpts s)
-                (do (c/setf! ln :value (str (get jpts s)))
-                    [syms rampos])
-                ;; if symbol exists already, get its address
-                (c/in? syms s)
-                (do (c/setf! ln :value (str (get syms s)))
-                    [syms rampos])
-                ;; new symbol, add it and save its RAM address
+                ;;built-in symbol?
+                (number? sv)
+                (c/do->nil (c/setf! ln :value (str sv)))
+                ;; symbol refers to a label?
+                (c/in? jpts symbol)
+                (c/do->nil (c/setf! ln :value (str (get jpts symbol))))
+                ;; symbol found already?
+                (c/in? syms symbol)
+                (c/do->nil (c/setf! ln :value (str (get syms symbol))))
                 :else
-                (do (c/setf! ln :value (str rampos))
-                    [(assoc syms s rampos) (inc rampos)])))]
-        (recur more s' (long r'))))))
+                (do
+                  (c/setf! ln :value (str rampos))
+                  [(assoc syms symbol rampos) (inc rampos)])))]
+        (recur more
+               (or s' syms)
+               (long (or r' rampos)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -155,38 +156,33 @@
                       io/reader
                       LineNumberReader. )]
     (loop [total []
-           lbls []
            jpts {}
-           mempos 0
+           rom 1
            cur 1
            rdr inp
            line (.readLine rdr)]
       (if (nil? line)
-        (do (findSymbols total jpts) total)
+        (do (resolveSymbols total jpts) total)
         (let [fl (fl/fileLine<> cur line)
-              total (conj total fl)]
-          (cond
-            (:blank? @fl)
-            (recur total lbls jpts mempos (inc cur) rdr (.readLine rdr))
-            (fl/isLabel? fl)
-            (recur total
-                   (conj lbls fl)
-                   jpts mempos (inc cur) rdr (.readLine rdr))
-            (fl/isValidCodeLine? fl)
-            (let
-              [;store the position as raw ROM address
-               _ (c/setf! fl :romPtr mempos)
-               jpts (reduce
-                      #(let [s (:label (deref %2))]
-                         (when (c/in? %1 s) (syntaxError! %2))
-                         (assoc %1 s mempos))
-                      jpts lbls)
-               lbls []
-               mempos (inc mempos)]
-              (recur total lbls jpts mempos
-                     (inc cur) rdr (.readLine rdr)))
-            :else
-            (syntaxError! fl)))))))
+              {:keys [blank? label]}
+              @fl
+              jp? (fl/isLabel? fl)]
+          (if-not (or blank?
+                      (fl/isLabel? fl)
+                      (fl/isValidCodeLine? fl))
+            (syntaxError! fl))
+          (if (and jp?
+                   (c/in? jpts label))
+            (syntaxError! fl))
+          (if (fl/isValidCodeLine? fl)
+            (c/setf! fl :romPtr rom))
+          (recur (conj total fl)
+                 (if jp?
+                   (assoc jpts label (dec rom)) jpts)
+                 (if (or blank? jp?) rom (inc rom))
+                 (inc cur)
+                 rdr
+                 (.readLine rdr)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
