@@ -11,7 +11,8 @@
 
   czlab.tecs.vm.core
 
-  (:require [czlab.basal.log :as log]
+  (:require [czlab.tecs.vm.fline :as fl]
+            [czlab.basal.log :as log]
             [czlab.basal.core :as c]
             [clojure.java.io :as io]
             [czlab.basal.str :as s]
@@ -34,6 +35,15 @@
 (def ^:private ^String sm-pointer "pointer")
 (def ^:private ^String sm-temp "temp")
 
+(def ^:private ^String SM-CONSTANT (s/ucase sm-constant))
+(def ^:private ^String SM-POINTER (s/ucase sm-pointer))
+(def ^:private ^String SM-ARGUMENT "ARG")
+(def ^:private ^String SM-LOCAL "LCL")
+(def ^:private ^String SM-STATIC (s/ucase sm-static))
+(def ^:private ^String SM-THIS (s/ucase sm-this))
+(def ^:private ^String SM-THAT (s/ucase sm-that))
+(def ^:private ^String SM-TEMP (s/ucase sm-temp))
+
 (def ^:private _SP 256) ;; -> 2047
 (def ^:private _CONST -999)
 (def ^:private _PTR -888)
@@ -49,53 +59,24 @@
 (def ^:private _REG_TEMP 5)    ;; -> 12
 (def ^:private _REG_REG 13)    ;; -> 15
 
-(def ^:private _SEGREGS {sm-argument _REG_ARG
-                         sm-local _REG_LCL
-                         sm-static _STATICS
-                         sm-this _REG_THIS
-                         sm-that  _REG_THAT
-                         sm-temp _REG_TEMP
-                         sm-constant _CONST
-                         sm-pointer _PTR})
-
 (def ^:private _counter (AtomicInteger.))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- nextAutoLabel "" [pf]
-  (str pf
-       "."
-       (System/currentTimeMillis)
-       "."
-       (.getAndIncrement _counter)))
+(defn- pushSPWithD "" [] (cs/join "\n" ["@SP" "A=M" "M=D" ""]))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- writeASM "" [ctx ln buffer]
-  (let [{:keys [action segment
-                offset label func args]}
-        @ln
-        out
-        (case action
-          "push" (handlePush ctx segment offset)
-          "pop" (handlePop ctx segment offset)
-          "add" (handleAdd ctx)
-          "sub" (handleSub ctx)
-          "neg" (handleNeg ctx)
-          "not" (handleNot ctx)
-          "and" (handleAnd ctx)
-          "or" (handleOr ctx)
-          "eq" (handleEQ ctx)
-          "gt" (handleGT ctx)
-          "lt" (handleLT ctx)
-          "if-goto" (handleIfGoto ctx label)
-          "label" (handleLabelDef ctx label)
-          "goto" (handleGoto ctx lable)
-          "function" (handleFunc ctx func args)
-          "return" (handleFuncReturn ctx)
-          "call" (handleCall ctx func args)
-          (c/trap! Exception "bad action"))]
-    (.append buffer out)))
+(defn- incSP "" [] (cs/join "\n" ["@SP" "M=M+1" ""]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- decSP "" [] (cs/join "\n" ["@SP" "M=M-1" ""]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- nextAutoLabel "" [pf]
+  (str pf "." (c/now<>) "." (.getAndIncrement ^AtomicInteger _counter)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -118,82 +99,83 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+(defn thisthat<n> "" [offset] (if (= 0 offset) _REG_THIS _REG_THAT))
+(defn thisthat<s> "" [offset] (if (= 0 offset) SM-THIS SM-THAT))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 (defn- handlePush "" [ctx segment offset]
-  (let [seg (s/lcase segment)
-        deal_with_spec_segs #(str "@" %2 "\nD=A\n@" %1 "\nA=M+D\nD=M\n")
+  (let [spec-segs #(str "@" %2
+                        "\nD=A\n"
+                        "@" %1
+                        "\nA=M+D\nD=M\n")
+        seg (s/lcase segment)
         offset
-        (if (= "static" segment)
-          (let [{:keys [staticOffset fname vmvars]} @ctx
+        (if (= "static" seg)
+          (let [{:keys [staticOffset
+                        fname vmvars]} @ctx
                 vn (str fname "." offset)]
-            (when-not (c/in? vmvars vn)
+            (if-not (c/in? vmvars vn)
               (c/copy* ctx {:vmvars (assoc vmvars vn staticOffset)
                             :staticOffset (inc staticOffset)}))
             (get (:vmvars @ctx) vn))
           offset)
-        ;; get value from the [segment+offset],put it into D-Reg
         out (s/strbf<>)]
-    (case segment
-      "constant"
-      (.append out (str "@" offset " //constant here\nD=A\n"))
-      "temp"
-      (.append out (str "@" (+ _REG_TEMP offset) " // temp here\nD=M\n"))
-      "static"
-      (.append out (str "@" (+ _STATICS offset) " // static here\nD=M\n"))
-      "pointer"
-      (.append out (str (if (= 0 offset) "@THIS" "@THAT")
-                        " // pointer here\nD=M\n"))
-      "argument"
-      (.append out (deal_with_spec_segs "ARG" offset))
-      "local"
-      (.append out (deal_with_spec_segs "LCL" offset))
-      "this"
-      (.append out (deal_with_spec_segs "THIS" offset))
-      "that"
-      (.append out (deal_with_spec_segs "THAT" offset))
+    ;; get value from [segment+offset],put it into D-Reg
+    (cond
+      (= seg sm-constant)
+      (s/sb+ out "@" offset "\nD=A\n")
+      (= seg sm-temp)
+      (s/sb+ out "@" (+ _REG_TEMP offset) "\nD=M\n")
+      (= seg sm-static)
+      (s/sb+ out "@" (+ _STATICS offset) "\nD=M\n")
+      (= seg sm-pointer)
+      (s/sb+ out "@" (thisthat<s> offset) "\nD=M\n")
+      (= seg sm-argument)
+      (s/sb+ out (spec-segs SM-ARGUMENT offset))
+      (= seg sm-local)
+      (s/sb+ out (spec-segs SM-LOCAL offset))
+      (= seg sm-this)
+      (s/sb+ out (spec-segs SM-THIS offset))
+      (= seg sm-that)
+      (s/sb+ out (spec-segs SM-THAT offset))
+      :else
       (c/trap! Exception (format "Unexpected segment: %s" segment)))
     ;; we have the target data in D-REG
     ;; set value to current stack pointer [sptr] = D
     ;; then inc the stack pointer by 1
-    (.append out (str (pushSPWithD) (incSP)))
-    (str out)))
+    (str (s/sb+ out (pushSPWithD) (incSP)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- setValInR13ToAddrInR14 "" [] "@R13\nD=M\n@R14\nA=M\nM=D\n")
+(defn- setValInR13ToAddrInR14 "" []
+  (cs/join "\n" ["@R13" "D=M" "@R14" "A=M" "M=D" ""]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- popSPWithR13 "" [] "@SP\nA=M-1\nD=M\n@R13\nM=D\n")
+(defn- popSPWithR13 "" []
+  (cs/join "\n" ["@SP" "A=M-1" "D=M" "@R13" "M=D" ""]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- setDRegAsAddrInR14 "" [lbl offset cmt]
-  (if (s/nichts? lbl)
-    (str "@" offset "  // " cmt "\n" "D=A\n@R14\nM=D\n")
-    (str "@" offset "\n" "D=A\n" "@" lbl "\n" "D=D+M\n@R14\nM=D\n")))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- pushSPWithD "" [] "@SP\nA=M\nM=D\n")
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- incSP "" [] "@SP\nM=M+1\n")
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- decSP "" [] "@SP\nM=M-1\n")
+  (->>
+    (if (s/nichts? lbl)
+      [(str "@" offset) "D=A" "@R14" "M=D" ""]
+      [(str "@" offset) "D=A" (str "@" lbl) "D=D+M" "@R14" "M=D" ""])
+    (cs/join "\n")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handlePop "" [ctx segment offset]
-  (let [seg (s/lcase seqment)
+  (let [seg (s/lcase segment)
         out (s/strbf<>)
         offset
-        (if (= "static" seg)
-          (let [{:keys [fname vmvars statisOffset]} @ctx
+        (if (= sm-static seg)
+          (let [{:keys [fname vmvars
+                        staticOffset]} @ctx
                 vn (str fname "." offset)]
-            (when-not (c/in? vmvars vn)
+            (if-not (c/in? vmvars vn)
               (c/copy* ctx {:vmvars (assoc vmvars vn staticOffset)
                             :staticOffset (inc staticOffset)}))
             (get (:vmvars @ctx) vn))
@@ -203,72 +185,92 @@
     ;; we store the target RAM address int R14 first
     ;; once we get the value off the stack,
     ;; then set the value into the target address
-    (case seg
-      "constant"
+    (cond
+      (= seg sm-constant)
       (c/trap! Exception "Cannot pop constant segment!")
-      "pointer"
-      (.append out
-               (setDRegAsAddrInR14 ""
-                                   (if (= offset 0)
-                                     _REG_THIS _REG_THAT)
-                                   "pointer"))
-      "temp"
-      (.append out (setDRegAsAddrInR14 "" (+ _REG_TEMP offset) "temp-offset"))
-      "static"
-      (.append out (setDRegAsAddrInR14 "" (+ _STATICS offset) "static-offset"))
-      "argument"
-      (.append out (setDRegAsAddrInR14 "ARG" offset "arg-offset"))
-      "local"
-      (.append out (setDRegAsAddrInR14 "LCL" offset "lcl-offset"))
-      "this"
-      (.append out (setDRegAsAddrInR14 "THIS" offset "this-offset"))
-      "that"
-      (.append out (setDRegAsAddrInR14 "THAT" offset "this-that"))
+      (= seg sm-pointer)
+      (s/sb+ out
+             (setDRegAsAddrInR14 ""
+                                 (thisthat<n> offset) "pointer"))
+      (= seg sm-temp)
+      (s/sb+ out (setDRegAsAddrInR14 "" (+ _REG_TEMP offset) "temp-offset"))
+      (= seg sm-static)
+      (s/sb+ out (setDRegAsAddrInR14 "" (+ _STATICS offset) "static-offset"))
+      (= seg sm-argument)
+      (s/sb+ out (setDRegAsAddrInR14 SM-ARGUMENT offset "arg-offset"))
+      (= seg sm-local)
+      (s/sb+ out (setDRegAsAddrInR14 SM-LOCAL offset "lcl-offset"))
+      (= seg sm-this)
+      (s/sb+ out (setDRegAsAddrInR14 SM-THIS offset "this-offset"))
+      (= seg sm-that)
+      (s/sb+ out (setDRegAsAddrInR14 SM-THAT offset "this-that"))
+      :else
       (c/trap! Exception (format "Unexpected segment: %s" segment)))
-
-    (str (popSPWithR13) (decSP) out (setValInR13ToAddrInR14))))
+    (str (popSPWithR13)
+         (decSP)
+         out
+         (setValInR13ToAddrInR14))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handleAdd "" [ctx]
-    (str "@SP\nA=M-1\nD=M\n@SP\nA=M-1\nA=A-1\nM=D+M\n" (decSP)))
+  (cs/join "\n"
+           ["@SP" "A=M-1" "D=M" "@SP" "A=M-1" "A=A-1" "M=D+M" (decSP)]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handleSub "" [ctx]
-  (str "@SP\nA=M-1\nD=M\n@SP\nA=M-1\nA=A-1\nM=M-D\n" (decSP)))
+  (cs/join "\n"
+           ["@SP" "A=M-1" "D=M" "@SP" "A=M-1" "A=A-1" "M=M-D" (decSP)]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handleAnd "" [ctx]
-  (str "@SP\nA=M-1\nD=M\n@SP\nA=M-1\nA=A-1\nM=D&M\n" (decSP)))
+  (cs/join "\n"
+           ["@SP" "A=M-1" "D=M" "@SP" "A=M-1" "A=A-1" "M=D&M" (decSP)]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- handleOr "" []
-  (str "@SP\nA=M-1\nD=M\n@SP\nA=M-1\nA=A-1\nM=D|M\n" (decSP)))
+(defn- handleOr "" [ctx]
+  (cs/join "\n"
+           ["@SP" "A=M-1" "D=M" "@SP" "A=M-1" "A=A-1" "M=D|M" (decSP)]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handle_bool_0 "" []
   ;; D has the value of x-y
-  "@SP\nA=M-1\nD=M\n@SP\nA=M-1\nA=A-1\nD=M-D\n")
+  (cs/join "\n" ["@SP" "A=M-1" "D=M" "@SP" "A=M-1" "A=A-1" "D=M-D" ""]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handle_bool_1 "" [cp t f]
-  (str "@" t "\nD;" cp "\n@" f "\n0;JMP\n"))
+  (cs/join "\n"
+           [(str "@" t)
+            (str "D;" cp) (str "@" f) (str "0;JMP") ""]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handle_bool_toggles "" [t f z]
-  (str "(" t ")\n@SP\nA=M-1\nA=A-1\nM=-1\n@" z "\n0;JMP\n"
-       "(" f ")\n@SP\nA=M-1\nA=A-1\nM=0\n@" z "\n0;JMP\n"
-       "(" z+ ")\n" (decSP)))
+  (cs/join "\n"
+           [(str "(" t ")")
+            "@SP"
+            "A=M-1"
+            "A=A-1"
+            "M=-1"
+            (str "@" z)
+            "0;JMP"
+            (str "(" f ")")
+            "@SP"
+            "A=M-1"
+            "A=A-1"
+            "M=0"
+            (str "@" z)
+            "0;JMP"
+            (str "(" z ")") (decSP)]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- handleEQ "" []
+(defn- handleEQ "" [ctx]
   (let [lbl (nextAutoLabel "")
         t (str lbl ".t")
         f (str lbl ".f")
@@ -279,7 +281,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- handleGT "" []
+(defn- handleGT "" [ctx]
   (let [lbl (nextAutoLabel "")
         t (str lbl ".t")
         f (str lbl ".f")
@@ -290,7 +292,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- handleLT "" []
+(defn- handleLT "" [ctx]
   (let [lbl (nextAutoLabel "")
         t (str lbl ".t")
         f (str lbl ".f")
@@ -301,79 +303,78 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- handleNeg "" [] "@SP\nA=M-1\nD=-M\nM=D\n")
+(defn- handleNeg "" [ctx] (cs/join "\n"
+                                   ["@SP" "A=M-1" "D=-M" "M=D" ""]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- handleNot "" [] "@SP\nA=M-1\nD=!M\nM=D\n")
+(defn- handleNot "" [ctx] (cs/join "\n" ["@SP" "A=M-1" "D=!M" "M=D" ""]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- handleLabelDef "" [lbl] (str "(" lbl ")\n"))
+(defn- handleLabelDef "" [ctx lbl] (str "(" lbl ")\n"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- handleIfGoto "" [lbl]
-  (str (popSPWithR13) (decSP) "@R13\nD=M\n@" lbl "\nD;JNE\n"))
+(defn- handleIfGoto "" [ctx lbl]
+  (str (popSPWithR13)
+       (decSP)
+       (cs/join "\n" ["@R13" "D=M" (str "@" lbl) "D;JNE" ""])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- handleGoto "" [lbl] (str "@" lbl "\n" "0;JMP\n"))
+(defn- handleGoto "" [ctx lbl]
+  (cs/join "\n" [(str "@" lbl) "0;JMP" ""]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handleFunc "" [ctx func args]
-  (let [out (s/strbf<>
-              (str "("
-                   func
-                   ") // function-def starts here\n"))
+  (let [out (s/strbf<> (str "(" func ")\n"))
         s (s/strbf<>)]
     (c/setf! ctx :func func)
-    ;; deal with local vars , set them to zero, up the SP too, yes ?
+    ;; deal with local vars ,
+    ;; set them to zero, up the SP too, yes ?
     (doseq [i (range args)]
       (if (= i 0)
-        (.append s "// prepare local vars\n@LCL\nD=M\n")
-        (.append s "D=D+1\n"))
-      (.append s "A=D\nM=0\n"))
-    (.append out s)
+        (s/sb+ s (cs/join "\n" ["" "@LCL" "D=M" ""]))
+        (s/sb+ s "D=D+1\n"))
+      (s/sb+ s (cs/join "\n" ["A=D" "M=0" ""])))
+    (s/sb+ out s)
     (.setLength s 0)
+    ;; adjust SP to cater for added local vars
     (doseq [i (range args)]
       (if (= 0 i)
-        (.append s "// adjust SP to cater for added local vars\n@SP\nD=M\n"))
-      (.append s "D=D+1\n"))
+        (s/sb+ s (cs/join "\n" ["" "@SP" "D=M" ""])))
+      (s/sb+ s "D=D+1\n"))
     (if (pos? (.length s))
-      (.append s "@SP\nM=D\n"))
-    (.append out (str s "// starts code\n"))
-    (str out)))
+      (s/sb+ s (cs/join "\n" ["@SP" "M=D" ""])))
+    (str (s/sb+ out s "\n"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handleFuncReturn "" [ctx]
-  (str "// start the return nightmare....\n"
-       "@LCL\nD=M\n@R13\n"
-       "M=D // [13] => LCL -> frame\n"
-
-       "@R13\nD=M-1\nD=D-1\nD=D-1\nD=D-1\nA=D-1\nD=M\n"
-       "@R14\nM=D  // [14] -> return addr\n"
-
-       ;; move the SP back to old place, also place the return value there
-       "@ARG\nD=M\n@R15\nM=D\n@SP\nA=M-1\nD=M\n@R15\nA=M\nM=D\n"
-       "@R15\nD=M\nD=D+1\n@SP\nM=D\n"
-
-       "@R13\nA=M-1\nD=M\n@THAT\n"
-       "M=D // reset THAT\n"
-
-       "@R13\nD=M-1\nA=D-1\nD=M\n@THIS\n"
-       "M=D  // reset THIS\n"
-
-       "@R13\nD=M-1\nD=D-1\nA=D-1\nD=M\n@ARG\n"
-       "M=D // reset ARG\n"
-
-       "@R13\nD=M-1\nD=D-1\nD=D-1\nA=D-1\nD=M\n@LCL\n"
-       "M=D  // reset LCL\n"
-
-       "@R14\nA=M\n"
-       "0;JMP      // return code\n"))
+  (cs/join "\n"
+           ["//start the return nightmare...."
+            "@LCL" "D=M" "@R13"
+            "M=D // [13] => LCL -> frame"
+            "@R13" "D=M-1"
+            "D=D-1" "D=D-1" "D=D-1" "A=D-1" "D=M"
+            "@R14" "M=D // [14] -> return addr"
+            ;; move the SP back to old place, also place the return value there
+            "@ARG" "D=M" "@R15" "M=D"
+            "@SP" "A=M-1" "D=M" "@R15" "A=M" "M=D"
+            "@R15" "D=M" "D=D+1" "@SP" "M=D"
+            "@R13" "A=M-1" "D=M" "@THAT"
+            "M=D // reset THAT"
+            "@R13" "D=M-1" "A=D-1" "D=M" "@THIS"
+            "M=D  // reset THIS"
+            "@R13" "D=M-1" "D=D-1" "A=D-1" "D=M" "@ARG"
+            "M=D // reset ARG"
+            "@R13" "D=M-1" "D=D-1" "D=D-1" "A=D-1" "D=M" "@LCL"
+            "M=D // reset LCL"
+            "@R14" "A=M"
+            "0;JMP // return code"
+            ""]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -382,59 +383,98 @@
         s (s/strbf<>)
         out
         (s/strbf<>
-          (str "// remember current SP\n"
-               "@SP\nD=M\n@R15\nM=D\n"
-               "@"  ret_addr  " // push ret-addr to stack\n"
-               "D=A\n@SP\nA=M\nM=D\n"
-               (incSP)
-               "@LCL // push old LCL to stack\n"
-               "D=M\n@SP\nA=M\nM=D\n"
-               (incSP)
-               "@ARG // push old ARG to stack\n"
-               "D=M\n@SP\nA=M\nM=D\n"
-               (incSP)
-               "@THIS // push old THIS to stack\n"
-               "D=M\n@SP\nA=M\nM=D\n"
-               (incSP)
-               "@THAT // push old THAT to stack\n"
-               "D=M\n@SP\nA=M\nM=D\n"
-               (incSP)
-               "@R15 // repos ARG for function\n"
-               "D=M\n"))]
-    (doseq [i (range args)] (.append s "D=D-1\n"))
-    (.append out
-             (str s
-                  "@ARG\n // ARG -> old-SP - n-args \n"
-                  "M=D\n"
-                  ;; set LCL to be same as SP
-                  "@SP\nD=M\n@LCL  // lcl -> SP\n"
-                  "M=D\n"
-                  "@" func " // now jump to funct\n"
-                  "0;JMP\n"
-                  "(" ret_addr ")\n"))
-    (str out)))
+          (cs/join "\n"
+                   ["// remember current SP"
+                    "@SP" "D=M" "@R15" "M=D"
+                    (str "@" ret_addr)
+                    "D=A" "@SP" "A=M" "M=D"
+                    (incSP)
+                    "@LCL"
+                    "D=M" "@SP" "A=M" "M=D"
+                    (incSP)
+                    "@ARG"
+                    "D=M" "@SP" "A=M" "M=D"
+                    (incSP)
+                    "@THIS"
+                    "D=M" "@SP" "A=M" "M=D"
+                    (incSP)
+                    "@THAT"
+                    "D=M" "@SP" "A=M" "M=D"
+                    (incSP)
+                    "@R15" "D=M" ""]))]
+    (doseq [i (range args)] (s/sb+ s "D=D-1\n"))
+    (str
+      (s/sb+ out
+             s
+             (cs/join "\n"
+                      ["@ARG"
+                       "// ARG -> old-SP - n-args"
+                       "M=D"
+                       ;; set LCL to be same as SP
+                       "@SP" "D=M"
+                       "@LCL // lcl -> SP"
+                       "M=D"
+                       (str "@" func)
+                       "0;JMP"
+                       (str "(" ret_addr ")")])))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- pass2 "" [ctx total] (c/sreduce<> #(writeASM ctx %2 %1) total))
+(defn- writeASM "" [ctx ln buffer]
+  (let [{:keys [action segment
+                offset label func args]}
+        @ln
+        out
+        (case action
+          "push" (handlePush ctx segment offset)
+          "pop" (handlePop ctx segment offset)
+          "add" (handleAdd ctx)
+          "sub" (handleSub ctx)
+          "neg" (handleNeg ctx)
+          "not" (handleNot ctx)
+          "and" (handleAnd ctx)
+          "or" (handleOr ctx)
+          "eq" (handleEQ ctx)
+          "gt" (handleGT ctx)
+          "lt" (handleLT ctx)
+          "if-goto" (handleIfGoto ctx label)
+          "label" (handleLabelDef ctx label)
+          "goto" (handleGoto ctx label)
+          "function" (handleFunc ctx func args)
+          "return" (handleFuncReturn ctx)
+          "call" (handleCall ctx func args)
+          (c/trap! Exception (format "bad action: %s" action)))]
+    (s/sb+ buffer out)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- scanOneFile "" [fp]
-  (let [ctx (GenericMutable. {})
-        f (io/file fp)]
-    (c/setf! ctx :fname (.getName f))
-    (->> (io/as-url f)
-         (pass1 ctx)
-         (pass2 ctx))))
+(defn- pass2 "" [ctx total]
+  (c/sreduce<>
+    #(if (:blank? (deref %2)) %1 (writeASM ctx %2 %1)) total))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- scanFile "" [fp fout]
+  (let [ctx (GenericMutable.
+              {:fname (.getName ^File fp)})]
+    (c/prn!! "Processing file: %s" fp)
+    (c/prn!! "Writing file: %s" fout)
+    (->> (io/as-url fp) (pass1 ctx) (pass2 ctx) (spit fout))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn -main "" [& args]
-  (try
-    (scanOneFile (first args))
-    (catch Throwable t
-      (.printStackTrace t))))
+
+  (let [[src des & more] args]
+    (if (and (some? src)
+             (some? des)
+             (empty? more))
+      (try
+        (scanFile (io/file src)
+                  (io/file des))
+        (catch Throwable e
+          (.printStackTrace e)))
+      (c/prn!! "Usage: vm <vm-file> <output-file>"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;EOF

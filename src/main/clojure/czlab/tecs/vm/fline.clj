@@ -21,12 +21,12 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(decl-mutable FileLineObj)
+(c/decl-mutable FileLineObj)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- scanLine "" [obj]
-  (let [line (:text @obj)
+  (let [^String line (:text @obj)
         pos (.indexOf line "//")
         line (if-not (neg? pos)
                (.substring line 0 pos) line)
@@ -39,6 +39,8 @@
             p1  (-> (first tkns) s/lcase)]
         (c/setf! obj :action p1)
         (case p1
+          ("add" "sub" "neg" "eq" "gt" "lt" "and" "or" "not")
+          nil
           ("function" "call")
           (let [[_ a b & xs] tkns]
             (c/setf! obj :func a)
