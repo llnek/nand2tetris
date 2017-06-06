@@ -63,20 +63,25 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- pushSPWithD "" [] (cs/join "\n" ["@SP" "A=M" "M=D" ""]))
+(defmacro ^:private "" csj [args] `(cs/join "\n" ~args))
+(defmacro ^:private "" at! [x] `(str "@" ~x))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- incSP "" [] (cs/join "\n" ["@SP" "M=M+1" ""]))
+(defn- pushSPWithD "" [] (csj [(at! "SP") "A=M" "M=D" ""]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- decSP "" [] (cs/join "\n" ["@SP" "M=M-1" ""]))
+(defn- incSP "" [] (csj [(at! "SP") "M=M+1" ""]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- decSP "" [] (csj [(at! "SP") "M=M-1" ""]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- nextAutoLabel "" [pf]
-  (str pf "." (c/now<>) "." (.getAndIncrement ^AtomicInteger _counter)))
+  (str pf "." (c/jid<>) "." (.getAndIncrement ^AtomicInteger _counter)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -105,10 +110,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handlePush "" [ctx segment offset]
-  (let [spec-segs #(str "@" %2
-                        "\nD=A\n"
-                        "@" %1
-                        "\nA=M+D\nD=M\n")
+  (let [spec-segs #(csj [(at! %2)
+                         "D=A"
+                         (at! %1) "A=M+D" "D=M" ""])
         seg (s/lcase segment)
         offset
         (if (= "static" seg)
@@ -381,27 +385,46 @@
 (defn- handleCall "" [ctx func args]
   (let [ret_addr (nextAutoLabel "fc")
         s (s/strbf<>)
-        out
-        (s/strbf<>
-          (cs/join "\n"
-                   ["// remember current SP"
-                    "@SP" "D=M" "@R15" "M=D"
-                    (str "@" ret_addr)
-                    "D=A" "@SP" "A=M" "M=D"
-                    (incSP)
-                    "@LCL"
-                    "D=M" "@SP" "A=M" "M=D"
-                    (incSP)
-                    "@ARG"
-                    "D=M" "@SP" "A=M" "M=D"
-                    (incSP)
-                    "@THIS"
-                    "D=M" "@SP" "A=M" "M=D"
-                    (incSP)
-                    "@THAT"
-                    "D=M" "@SP" "A=M" "M=D"
-                    (incSP)
-                    "@R15" "D=M" ""]))]
+        out (cs/join
+              "\n"
+              ["//remember current SP"
+               (at! "SP")
+               "D=M"
+               (at! "R15")
+               "M=D"
+               (at! ret_addr)
+               "D=A"
+               (at! "SP")
+               "A=M"
+               "M=D"
+               (incSP)
+               (at! SM-LOCAL)
+               "D=M"
+               (at! "SP")
+               "A=M"
+               "M=D"
+               (incSP)
+               (at! SM-ARGUMENT)
+               "D=M"
+               (at! "SP")
+               "A=M"
+               "M=D"
+               (incSP)
+               (at! SM-THIS)
+               "D=M"
+               (at! "SP")
+               "A=M"
+               "M=D"
+               (incSP)
+               (at! SM-THAT)
+               "D=M"
+               (at! "SP")
+               "A=M"
+               "M=D"
+               (incSP)
+               (at! "R15")
+               "D=M"
+               ""])]
     (doseq [i (range args)] (s/sb+ s "D=D-1\n"))
     (str
       (s/sb+ out
@@ -466,8 +489,8 @@
 (defn -main "" [& args]
 
   (let [[src des & more] args]
-    (if (and (some? src)
-             (some? des)
+    (if (and (s/hgl? src)
+             (s/hgl? des)
              (empty? more))
       (try
         (scanFile (io/file src)

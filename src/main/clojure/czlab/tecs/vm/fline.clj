@@ -35,24 +35,24 @@
     (if (= 0 len)
       (c/setf! obj :blank? true)
       (let [tkns (.split line "[ \t\n\r]+")
-            tz (count tkns)
-            p1  (-> (first tkns) s/lcase)]
+            [p1 & pms] tkns
+            p1  (s/lcase p1)]
         (c/setf! obj :action p1)
         (case p1
           ("add" "sub" "neg" "eq" "gt" "lt" "and" "or" "not")
           nil
           ("function" "call")
-          (let [[_ a b & xs] tkns]
+          (let [[a b & xs] pms]
             (c/setf! obj :func a)
             (c/setf! obj :args (Integer/parseInt b)))
           "return"
           (c/setf! obj :fret? true)
           ("push" "pop")
-          (let [[_ a b & xs] tkns]
+          (let [[a b & xs] pms]
             (c/setf! obj :segment a)
             (c/setf! obj :offset (Integer/parseInt b)))
           ("if-goto" "label" "goto")
-          (let [[_ a & xs] tkns]
+          (let [[a & xs] pms]
             (c/setf! obj :label a))
           (c/trap! Exception (format "Unknown action: %s" line)))))))
 
