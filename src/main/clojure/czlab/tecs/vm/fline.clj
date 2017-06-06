@@ -54,7 +54,7 @@
           ("if-goto" "label" "goto")
           (let [[a & xs] pms]
             (c/setf! obj :label a))
-          (c/trap! Exception (format "Unknown action: %s" line)))))))
+          (c/throwBadData "Unknown action: %s" line))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
