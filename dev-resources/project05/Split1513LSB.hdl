@@ -1,0 +1,21 @@
+CHIP Split1513LSB {
+	IN in[15];
+	OUT out[13];
+
+	PARTS:
+
+	Xor(a=in[0], b=in[0], out=z0);
+	Or(a=z0, b=in[0], out=out[0]);
+	Or(a=z0, b=in[1], out=out[1]);
+	Or(a=z0, b=in[2], out=out[2]);
+	Or(a=z0, b=in[3], out=out[3]);
+	Or(a=z0, b=in[4], out=out[4]);
+	Or(a=z0, b=in[5], out=out[5]);
+	Or(a=z0, b=in[6], out=out[6]);
+	Or(a=z0, b=in[7], out=out[7]);
+	Or(a=z0, b=in[8], out=out[8]);
+	Or(a=z0, b=in[9], out=out[9]);
+	Or(a=z0, b=in[10], out=out[10]);
+	Or(a=z0, b=in[11], out=out[11]);
+	Or(a=z0, b=in[12], out=out[12]);
+}

@@ -1,0 +1,42 @@
+// This file is part of the materials accompanying the book 
+// "The Elements of Computing Systems" by Nisan and Schocken, 
+// MIT Press. Book site: www.idc.ac.il/tecs
+// File name: projects/03/2/RAM16K.hdl
+
+/**
+ * Memory of 16K registers, each 16-bit wide.  
+ * The chip facilitates read and write operations, as follows:
+ *     Read:  out(t) = RAM16K[address(t)](t)
+ *     Write: If load(t-1) then RAM16K[address(t-1)](t) = in(t-1)
+ * In words: the chip always outputs the value stored at the memory 
+ * location specified by address. If load=1, the in value is loaded 
+ * into the memory location specified by address.  This value becomes 
+ * available through the out output starting from the next time step.
+ */
+
+
+CHIP RAM16K {
+
+    IN  in[16], load, address[14];
+    OUT out[16];
+
+    PARTS:
+
+	Split14MSB(in=address , out=msb);
+	Split14LSB(in=address , out=lsb);
+   	Xor(a=in[0], b=in[0], out=z0);
+	Not(in=z0,out=t0);
+
+	DMux4Way(in=t0 , sel=msb , a=m1 , b=m2 , c=m3 , d=m4 );
+	And(a=m1,b=load,out=f1);
+	And(a=m2,b=load,out=f2);
+	And(a=m3,b=load,out=f3);
+	And(a=m4,b=load,out=f4);
+
+	RAM4K(in=in, load=f1 , address=lsb, out=r1);
+	RAM4K(in=in, load=f2 , address=lsb, out=r2);
+	RAM4K(in=in, load=f3 , address=lsb, out=r3);
+	RAM4K(in=in, load=f4 , address=lsb, out=r4);
+
+	Mux4Way16(a=r1 , b=r2 , c=r3 , d=r4, sel=msb , out=out );
+}

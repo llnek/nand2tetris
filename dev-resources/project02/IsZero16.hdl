@@ -1,0 +1,35 @@
+// This file is part of the materials accompanying the book 
+// "The Elements of Computing Systems" by Nisan and Schocken, 
+// MIT Press. Book site: www.idc.ac.il/tecs
+// File name: projects/01/SpreadAnd16.hdl
+
+/**
+ */
+
+CHIP IsZero16 {
+     
+    IN in[16];
+    OUT out;
+
+    PARTS:
+
+	Xor(a=in[0],b=in[0],out=zero);
+	Or(a=in[0],b=zero,out=o2);
+	Or(a=in[1],b=o2,out=o3);
+	Or(a=in[2],b=o3,out=o4);
+	Or(a=in[3],b=o4,out=o5);
+	Or(a=in[4],b=o5,out=o6);
+	Or(a=in[5],b=o6,out=o7);
+	Or(a=in[6],b=o7,out=o8);
+	Or(a=in[7],b=o8,out=o9);
+	Or(a=in[8],b=o9,out=o10);
+	Or(a=in[9],b=o10,out=o11);
+	Or(a=in[10],b=o11,out=o12);
+	Or(a=in[11],b=o12,out=o13);
+	Or(a=in[12],b=o13,out=o14);
+	Or(a=in[13],b=o14,out=o15);
+	Or(a=in[14],b=o15,out=o16);
+	Or(a=in[15],b=o16,out=out);
+
+}
+

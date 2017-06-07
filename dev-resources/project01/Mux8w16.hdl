@@ -1,0 +1,38 @@
+// This file is part of the materials accompanying the book 
+// "The Elements of Computing Systems" by Nisan and Schocken, 
+// MIT Press. Book site: www.idc.ac.il/tecs
+// File name: projects/01/Mux8w16.hdl
+
+/**
+ */
+
+CHIP Mux8w16 {
+     
+    IN a, b, c, d, e, f, g, h, sel[3];
+    OUT out;
+
+    PARTS:
+
+	Not(in=sel[0], out=ns0);
+	Not(in=sel[1], out=ns1);
+	Not(in=sel[2], out=ns2);
+
+	And4to1(a=a, b=ns0, c=ns1, d=ns2, out=a1);
+	And4to1(a=b, b=ns2, c=ns1, d=sel[0], out=b1);
+	And4to1(a=c, b=ns0, c=sel[1], d=ns2, out=c1);
+	And4to1(a=d, b=ns2, c=sel[1], d=sel[0], out=d1);
+	And4to1(a=e, b=sel[2], c=ns1, d=ns0, out=e1);
+	And4to1(a=f, b=sel[2], c=ns1, d=sel[0], out=f1);
+	And4to1(a=g, b=sel[2], c=sel[1], d=ns0, out=g1);
+	And4to1(a=h, b=sel[2], c=sel[1], d=sel[0], out=h1);
+
+	Or(a=a1,b=b1,out=o1);
+	Or(a=c1,b=d1,out=o2);
+	Or(a=e1,b=f1,out=o3);
+	Or(a=g1,b=h1,out=o4);
+	Or(a=o1,b=o2,out=o5);
+	Or(a=o3,b=o4,out=o6);
+
+	Or(a=o5,b=o6,out=out);
+}
+

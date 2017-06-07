@@ -1,0 +1,10 @@
+CHIP Split15MSB {
+
+	IN in[15];
+	OUT out;
+	
+	PARTS:
+
+	Xor(a=in[0], b=in[0], out=z0);
+	Or(a=z0, b=in[14], out=out);
+}

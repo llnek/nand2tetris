@@ -1,0 +1,12 @@
+CHIP Split12MSB {
+
+	IN in[12];
+	OUT out[3];
+
+	PARTS:
+
+	Xor(a=in[0], b=in[0], out=z0);
+	Or(a=z0, b=in[9], out=out[0]);
+	Or(a=z0, b=in[10], out=out[1]);
+	Or(a=z0, b=in[11], out=out[2]);
+}

@@ -1,0 +1,14 @@
+CHIP IsNeg16 {
+    
+	IN in[16];
+    OUT out;
+
+    PARTS:
+	
+	Xor(a=in[0], b=in[0], out=o1);
+	Not(in=o1, out=no1);
+	And(a=in[15], b=no1, out=out);
+}
+
+	/*
+	*/

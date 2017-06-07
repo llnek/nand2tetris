@@ -1,0 +1,118 @@
+// This file is part of the materials accompanying the book 
+// "The Elements of Computing Systems" by Nisan and Schocken, 
+// MIT Press. Book site: www.idc.ac.il/tecs
+// File name: projects/05/CPU.hdl
+
+/**
+ * The Central Processing unit (CPU).
+ * Consists of an ALU and a set of registers, designed to fetch and 
+ * execute instructions written in the Hack machine language.
+ * In particular, functions as follows:
+ * Executes the inputted instruction according to the Hack machine 
+ * language specification. The D and A in the language specification
+ * refer to CPU-resident registers, while M refers to the external
+ * memory location addressed by A, i.e. to Memory[A]. The inM input 
+ * holds the value of this location. If the current instruction needs 
+ * to write a value to M, the value is placed in outM, the address 
+ * of the target location is placed in the addressM output, and the 
+ * writeM control bit is asserted. (When writeM=0, any value may 
+ * appear in outM). The outM and writeM outputs are combinational: 
+ * they are affected instantaneously by the execution of the current 
+ * instruction. The addressM and pc outputs are clocked: although they 
+ * are affected by the execution of the current instruction, they commit 
+ * to their new values only in the next time unit. If reset=1 then the 
+ * CPU jumps to address 0 (i.e. sets pc=0 in next time unit) rather 
+ * than to the address resulting from executing the current instruction. 
+ */
+
+CHIP CPU {
+
+    IN  inM[16],         // M value input  (M = contents of RAM[A])
+        instruction[16], // Instruction for execution
+        reset;           // Signals whether to re-start the current
+                         // program (reset=1) or continue executing
+                         // the current program (reset=0).
+
+    OUT outM[16],        // M value output
+        writeM,          // Write into M? 
+        addressM[15],    // Address in data memory (of M)
+        pc[15];          // address of next instruction
+
+    PARTS:
+
+	// decode the instruction into bits
+	Decoder(in=instruction, jjbits=jjbits, ddbits=ddbits, ccbits=ccbits, abit=abit);
+	Not(in=instruction[15], out=opisa);
+	Or(a=instruction[15], b=false,out=opisc);
+
+	// control logic ?
+	// if we have a destination ptr, then check which register is flagged
+	Or(a=instruction[3],b=false, out=ww0m);
+	Or(a=instruction[4],b=false, out=ww0d);
+	Or(a=instruction[5],b=false, out=ww0a);
+	// however, if this is not-compute, all are false!
+	Mux(a=false , b=ww0m, sel=instruction[15], out=w0m );
+	Mux(a=false , b=ww0d, sel=instruction[15], out=w0d );
+	Mux(a=false , b=ww0a, sel=instruction[15], out=w0a );
+	//
+
+	// if bit15 == 0, then instruction is for A, so pass in the new value
+	// else pass back the last ALU-output
+	Mux16(a=instruction , b=aluout, sel=instruction[15], out=aregin);
+	// if dest ==> A, then load A
+	Or(a=opisa,b=w0a,out=loada);
+	ARegister(in=aregin, load=loada, out=aregout);
+
+	// if dest ==> D, load D
+	And(a=opisc,b=w0d,out=loadd);
+	DRegister(in=aluout, load=loadd, out=dregout);
+	Mux16(a=aregout , b=inM, sel=abit , out=aluin);
+	ALU(x=dregout, y=aluin, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=aluout);
+
+	// handle jump
+	IsNeg(in=aluout, out=outneg);
+	IsZero(in=aluout,out=outzero);
+	IsPos(in=aluout, out=outpos);
+	Not(in=outzero,out=nonzero);
+	Or(a=outzero,b=outpos, out=geq);
+	Or(a=outzero,b=outneg, out=leq);
+
+	And(a=instruction[2], b=outneg, out=jmp1);
+	And(a=instruction[1], b=outzero, out=jmp2);
+	And(a=instruction[0], b=outpos, out=jmp3);
+
+	And(a=instruction[0], b=instruction[1] , out=j10 );
+	And(a=j10, b=geq , out=jmp4 );
+	And(a=instruction[1], b=instruction[2] , out=j11 );
+	And(a=j11, b=leq , out=jmp5 );
+	And(a=instruction[0], b=instruction[2] , out=j12 );
+	And(a=j12, b=nonzero , out=jmp6 );
+
+	Or(a=jmp1,b=jmp2,out=j50);
+	Or(a=jmp3,b=jmp4,out=j51);
+	Or(a=jmp5,b=jmp6,out=j52);
+	Or(a=j50,b=j51,out=j60);
+	Or(a=j52,b=false,out=j61);
+	Or(a=j60,b=j61,out=j99);
+
+	And(a=instruction[0],b=instruction[1],out=j77);
+	And(a=instruction[2],b=j77,out=j78);
+	Or(a=j78,b=j99, out=j100);
+
+	Or(a=instruction[0],b=instruction[1],out=j87);
+	Or(a=instruction[2],b=j87,out=j88);
+	Not(in=j88,out=nojmp);
+	Mux(a=j100 , b=false , sel=nojmp, out=jmpchoice );
+	Mux(a=jmpchoice , b=false , sel=opisa, out=jmppc );
+	Not(in=jmppc,out=incpc);
+	Or(a=opisa,b=incpc,out=pcplus);
+
+	// finally ??
+	PC(in=aregout, load=jmppc, inc=pcplus, reset=reset, out=pc0out);
+	Split16LSB(in=pc0out, out=pc);
+	Split16LSB(in=aregout, out=addressM);
+
+	And(a=opisc,b=w0m,out=writeM);
+	Or16(a=false,b=aluout, out=outM);
+}
+

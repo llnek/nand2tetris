@@ -1,0 +1,50 @@
+CHIP Decoder {
+
+	IN in[16];
+	OUT jjbits[3], ddbits[3], ccbits[6], abit ;
+
+	PARTS:
+
+	Or(a=false, b=in[0], out=jjs0 );
+	Or(a=false, b=in[1], out=jjs1 );
+	Or(a=false, b=in[2], out=jjs2 );
+
+	Mux(a=false,b=jjs0,sel=in[15],out=jjbits[0]);
+	Mux(a=false,b=jjs1,sel=in[15],out=jjbits[1]);
+	Mux(a=false,b=jjs2,sel=in[15],out=jjbits[2]);
+
+	Or(a=false, b=in[3], out=dds0);
+	Or(a=false, b=in[4], out=dds1);
+	Or(a=false, b=in[5], out=dds2);
+
+	Mux(a=false,b=dds0,sel=in[15],out=ddbits[0]);
+	Mux(a=false,b=dds1,sel=in[15],out=ddbits[1]);
+	Mux(a=false,b=dds2,sel=in[15],out=ddbits[2]);
+
+	Or(a=false, b=in[6], out=ccbs0);
+	Or(a=false, b=in[7], out=ccbs1);
+	Or(a=false, b=in[8], out=ccbs2);
+	Or(a=false, b=in[9], out=ccbs3);
+	Or(a=false, b=in[10], out=ccbs4);
+	Or(a=false, b=in[11], out=ccbs5);
+
+	Mux(a=false,b=ccbs0,sel=in[15],out=ccbits[0]);
+	Mux(a=false,b=ccbs1,sel=in[15],out=ccbits[1]);
+	Mux(a=false,b=ccbs2,sel=in[15],out=ccbits[2]);
+	Mux(a=false,b=ccbs3,sel=in[15],out=ccbits[3]);
+	Mux(a=true,b=ccbs4,sel=in[15],out=ccbits[4]);
+	Mux(a=true,b=ccbs5,sel=in[15],out=ccbits[5]);
+
+	Or(a=false, b= in[12], out=abit);
+
+	//Or(a=false,b=false, out=aabits[0]);
+	//Or(a=false,b=false, out=aabits[1]);
+	//Or(a=false,b=false, out=aabits[2]);
+	//Or(a=false,b=false, out=aabits[3]);
+	//Or(a=true,b=true, out=aabits[4]);
+	//Or(a=true,b=true, out=aabits[5]);
+
+	//Or(a=false,b=in[13], out=xxbits[0]);
+	//Or(a=false,b=in[14], out=xxbits[1]);
+
+}

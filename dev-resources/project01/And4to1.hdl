@@ -1,0 +1,20 @@
+// This file is part of the materials accompanying the book 
+// "The Elements of Computing Systems" by Nisan and Schocken, 
+// MIT Press. Book site: www.idc.ac.il/tecs
+// File name: projects/01/And4to1.hdl
+
+/**
+ */
+
+CHIP And4to1 {
+
+    IN  a, b, c, d;
+    OUT out;
+
+    PARTS:
+
+	And(a=a, b=b, out=o1);
+	And(a=c, b=d, out=o2);
+	And(a=o1,b=o2, out=out);
+}
+

@@ -1,0 +1,26 @@
+CHIP Zero16 {
+
+	IN in[16];
+	OUT out[16];
+
+	PARTS:
+
+	Xor(a=in[0],b=in[0],out=z0);
+	And(a=z0,b=z0,out=out[0]);
+	And(a=z0,b=z0,out=out[1]);
+	And(a=z0,b=z0,out=out[2]);
+	And(a=z0,b=z0,out=out[3]);
+	And(a=z0,b=z0,out=out[4]);
+	And(a=z0,b=z0,out=out[5]);
+	And(a=z0,b=z0,out=out[6]);
+	And(a=z0,b=z0,out=out[7]);
+	And(a=z0,b=z0,out=out[8]);
+	And(a=z0,b=z0,out=out[9]);
+	And(a=z0,b=z0,out=out[10]);
+	And(a=z0,b=z0,out=out[11]);
+	And(a=z0,b=z0,out=out[12]);
+	And(a=z0,b=z0,out=out[13]);
+	And(a=z0,b=z0,out=out[14]);
+	And(a=z0,b=z0,out=out[15]);
+
+}

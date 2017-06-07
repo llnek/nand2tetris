@@ -1,0 +1,52 @@
+// This file is part of the materials accompanying the book 
+// "The Elements of Computing Systems" by Nisan and Schocken, 
+// MIT Press. Book site: www.idc.ac.il/tecs
+// File name: projects/03/1/RAM64.hdl
+
+/**
+ * Memory of 64 registers, each 16-bit wide.  
+ * The chip facilitates read and write operations, as follows:
+ *     Read:  out(t) = RAM64[address(t)](t)
+ *     Write: If load(t-1) then RAM64[address(t-1)](t) = in(t-1)
+ * In words: the chip always outputs the value stored at the memory 
+ * location specified by address. If load=1, the in value is loaded 
+ * into the memory location specified by address.  This value becomes 
+ * available through the out output starting from the next time step.
+ */
+
+CHIP RAM64 {
+
+    IN in[16], load, address[6];
+    OUT out[16];
+
+    PARTS:
+
+	Xor(a=in[0], b=in[0], out=z0);
+	Not(in=z0,out=t0);
+
+	Split6MSB(in=address, out=msb);
+	Split6LSB(in=address, out=lsb);
+
+	DMux8Way(in=t0 , sel=msb , a=m1 , b=m2 , c=m3 , d=m4 , e=m5 , f=m6 , g=m7 , h=m8 );
+	And(a=m1,b=load,out=f1);
+	And(a=m2,b=load,out=f2);
+	And(a=m3,b=load,out=f3);
+	And(a=m4,b=load,out=f4);
+	And(a=m5,b=load,out=f5);
+	And(a=m6,b=load,out=f6);
+	And(a=m7,b=load,out=f7);
+	And(a=m8,b=load,out=f8);
+
+	RAM8(in=in , load=f1 , address=lsb , out=r1 );
+	RAM8(in=in , load=f2 , address=lsb , out=r2 );
+	RAM8(in=in , load=f3 , address=lsb , out=r3 );
+	RAM8(in=in , load=f4 , address=lsb , out=r4 );
+	RAM8(in=in , load=f5 , address=lsb , out=r5 );
+	RAM8(in=in , load=f6 , address=lsb , out=r6 );
+	RAM8(in=in , load=f7 , address=lsb , out=r7 );
+	RAM8(in=in , load=f8 , address=lsb , out=r8 );
+
+	Mux8Way16(a=r1 , b=r2 , c=r3 , d=r4 , e=r5 , f=r6 , g=r7 , h=r8 , sel=msb , out=out );
+
+
+}

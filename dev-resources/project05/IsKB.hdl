@@ -1,0 +1,44 @@
+CHIP IsKB {
+
+	IN in[15];
+	OUT out;
+
+	PARTS:
+
+	Xor(a=in[0],b=in[0],out=z0);
+	Not(in=z0,out=t0);
+
+	Not(in=in[0],out=n0);
+	Not(in=in[1],out=n1);
+	Not(in=in[2],out=n2);
+	Not(in=in[3],out=n3);
+	Not(in=in[4],out=n4);
+	Not(in=in[5],out=n5);
+	Not(in=in[6],out=n6);
+	Not(in=in[7],out=n7);
+	Not(in=in[8],out=n8);
+	Not(in=in[9],out=n9);
+	Not(in=in[10],out=n10);
+	Not(in=in[11],out=n11);
+	Not(in=in[12],out=n12);
+	And(a=t0,b=in[13],out=n13);
+	And(a=t0,b=in[14],out=n14);
+
+	And(a=n0,b=n1,out=a0);
+	And(a=n2,b=n3,out=a1);
+	And(a=n4,b=n5,out=a2);
+	And(a=n6,b=n7,out=a3);
+	And(a=n8,b=n9,out=a4);
+	And(a=n10,b=n11,out=a5);
+	And(a=n12,b=n13,out=a6);
+
+	And(a=a1,b=a2,out=k0);
+	And(a=a3,b=a4,out=k1);
+	And(a=a5,b=a6,out=k2);
+	And(a=a0,b=n14,out=k3);
+
+	And(a=k0,b=k1,out=p1);
+	And(a=k2,b=k3,out=p2);
+
+	And(a=p1,b=p2,out=out);
+}
