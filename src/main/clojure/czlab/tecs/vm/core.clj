@@ -45,8 +45,19 @@
 ;RAM[5–12]  Holds the contents of the temp segment;
 ;RAM[13–15] Can be used by the VM implementation as general- purpose registers.
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defmacro ^:private csj "" [args] `(cs/join "\n" ~args))
+(defmacro ^:private pc! "" [x] `(str "(" ~x ")"))
+(defmacro ^:private at! "" [x] `(str "@" ~x))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+(defmacro ^:private decl-atxxx "" [s]
+  `(def ~(with-meta
+           (symbol (str "at-" s))
+           {:private true :tag String}) (str "@" (s/ucase ~s))))
+
 (defmacro ^:private decl-smxxx "" [s]
   `(def ~(with-meta
            (symbol (str "sm-" s))
@@ -54,54 +65,58 @@
 
 ;;dont change the order inside the array!
 (def ^:private _segs_ ["argument" "local" "static"
-                       "constant" "this" "that" "pointer" "temp"])
-(def ^:private _seglocs_ [2 1 16 0 3 4 0 5])
+                       "constant" "this" "that"
+                       "pointer" "temp"
+                       "sp" "r15" "r14" "r13"])
+(def ^:private _seglocs_ [2 1 16
+                          0 3 4
+                          0 5
+                          0 0 0 0])
+
+(def ^:private _SLS_ (zipmap _segs_ _seglocs_))
+(def ^:private _counter (AtomicInteger.))
 
 ;;def some constants
-(def ^:private _SEGS_ (merge (c/preduce<map>
-                               #(assoc! %1 %2 (s/ucase %2)) _segs_)
-                             {"argument" "ARG" "local" "LCL" }))
-(def ^:private _SMAS_ (zipmap _segs_ _seglocs_))
-(def ^:private _counter (AtomicInteger.))
+(def ^:private _SGS_
+  (c/preduce<map> #(assoc! %1 %2 (s/ucase %2)) _segs_))
 
 (defmacro ^:private decl-smxxx** []
   (let [ss (mapv #(str %) _segs_)]
     `(do ~@(map (fn [a]
                   `(decl-smxxx ~a)) ss))))
+(defmacro ^:private decl-atxxx** []
+  (let [ss (mapv #(str %) _segs_)]
+    `(do ~@(map (fn [a]
+                  `(decl-atxxx ~a)) ss))))
 (decl-smxxx**)
+(decl-atxxx**)
+
+(alter-var-root #'_SGS_ (fn [v m] (merge v m)) {"argument" "ARG"
+                                                "local" "LCL" })
+(alter-var-root #'at-argument (fn [v] (at! "ARG")))
+(alter-var-root #'at-local (fn [v] (at! "LCL")))
+
 (def ^:private sm-args sm-argument)
+(def ^:private at-args at-argument)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defmacro ^:private csj "" [args] `(cs/join "\n" ~args))
-(defmacro ^:private pc! "" [x] `(str "(" ~x ")"))
-(defmacro ^:private at! "" [x] `(str "@" ~x))
-
-(def ^:private LCL! (at! (_SEGS_ sm-local)))
-(def ^:private ARG! (at! (_SEGS_ sm-args)))
-(def ^:private THIS! (at! (_SEGS_ sm-this)))
-(def ^:private THAT! (at! (_SEGS_ sm-that)))
-(def ^:private R15! (at! "R15"))
-(def ^:private R14! (at! "R14"))
-(def ^:private R13! (at! "R13"))
-(def ^:private SP! (at! "SP"))
+(defn- incSP "" [] (csj [at-sp "M=M+1"]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- incSP "" [] (csj [SP! "M=M+1" ""]))
+(defn- decSP "" [] (csj [at-sp "M=M-1"]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- decSP "" [] (csj [SP! "M=M-1" ""]))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- pushSPWithD "" [] (str (csj [SP! "A=M" "M=D" ""]) (incSP)))
+(defn- pushSPWithD
+  "" [] (str (csj [at-sp "A=M" "M=D" ""]) (incSP) "\n"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- nextAutoLabel "" [pf]
-  (str pf "." (c/jid<>) "." (.getAndIncrement ^AtomicInteger _counter)))
+  (str pf "-" (.getAndIncrement ^AtomicInteger _counter)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -124,9 +139,9 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- thisthat<n> "" [offset] (get _SMAS_
+(defn- thisthat<n> "" [offset] (get _SLS_
                                     (if (= 0 offset) sm-this sm-that)))
-(defn- thisthat<s> "" [offset] (get _SEGS_
+(defn- thisthat<s> "" [offset] (get _SGS_
                                     (if (= 0 offset) sm-this sm-that)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -134,7 +149,7 @@
 (defn- remapOffset?? "" [ctx seg offset]
   (condp = seg
     sm-static
-    (+ (get _SMAS_ seg)
+    (+ (get _SLS_ seg)
        (let [{:keys [staticOffset fname vmvars]} @ctx
              vn (str fname "." offset)]
          (if-not (c/in? vmvars vn)
@@ -144,7 +159,7 @@
     sm-pointer
     (thisthat<n> offset)
     sm-temp
-    (+ (get _SMAS_ seg) offset)
+    (+ (get _SLS_ seg) offset)
     offset))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -169,7 +184,7 @@
                   (= seg sm-local))
               (csj [(at! offset)
                     "D=A"
-                    (at! (_SEGS_ seg)) "A=M+D" "D=M" ""])
+                    (at! (_SGS_ seg)) "A=M+D" "D=M" ""])
               :else
               (c/throwBadData "segment: %s?" segment))]
     (str out (pushSPWithD) )))
@@ -177,14 +192,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- setValInR13ToAddrInR14 "" []
-  (csj [(at! "R13") "D=M" (at! "R14") "A=M" "M=D" ""]))
+  (csj [at-r13 "D=M" at-r14 "A=M" "M=D" ""]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- popSPWithR13 "" []
-  (str (csj [SP!
+  (str (csj [at-sp
              "A=M-1" "D=M"
-             (at! "R13") "M=D" ""]) (decSP)))
+             at-r13 "M=D" ""]) (decSP) "\n"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -192,7 +207,7 @@
   (str (csj (if (s/nichts? lbl)
               [(at! offset) "D=A" ""]
               [(at! offset) "D=A" (at! lbl) "D=D+M" ""]))
-       (csj [(at! "R14") "M=D" ""])))
+       (csj [at-r14 "M=D" ""])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -215,7 +230,7 @@
                   (= seg sm-args)
                   (= seg sm-this)
                   (= seg sm-that))
-              (setR14AsAddrInD (_SEGS_ seg) offset)
+              (setR14AsAddrInD (_SGS_ seg) offset)
               :else
               (c/throwBadData "segment: %s?" segment))]
     (str (popSPWithR13) out (setValInR13ToAddrInR14))))
@@ -223,33 +238,33 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handleAdd "" [ctx]
-  (csj [SP! "A=M-1" "D=M"
-        SP! "A=M-1" "A=A-1" "M=D+M" (decSP)]))
+  (csj [at-sp "A=M-1" "D=M"
+        at-sp "A=M-1" "A=A-1" "M=D+M" (decSP) ""]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handleSub "" [ctx]
-  (csj [SP! "A=M-1" "D=M"
-        SP! "A=M-1" "A=A-1" "M=M-D" (decSP)]))
+  (csj [at-sp "A=M-1" "D=M"
+        at-sp "A=M-1" "A=A-1" "M=M-D" (decSP) ""]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handleAnd "" [ctx]
-  (csj [SP! "A=M-1" "D=M"
-        SP! "A=M-1" "A=A-1" "M=D&M" (decSP)]))
+  (csj [at-sp "A=M-1" "D=M"
+        at-sp "A=M-1" "A=A-1" "M=D&M" (decSP) ""]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handleOr "" [ctx]
-  (csj [SP! "A=M-1" "D=M"
-        SP! "A=M-1" "A=A-1" "M=D|M" (decSP)]))
+  (csj [at-sp "A=M-1" "D=M"
+        at-sp "A=M-1" "A=A-1" "M=D|M" (decSP) ""]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handle_bool_0 "" []
   ;; D has the value of x-y
-  (csj [SP! "A=M-1" "D=M"
-        SP! "A=M-1" "A=A-1" "D=M-D" ""]))
+  (csj [at-sp "A=M-1" "D=M"
+        at-sp "A=M-1" "A=A-1" "D=M-D" ""]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -260,26 +275,26 @@
 ;;
 (defn- handle_bool_toggles "" [t f z]
   (csj [(pc! t)
-        SP!
+        at-sp
         "A=M-1"
         "A=A-1"
         "M=-1"
         (at! z)
         "0;JMP"
         (pc! f)
-        SP!
+        at-sp
         "A=M-1"
         "A=A-1"
         "M=0"
         (at! z)
         "0;JMP"
         (pc! z)
-        (decSP)]))
+        (decSP) ""]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handleEQ "" [ctx]
-  (let [lbl (nextAutoLabel "")
+  (let [lbl (nextAutoLabel (:func @ctx))
         t (str lbl ".t")
         f (str lbl ".f")
         z (str lbl ".z")]
@@ -290,7 +305,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handleGT "" [ctx]
-  (let [lbl (nextAutoLabel "")
+  (let [lbl (nextAutoLabel (:func @ctx))
         t (str lbl ".t")
         f (str lbl ".f")
         z (str lbl ".z")]
@@ -301,7 +316,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handleLT "" [ctx]
-  (let [lbl (nextAutoLabel "")
+  (let [lbl (nextAutoLabel (:func @ctx))
         t (str lbl ".t")
         f (str lbl ".f")
         z (str lbl ".z")]
@@ -311,11 +326,11 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- handleNeg "" [ctx] (csj [SP! "A=M-1" "D=-M" "M=D" ""]))
+(defn- handleNeg "" [ctx] (csj [at-sp "A=M-1" "D=-M" "M=D" ""]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- handleNot "" [ctx] (csj [SP! "A=M-1" "D=!M" "M=D" ""]))
+(defn- handleNot "" [ctx] (csj [at-sp "A=M-1" "D=!M" "M=D" ""]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -325,7 +340,7 @@
 ;;
 (defn- handleIfGoto "" [ctx lbl]
   (str (popSPWithR13)
-       (csj [(at! "R13") "D=M" (at! lbl) "D;JNE" ""])))
+       (csj [at-r13 "D=M" (at! lbl) "D;JNE" ""])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -334,14 +349,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handleFunc "" [ctx func args]
-  (let [out (s/strbf<> (str (pc! func ) "\n"))
+  (let [out (s/strbf<> (str (pc! func) "\n"))
         s (s/strbf<>)]
     (c/setf! ctx :func func)
     ;; deal with local vars ,
     ;; set them to zero, up the SP too, yes ?
     (doseq [i (range args)]
       (if (= i 0)
-        (s/sb+ s (csj ["" (at! (_SEGS_ sm-local)) "D=M" ""]))
+        (s/sb+ s (csj ["" at-local "D=M" ""]))
         (s/sb+ s "D=D+1\n"))
       (s/sb+ s (csj ["A=D" "M=0" ""])))
     (s/sb+ out s)
@@ -349,79 +364,80 @@
     ;; adjust SP to cater for added local vars
     (doseq [i (range args)]
       (if (= 0 i)
-        (s/sb+ s (csj ["" SP! "D=M" ""])))
+        (s/sb+ s (csj ["" at-sp "D=M" ""])))
       (s/sb+ s "D=D+1\n"))
     (if (pos? (.length s))
-      (s/sb+ s (csj [SP! "M=D" ""])))
+      (s/sb+ s (csj [at-sp "M=D" ""])))
     (str out s "\n")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handleFuncReturn "" [ctx]
   (csj ["//start the return nightmare...."
-        (at! (_SEGS_ sm-local)) "D=M" (at! "R13")
+        at-local "D=M" at-r13
         "M=D // [13] => LCL -> frame"
-        (at! "R13") "D=M-1"
+        at-r13 "D=M-1"
         "D=D-1" "D=D-1" "D=D-1" "A=D-1" "D=M"
-        (at! "R14") "M=D // [14] -> return addr"
+        at-r14 "M=D // [14] -> return addr"
         ;; move the SP back to old place, also place the return value there
-        (at! (_SEGS_ sm-args)) "D=M" (at! "R15") "M=D"
-        SP! "A=M-1" "D=M" (at! "R15") "A=M" "M=D"
-        (at! "R15") "D=M" "D=D+1" SP! "M=D"
-        (at! "R13") "A=M-1" "D=M" (at! (_SEGS_ sm-that))
+        at-args "D=M" at-r15 "M=D"
+        at-sp "A=M-1" "D=M" at-r15 "A=M" "M=D"
+        at-r15 "D=M" "D=D+1" at-sp "M=D"
+        at-r13 "A=M-1" "D=M" at-that
         "M=D // reset THAT"
-        (at! "R13") "D=M-1" "A=D-1" "D=M" (at! (_SEGS_ sm-this))
+        at-r13 "D=M-1" "A=D-1" "D=M" at-this
         "M=D  // reset THIS"
-        (at! "R13") "D=M-1" "D=D-1" "A=D-1" "D=M" (at! (_SEGS_ sm-args))
+        at-r13 "D=M-1" "D=D-1" "A=D-1" "D=M" at-args
         "M=D // reset ARG"
-        (at! "R13") "D=M-1" "D=D-1" "D=D-1" "A=D-1" "D=M" (at! (_SEGS_ sm-local))
+        at-r13 "D=M-1" "D=D-1" "D=D-1" "A=D-1" "D=M"
+        at-local
         "M=D // reset LCL"
-        (at! "R14") "A=M"
-        "0;JMP // return code"
-        ""]))
+        at-r14
+        "A=M"
+        "0;JMP // return code" ""]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- handleCall "" [ctx func args]
-  (let [ret_addr (nextAutoLabel "fc")
+  (let [ret_addr (nextAutoLabel func)
         s (s/strbf<>)
         out (csj ["//remember current SP"
-                  SP! "D=M" (at! "R15") "M=D"
+                  at-sp "D=M" at-r15 "M=D"
                   (at! ret_addr)
-                  "D=A" SP! "A=M" "M=D"
+                  "D=A" at-sp "A=M" "M=D"
                   (incSP)
-                  (at! (_SEGS_ sm-local)) "D=M"
-                  SP! "A=M" "M=D"
+                  at-local "D=M"
+                  at-sp "A=M" "M=D"
                   (incSP)
-                  (at! (_SEGS_ sm-args))
+                  at-args
                   "D=M"
-                  SP!
+                  at-sp
                   "A=M" "M=D"
                   (incSP)
-                  (at! (_SEGS_ sm-this))
+                  at-this
                   "D=M"
-                  SP!
+                  at-sp
                   "A=M" "M=D"
                   (incSP)
-                  (at! (_SEGS_ sm-that))
+                  at-that
                   "D=M"
-                  SP!
+                  at-sp
                   "A=M" "M=D"
                   (incSP)
-                  (at! "R15") "D=M" ""])]
+                  at-r15 "D=M" ""])]
     (doseq [i (range args)] (s/sb+ s "D=D-1\n"))
     (str out
          s
-         (csj [(at! (_SEGS_ sm-args))
+         (csj [at-args
                "// ARG -> old-SP - n-args"
                "M=D"
                ;; set LCL to be same as SP
-               SP! "D=M"
-               (at! (_SEGS_ sm-local))
+               at-sp "D=M"
+               at-local
                "M=D"
                (at! func)
                "0;JMP"
-               (str "(" ret_addr ")")]))))
+               (str "(" ret_addr ")") ""]))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
