@@ -14,6 +14,7 @@
   (:require [czlab.tecs.vm.fline :as fl]
             [czlab.basal.log :as log]
             [czlab.basal.core :as c]
+            [czlab.basal.io :as i]
             [clojure.java.io :as io]
             [czlab.basal.str :as s]
             [clojure.string :as cs])
@@ -475,14 +476,33 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- scanFile "" [fp fout]
-  (let [ctx (GenericMutable.
-              {:fname (.getName ^File fp)
-               :vmvars {}
-               :staticOffset 0})]
-    (c/prn!! "Processing file: %s" fp)
+(defn- scanFile ""
+  ([ctx fp] (scanFile ctx fp nil))
+  ([ctx fp fout]
+   (c/prn!! "Processing file: %s" fp)
+   (c/copy* ctx
+            {:fname (.getName ^File fp) :vmvars {}})
+   (c/do-with
+     [out (->> (io/as-url fp)
+               (pass1 ctx) (pass2 ctx))]
+     (when fout
+       (c/prn!! "Writing file: %s" fout)
+       (spit fout out)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- scanDir "" [ctx dir fout]
+  (let [b (s/strbf<>)
+        t (s/strbf<>)]
+    (doseq [f (i/listFiles dir ".vm")
+            :let [nm (.getName ^File f)
+                  s (scanFile ctx f)]]
+      (if (= "Sys.vm" nm)
+        (s/sb+ t s)
+        (s/sb+ b s)))
     (c/prn!! "Writing file: %s" fout)
-    (->> (io/as-url fp) (pass1 ctx) (pass2 ctx) (spit fout))))
+    (->> (str t b)
+         (spit fout))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -493,8 +513,13 @@
              (s/hgl? des)
              (empty? more))
       (try
-        (scanFile (io/file src)
-                  (io/file des))
+        (let [ctx (GenericMutable.
+                    {:staticOffset 0})
+              f (io/file src)
+              d (io/file des)]
+          (if (.isDirectory f)
+            (scanDir ctx f d)
+            (scanFile ctx f d)))
         (catch Throwable e
           (.printStackTrace e)))
       (c/prn!! "Usage: vm <vm-file> <output-file>"))))
