@@ -9,7 +9,7 @@
 (ns ^{:doc ""
       :author "Kenneth Leung"}
 
-  czlab.tecs.cmp.lexx
+  czlab.tecs.cmp.core
 
   (:require [czlab.basal.log :as log]
             [czlab.basal.core :as c]
@@ -23,22 +23,35 @@
   (:import [java.util.concurrent.atomic AtomicInteger]
            [czlab.basal.core GenericMutable]
            [java.io File LineNumberReader]
+           [czlab.tecs.cmp JackParser]
            [java.net URL]
            [java.util Map]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- pass2 "" [x] )
+(defn- pass1 "" [x] )
+(defn- compilej "" [x] )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- pass1 "" [furl]
-  (with-open [inp (-> (.openStream ^URL furl)
-                      io/reader
-                      LineNumberReader. )]
-    (loop [cur 1
-           rdr inp
-           line (.readLine rdr)])))
+(defn- tokenj "" [furl]
+  (with-open [inp (.openStream ^URL furl)]
+    (let [p (JackParser. inp)]
+      (c/prn!! "compiling file...")
+      (.compileOneUnit p))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- compFile ""
+  ([fp] (compFile fp nil))
+  ([fp fout]
+   (c/prn!! "Processing file: %s" fp)
+   (c/do-with
+     [out (->> (io/as-url fp) tokenj compilej)]
+     (when fout
+       (c/prn!! "Writing file: %s" fout)
+       (spit fout out)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -67,7 +80,7 @@
         (let [f (io/file src)]
           (if (.isDirectory f)
             (scanDir f)
-            (scanFile f)))
+            (compFile f)))
         (catch Throwable e
           (.printStackTrace e)))
       (c/prn!! "Usage: cmp <jack-file>"))))

@@ -23,7 +23,8 @@
   :aot :all
 
   ;:main  czlab.tecs.asm.core
-  :main  czlab.tecs.vm.core
+  ;:main  czlab.tecs.vm.core
+  :main  czlab.tecs.cmp.core
 
   :coordinate! "czlab"
   :omit-source true

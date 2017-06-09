@@ -1,0 +1,308 @@
+
+
+options {
+  //FORCE_LA_CHECK=true;
+  LOOKAHEAD=2;
+  STATIC=false;
+}
+
+PARSER_BEGIN(JackParser)
+package czlab.tecs.cmp;
+
+public class JackParser {
+
+  public static void main(String args[]) {
+  }
+
+}
+
+PARSER_END(JackParser)
+
+SKIP :
+{
+  < " " >
+  | < "\t" >
+  | < "\n" >
+  | < "\r" >
+  | < "//" (~["\n"])* "\n" >
+  | <"/*" (~["*"])* "*" (~["/"] (~["*"])* "*")* "/">
+}
+
+
+/**********************************************
+ * THE Jack TOKEN SPECIFICATION STARTS HERE *
+ **********************************************/
+
+TOKEN :
+{
+  < CLASS: "class" >
+  | < CONSTRUCTOR: "constructor" >
+  | < FUNCTION: "function" >
+  | < METHOD: "method" >
+  | < FIELD: "field" >
+  | < STATIK: "static" >
+  | < VAR: "var" >
+  | < INT: "int" >
+  | < CHAR: "char" >
+  | < BOOLEAN: "boolean" >
+  | < VOID: "void" >
+  | < TRUE: "true" >
+  | < FALSE: "false" >
+  | < NULL: "null" >
+  | < THIS: "this" >
+  | < LET: "let" >
+  | < DO: "do" >
+  | < IF: "if" >
+  | < ELSE: "else" >
+  | < WHILE: "while" >
+  | < RETURN: "return" >
+  | < LCURLY: "{" >
+  | < RCURLY: "}" >
+  | < LPAREN: "(" >
+  | < RPAREN: ")" >
+  | < LBRAC: "[" >
+  | < RBRAC: "]" >
+  | < DOT: "." >
+  | < COMMA: "," >
+  | < SEMICOLON: ";" >
+  | < PLUS: "+" >
+  | < MINUS: "-" >
+  | < STAR: "*" >
+  | < SLASH: "/" >
+  | < AND: "&" >
+  | < BAR: "|" >
+  | < LT: "<" >
+  | < GT: ">" >
+  | < EQ: "=" >
+  | < TILDA: "~" >
+
+}
+
+TOKEN :
+{
+  < QSTRING: "\"" (~["\"", "\\"] | "\\\"" | "\\\\")* "\"" >
+  |
+  < NUMBER: "0" | ["1" - "9"] (["0" - "9"])* >
+}
+
+TOKEN :
+{
+  < IDENTIFIER: <ALPHA> (<ALPHA>|<DIGIT>)* >
+  |
+  < #ALPHA: "_" | ["a"-"z", "A"-"Z"]>
+  |
+  < #DIGIT: ["0"-"9"]>
+}
+
+TOKEN :
+{
+  < SCOPEDINVOKER: <IDENTIFIER> <DOT> <IDENTIFIER> >
+}
+
+/************************************************
+ * THE Jack GRAMMAR SPECIFICATION STARTS HERE *
+ ************************************************/
+
+void compileOneUnit():
+{}
+{
+  <CLASS> className() <LCURLY>
+  (classVarDec())*
+  (subroutineDec())*
+  <RCURLY>
+}
+
+void classVarDec():
+{}
+{
+  (<STATIK> | <FIELD>)
+  type()
+  varName()
+  (<COMMA> varName())* <SEMICOLON>
+}
+
+void type():
+{}
+{
+  <INT> | <CHAR> | <BOOLEAN> | className()
+}
+
+void subroutineDec():
+{}
+{
+  (<CONSTRUCTOR> | <FUNCTION> | <METHOD>)
+  (<VOID> | type())
+  subroutineName() <LPAREN>
+  parameterList()
+  <RPAREN>
+  subroutineBody()
+}
+
+void parameterList():
+{}
+{
+  ((type() varName())
+  (<COMMA> type() varName())*)?
+}
+
+void subroutineBody():
+{}
+{
+  <LCURLY> (varDec())* statements() <RCURLY>
+}
+
+void varDec():
+{}
+{
+  <VAR> type() varName()
+  (<COMMA> varName())* <SEMICOLON>
+}
+
+void statements():
+{}
+{
+  (statement())*
+}
+
+void statement():
+{}
+{
+  letStatement() |
+  ifStatement() |
+  whileStatement() |
+  doStatement() |
+  returnStatement()
+}
+
+void letStatement():
+{}
+{
+  <LET> varName()
+  (<LBRAC> expr() <RBRAC>)? <EQ> expr() <SEMICOLON>
+}
+
+void ifStatement():
+{}
+{
+  <IF> <LPAREN> expr() <RPAREN>
+  <LCURLY> statements() <RCURLY>
+  (<ELSE> <LCURLY> statements() <RCURLY>)?
+}
+
+void whileStatement():
+{}
+{
+  <WHILE> <LPAREN> expr() <RPAREN>
+  <LCURLY> statements() <RCURLY>
+}
+
+void doStatement():
+{}
+{
+  <DO> subroutineCall() <SEMICOLON>
+}
+
+void returnStatement():
+{}
+{
+  <RETURN> <SEMICOLON> |
+  <RETURN> expr() <SEMICOLON>
+}
+
+void expr():
+{}
+{
+  term() (op() term())*
+}
+
+void term():
+{}
+{
+  integerConstant() |
+  stringConstant() |
+  keywordConstant() |
+  varName() |
+  varName() <LBRAC> expr() <RBRAC> |
+  subroutineCall() |
+  <LPAREN> expr() <RPAREN> |
+  unaryOp() term()
+}
+
+void subroutineCall():
+{}
+{
+  subroutineName() <LPAREN> exprList() <RPAREN> |
+  scopedCall() <LPAREN> exprList() <RPAREN>
+}
+
+void exprList():
+{}
+{
+  (expr() (<COMMA> expr())*)?
+}
+
+void scopedCall():
+{}
+{
+  <SCOPEDINVOKER>
+}
+
+void expressionList():
+{}
+{
+  (expr() (<COMMA> expr())* )?
+}
+
+void op():
+{}
+{
+  <PLUS> | <MINUS> | <STAR> | <SLASH> |
+  <AND> | <BAR> | <LT> | <GT> | <EQ>
+}
+
+void  unaryOp():
+{}
+{
+  <MINUS>  | <TILDA>
+}
+
+void integerConstant():
+{}
+{
+  <NUMBER>
+}
+
+void stringConstant():
+{}
+{
+  <QSTRING>
+}
+
+void keywordConstant():
+{}
+{
+  <TRUE>  | <FALSE>  | <NULL>  | <THIS>
+}
+
+void subroutineName():
+{}
+{
+  <IDENTIFIER>
+}
+
+void className():
+{}
+{
+  <IDENTIFIER>
+}
+
+void varName():
+{}
+{
+  <IDENTIFIER>
+}
+
+
+
+
+
