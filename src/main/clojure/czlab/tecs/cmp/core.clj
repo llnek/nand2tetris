@@ -39,7 +39,7 @@
   (with-open [inp (.openStream ^URL furl)]
     (let [p (JackParser. inp)]
       (c/prn!! "compiling file...")
-      (.compileOneUnit p))))
+      (c/prn!! (.compileOneUnit p)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

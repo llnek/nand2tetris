@@ -27,16 +27,18 @@ public class JackParser {
     }
     return s;
   }
-  private String stag(Object obj) {
-    return "<" + strit(obj) + ">";
+  private void stag(Object obj) {
+    String s= strit(obj);
+    astTree.append("<" + s + ">");
   }
-  private String etag(Object obj) {
-    return "</" + strit(obj) + ">";
+  private void etag(Object obj) {
+    String s= strit(obj);
+    astTree.append("</" + s + ">");
   }
-  private String vtag(Object tag, Object obj) {
+  private void vtag(Object tag, Object obj) {
     String t= strit(tag);
     String s= strit(obj);
-    return stag(t) + s + etag(t);
+    stag(t); astTree.append(s); etag(t);
   }
 }
 
@@ -128,41 +130,28 @@ TOKEN :
  ************************************************/
 
 void compileClazz():
-{ StringBuilder bf=new StringBuilder();
-  String dv, ds;
-  Token cz, cn, lc, rc; }
+{ Token cz, cn, lc, rc; }
 {
   cz=<CLASS> cn=className() lc=<LCURLY>
-  (dv=classVarDec() {
-    if (bf.length()> 0) { bf.append("\n"); }
-    bf.append(dv);
-  })*
-  (ds=subroutineDec() {
-    if (bf.length()> 0) { bf.append("\n"); }
-    bf.append(ds);
-  })*
+  (classVarDec())*
+  (subroutineDec())*
   rc=<RCURLY> {
-    astTree.
-    append(stag("class")).
-    append(vtag("keyword", cz)).
-    append(vtag("identifier", cn)).
-    append(vtag("symbol", lc)).
-    append(bf).
-    append(vtag("symbol", rc)).
-    append(etag("class")).
-    append("\n");
+    stag("class"); 
+    vtag("keyword", cz);
+    vtag("identifier", cn);
+    vtag("symbol", lc);
+    vtag("symbol", rc);
+    etag("class");
   }
 }
 
-String classVarDec():
+void classVarDec():
 {}
 {
   (<STATIK> | <FIELD>)
   type()
   varName()
-  (<COMMA> varName())* <SEMICOLON> {
-    return "vdef";
-  }
+  (<COMMA> varName())* <SEMICOLON>
 }
 
 void type():
@@ -171,7 +160,7 @@ void type():
   <INT> | <CHAR> | <BOOLEAN> | className()
 }
 
-String subroutineDec():
+void subroutineDec():
 {}
 {
   (<CONSTRUCTOR> | <FUNCTION> | <METHOD>)
@@ -179,9 +168,7 @@ String subroutineDec():
   subroutineName() <LPAREN>
   parameterList()
   <RPAREN>
-  subroutineBody() {
-    return "subdef";
-  }
+  subroutineBody()
 }
 
 void parameterList():
