@@ -3,14 +3,11 @@
 package czlab.tecs.cmp;
 
 public class JackParser implements JackParserConstants {
-  StringBuilder astTree;
-  public static void main(String args[]) {
-  }
+
   public String compileOneUnit() throws Exception {
-    astTree= new StringBuilder();
-    this.compileClazz();
-    return astTree.toString();
+    return this.compileClazz();
   }
+
   private String strit(Object obj) {
     String s;
     if (obj instanceof Token) {
@@ -20,12 +17,15 @@ public class JackParser implements JackParserConstants {
     }
     return s;
   }
+
   private String stag(Object obj) {
     return "<" + strit(obj) + ">";
   }
+
   private String etag(Object obj) {
     return "</" + strit(obj) + ">";
   }
+
   private String vtag(Object tag, Object obj) {
     String t= strit(tag);
     String s= strit(obj);
@@ -35,8 +35,8 @@ public class JackParser implements JackParserConstants {
 /************************************************
  * THE Jack GRAMMAR SPECIFICATION STARTS HERE *
  ************************************************/
-  final public 
-void compileClazz() throws ParseException {StringBuilder bf=new StringBuilder();
+//kenl
+  final public String compileClazz() throws ParseException {StringBuilder bf=new StringBuilder();
   String dv, ds;
   Token cz, cn, lc, rc;
     cz = jj_consume_token(CLASS);
@@ -65,15 +65,15 @@ if (bf.length()> 0) { bf.append("\u005cn"); }
     bf.append(ds);
     }
     rc = jj_consume_token(RCURLY);
-astTree.
-    append(stag("class")).
-    append(vtag("keyword", cz)).
-    append(vtag("identifier", cn)).
-    append(vtag("symbol", lc)).
-    append(bf).
-    append(vtag("symbol", rc)).
-    append(etag("class")).
-    append("\u005cn");
+{if ("" != null) return
+    stag("class") +
+    vtag("keyword", cz) +
+    vtag("identifier", cn) +
+    vtag("symbol", lc) +
+    bf +
+    vtag("symbol", rc) +
+    etag("class") + "\u005cn";}
+    throw new Error("Missing return statement in function");
   }
 
   final public String classVarDec() throws ParseException {
@@ -926,6 +926,18 @@ astTree.
     finally { jj_save(57, xla); }
   }
 
+  private boolean jj_3_8()
+ {
+    if (jj_scan_token(BOOLEAN)) return true;
+    return false;
+  }
+
+  private boolean jj_3_14()
+ {
+    if (jj_3R_14()) return true;
+    return false;
+  }
+
   private boolean jj_3_7()
  {
     if (jj_scan_token(CHAR)) return true;
@@ -1047,15 +1059,15 @@ astTree.
     return false;
   }
 
-  private boolean jj_3_47()
- {
-    if (jj_scan_token(SLASH)) return true;
-    return false;
-  }
-
   private boolean jj_3_2()
  {
     if (jj_3R_12()) return true;
+    return false;
+  }
+
+  private boolean jj_3_47()
+ {
+    if (jj_scan_token(SLASH)) return true;
     return false;
   }
 
@@ -1082,15 +1094,15 @@ astTree.
     return false;
   }
 
-  private boolean jj_3_51()
- {
-    if (jj_scan_token(GT)) return true;
-    return false;
-  }
-
   private boolean jj_3_1()
  {
     if (jj_3R_11()) return true;
+    return false;
+  }
+
+  private boolean jj_3_51()
+ {
+    if (jj_scan_token(GT)) return true;
     return false;
   }
 
@@ -1516,18 +1528,6 @@ astTree.
  {
     if (jj_3R_14()) return true;
     if (jj_scan_token(49)) return true;
-    return false;
-  }
-
-  private boolean jj_3_8()
- {
-    if (jj_scan_token(BOOLEAN)) return true;
-    return false;
-  }
-
-  private boolean jj_3_14()
- {
-    if (jj_3R_14()) return true;
     return false;
   }
 
