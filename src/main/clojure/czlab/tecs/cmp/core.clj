@@ -29,9 +29,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- pass2 "" [x] )
-(defn- pass1 "" [x] )
-(defn- compilej "" [x] )
+(defn- compilej "" [x] x)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -39,51 +37,44 @@
   (with-open [inp (.openStream ^URL furl)]
     (let [p (JackParser. inp)]
       (c/prn!! "compiling file...")
-      (c/prn!! (.compileOneUnit p)))))
+      (.compileOneUnit p))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- compFile ""
-  ([fp] (compFile fp nil))
-  ([fp fout]
-   (c/prn!! "Processing file: %s" fp)
-   (c/do-with
-     [out (->> (io/as-url fp) tokenj compilej)]
-     (when fout
-       (c/prn!! "Writing file: %s" fout)
-       (spit fout out)))))
+  [fp outDir]
+  (c/prn!! "Processing file: %s" fp)
+  (c/do-with
+    [out (->> (io/as-url fp) tokenj compilej)]
+    (let [nm (.getName ^File fp)
+          t (io/file outDir
+                     (str nm ".xml"))]
+      (c/prn!! "Writing file: %s" t)
+      (spit t out))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- scanFile ""
-  ([fp] (scanFile fp nil))
-  ([fp fout]
-   (c/prn!! "Processing file: %s" fp)
-   (c/do-with
-     [out (->> (io/as-url fp) pass1 pass2)]
-     (when fout
-       (c/prn!! "Writing file: %s" fout)
-       (spit fout out)))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- scanDir "" [f] )
+(defn- scanDir "" [dir out]
+  (doseq [f (i/listFiles dir ".jack")]
+    (compFile f out)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn -main "" [& args]
 
-  (let [[src & more] args]
+  (let [[src des & more] args]
     (if (and (s/hgl? src)
+             (s/hgl? des)
              (empty? more))
       (try
-        (let [f (io/file src)]
+        (let [f (io/file src)
+              d (io/file des)]
           (if (.isDirectory f)
-            (scanDir f)
-            (compFile f)))
+            (scanDir f d)
+            (compFile f d)))
         (catch Throwable e
           (.printStackTrace e)))
-      (c/prn!! "Usage: cmp <jack-file>"))))
+      (c/prn!! "Usage: cmp <jack-file> <out-dir>"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;EOF

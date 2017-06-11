@@ -33,18 +33,35 @@ public class JackParser {
     }
   }
 
+  private String stag(Object obj, boolean b) {
+    return "<" + strit(obj) + ">" + (b ? "\n" : "");
+  }
+
   private String stag(Object obj) {
-    return "<" + strit(obj) + ">";
+    return stag(obj,true);
+  }
+
+  private String etag(Object obj, boolean b) {
+    return "</" + strit(obj) + ">" + (b ? "\n" : "");
   }
 
   private String etag(Object obj) {
-    return "</" + strit(obj) + ">";
+    return etag(obj,true);
   }
 
   private String vtag(Object tag, Object obj) {
     String t= strit(tag);
     String s= strit(obj);
-    return stag(t) + s + etag(t);
+    if ("symbol".equals(t)) {
+      if (">".equals(s)) {
+        s="&gt;";
+      } else if ("<".equals(s)) {
+        s="&lt;";
+      } else if ("&".equals(s)) {
+        s="&amp;";
+      }
+    }
+    return stag(t,false) + s + etag(t, true);
   }
 }
 
@@ -142,11 +159,11 @@ String compileClazz():
 {
   cz=<CLASS> cn=className() lc=<LCURLY>
   (dv=classVarDec() {
-    if (bf.length()> 0) { bf.append("\n"); }
+    //if (bf.length()> 0) { bf.append("\n"); }
     bf.append(dv);
   })*
   (ds=subroutineDec() {
-    if (bf.length()> 0) { bf.append("\n"); }
+    //if (bf.length()> 0) { bf.append("\n"); }
     bf.append(ds);
   })*
   rc=<RCURLY> {
@@ -157,7 +174,7 @@ String compileClazz():
     vtag("symbol", lc) +
     bf +
     vtag("symbol", rc) +
-    etag("class") + "\n";
+    etag("class");
   }
 }
 
@@ -165,7 +182,8 @@ String compileClazz():
 //
 String classVarDec():
 { StringBuilder bf=new StringBuilder();
-  Token sc, c, t, v1, vn, q; }
+  Object t;
+  Token sc, c, v1, vn, q; }
 {
   (q=<STATIK> | q=<FIELD>)
   t=type()
@@ -173,12 +191,12 @@ String classVarDec():
   (c=<COMMA> vn=varName() {
     bf.
     append(vtag("symbol",c)).
-    append(tag("identifier", vn));
+    append(vtag("identifier", vn));
   })*
   sc=<SEMICOLON> {
-    stag("classVarDec") +
+    return stag("classVarDec") +
     vtag("keyword", q) +
-    vtag("identifier", t) +
+    xrefType(t) +
     vtag("identifier", v1) +
     bf +
     vtag("symbol", sc) +
@@ -194,23 +212,32 @@ Object type():
   t=<INT> { return t; } |
   t=<CHAR> { return t; } |
   t=<BOOLEAN> { return t; } |
-  z=className() {
-    return z.image;
-  }
+  z=className() { return z.image; }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
 String subroutineDec():
-{}
+{ StringBuilder bf= new StringBuilder();
+  String pml, sby;
+  Object rt;
+  Token ft, sn, lp, rp; }
 {
-  (<CONSTRUCTOR> | <FUNCTION> | <METHOD>)
-  (<VOID> | type())
-  subroutineName() <LPAREN>
-  parameterList()
-  <RPAREN>
-  subroutineBody() {
-    return "subdef";
+  (ft=<CONSTRUCTOR> | ft=<FUNCTION> | ft=<METHOD>)
+  (rt=<VOID> | rt=type())
+  sn=subroutineName() lp=<LPAREN>
+  pml=parameterList()
+  rp=<RPAREN>
+  sby=subroutineBody() {
+    return stag("subroutineDec") +
+    vtag("keyword", ft) +
+    xrefType(rt) +
+    vtag("identifier", sn) +
+    vtag("symbol", lp) +
+    pml +
+    vtag("symbol", rp) +
+    sby +
+    etag("subroutineDec");
   }
 }
 
@@ -219,7 +246,7 @@ String subroutineDec():
 String parameterList():
 { StringBuilder bf= new StringBuilder();
   Token vn, c, vn99;
-  Object t;}
+  Object t2, t;}
 {
   ((t=type() vn=varName() {
     bf.append(xrefType(t)).
@@ -298,9 +325,7 @@ String statement():
   s= ifStatement() { return s; } |
   s= whileStatement() { return s; } |
   s= doStatement() { return s; } |
-  s= returnStatement() {
-    return s;
-  }
+  s= returnStatement() { return s; }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -317,7 +342,7 @@ String letStatement():
       append(vtag("symbol", rb));
      })? eq=<EQ> e2=expr() sc=<SEMICOLON> {
     return stag("letStatement") +
-    vtag("symbol", l) +
+    vtag("keyword", l) +
     vtag("identifier", vn) +
     bf +
     vtag("symbol", eq) +
@@ -343,7 +368,7 @@ String ifStatement():
     append(vtag("symbol", rc2));
    })? {
     return stag("ifStatement") +
-    vtag("symbol",i) +
+    vtag("keyword",i) +
     vtag("symbol", lp) + ex + vtag("symbol", rp) +
     vtag("symbol", lc) + ss + vtag("symbol", rc) +
     bf +
@@ -360,7 +385,7 @@ String whileStatement():
   w=<WHILE> lp=<LPAREN> e=expr() rp=<RPAREN>
     lc=<LCURLY> ss=statements() rc=<RCURLY> {
     return stag("whileStatement") +
-    vtag("symbol", w) +
+    vtag("keyword", w) +
     vtag("symbol", lp) +
     e +
     vtag("symbol", rp) +
@@ -375,12 +400,12 @@ String whileStatement():
 //
 String doStatement():
 { Token sc, d;
-  String sc; }
+  String s; }
 {
-  d=<DO> sc=subroutineCall() sc=<SEMICOLON> {
+  d=<DO> s=subroutineCall() sc=<SEMICOLON> {
     return stag("doStatement") +
     vtag("keyword", d) +
-    sc +
+    s +
     vtag("symbol", sc) +
     etag("doStatement");
   }
@@ -411,7 +436,7 @@ String returnStatement():
 String expr():
 { StringBuilder bf= new StringBuilder();
   Token p;
-  string t1, t5;}
+  String t1, t5;}
 {
   t1=term() (p=op() t5=term() {
       bf.append(vtag("symbol",p) + t5);
@@ -424,7 +449,8 @@ String expr():
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
 String term():
-{ Token u, t, lp, rp, lb, rb;
+{ Token u, lp, rp, lb, rb;
+  Object t;
   String t3, sc, e89, e99; }
 {
   t=integerConstant() {
@@ -437,22 +463,22 @@ String term():
   } |
   t=keywordConstant() {
     return stag("term") +
-           vtag("symbol", t) + etag("term");
-  } |
-  t=varName() {
-    return stag("term") +
-           vtag("identifier", t) + etag("term");
+           vtag("keyword", t) + etag("term");
   } |
   t=varName() lb=<LBRAC> e89=expr() rb=<RBRAC> {
     return stag("term") +
            vtag("identifier", t) +
            vtag("symbol",lb) +
-           e89
+           e89 +
            vtag("symbol",rb) +
            etag("term");
   } |
   sc=subroutineCall() {
     return stag("term") + sc + etag("term");
+  } |
+  t=varName() {
+    return stag("term") +
+           vtag("identifier", t) + etag("term");
   } |
   lp=<LPAREN> e99=expr() rp=<RPAREN> {
     return stag("term") +
@@ -520,7 +546,8 @@ String[] scopedCall():
 { Token t; }
 {
   t= <SCOPEDINVOKER> {
-    return t.image.split(".");
+    //System.out.println("scopedinvoker= " + t.image);
+    return t.image.split("\\.");
   }
 }
 
@@ -529,14 +556,14 @@ String[] scopedCall():
 Token op():
 { Token t; }
 {
-  t=<PLUS> |
-  t=<MINUS> |
-  t=<STAR> |
-  t=<SLASH> |
-  t=<AND> |
-  t=<BAR> |
-  t=<LT> |
-  t=<GT> |
+  t=<PLUS> { return t; } |
+  t=<MINUS> { return t; } |
+  t=<STAR> { return t; } |
+  t=<SLASH> { return t; } |
+  t=<AND> { return t; } |
+  t=<BAR> { return t; } |
+  t=<LT> { return t; } |
+  t=<GT> { return t; } |
   t=<EQ> { return t; }
 }
 
@@ -545,25 +572,20 @@ Token op():
 Token unaryOp():
 { Token t; }
 {
-  t= <MINUS> |
+  t= <MINUS> { return t; } |
   t= <TILDA> { return t; }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-String integerConstant():
+Token integerConstant():
 { Token t; }
-{
-  t= <NUMBER> {
-    return t;
-  }
-}
+{ t= <NUMBER> { return t; } }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
 String stringConstant():
-{ String s;
-  Token t; }
+{ String s; Token t; }
 {
   t=<QSTRING> {
     s=t.image;
@@ -576,9 +598,9 @@ String stringConstant():
 Token keywordConstant():
 { Token t; }
 {
-  t=<TRUE> |
-  t=<FALSE> |
-  t=<NULL> |
+  t=<TRUE> { return t; } |
+  t=<FALSE> { return t; } |
+  t=<NULL> { return t; } |
   t=<THIS> { return t; }
 }
 
@@ -586,25 +608,19 @@ Token keywordConstant():
 //
 Token subroutineName():
 { Token t; }
-{
-  t=<IDENTIFIER> { return t; }
-}
+{ t=<IDENTIFIER> { return t; } }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
 Token className():
 { Token t; }
-{
-  t=<IDENTIFIER> { return t; }
-}
+{ t=<IDENTIFIER> { return t; } }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
 Token varName():
 { Token t; }
-{
-  t=<IDENTIFIER> { return t; }
-}
+{ t=<IDENTIFIER> { return t; } }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //EOF
