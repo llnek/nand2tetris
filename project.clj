@@ -24,7 +24,8 @@
 
   ;:main  czlab.tecs.asm.core
   ;:main  czlab.tecs.vm.core
-  :main  czlab.tecs.cmp.core
+  ;:main  czlab.tecs.cmp.lexx
+  :main  czlab.tecs.cmp.yacc
 
   :coordinate! "czlab"
   :omit-source true

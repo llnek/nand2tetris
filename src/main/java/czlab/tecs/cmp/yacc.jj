@@ -6,10 +6,10 @@ options {
   STATIC=false;
 }
 
-PARSER_BEGIN(JackParser)
+PARSER_BEGIN(JackCompiler)
 package czlab.tecs.cmp;
 
-public class JackParser {
+public class JackCompiler {
   StringBuilder astTree;
   public static void main(String args[]) {
   }
@@ -42,7 +42,7 @@ public class JackParser {
   }
 }
 
-PARSER_END(JackParser)
+PARSER_END(JackCompiler)
 
 SKIP :
 {

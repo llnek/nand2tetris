@@ -9,7 +9,7 @@
 (ns ^{:doc ""
       :author "Kenneth Leung"}
 
-  czlab.tecs.cmp.core
+  czlab.tecs.cmp.lexx
 
   (:require [czlab.basal.log :as log]
             [czlab.basal.core :as c]
