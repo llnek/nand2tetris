@@ -107,88 +107,81 @@ TOKEN :
  * THE Jack GRAMMAR SPECIFICATION STARTS HERE *
  ************************************************/
 //kenl
-ClassDec parseClazz() #ClassDec :
-{}
+void parseClazz() :
+{ Token t; }
 {
-  <CLASS> {jjtThis.value=token.image;} #Keyword
-  className()
-  <LCURLY> {jjtThis.value=token.image;} #Symbol
-  {String dummy="hack to bypass jjtree error";}
-  (classVarDec())*
-  (subroutineDec())*
-  <RCURLY> {jjtThis.value=token.image;} #Symbol
-  { return jjtThis; }
+  <CLASS> className() <LCURLY>
+  classVarDec()*
+  subroutineDec()*
+  <RCURLY>
 }
 
 //////////////////////////////////////////////////////////////////////////////
 //
-void classVarDec() #ClassVarDec :
-{}
+void classVarDec() :
+{ Token t; }
 {
   [<STATIK> | <FIELD>]
   type()
   varName()
-  (<COMMA> #Symbol varName())* <SEMICOLON> #Symbol
+  [<COMMA> varName()]* <SEMICOLON>
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
 void type() :
-{}
+{ Token t; }
 {
-  <INT>  {jjtThis.value=token.image;} #Keyword |
-  <CHAR>  {jjtThis.value=token.image;} #Keyword |
-  <BOOLEAN>  {jjtThis.value=token.image;} #Keyword | className()
+  <INT>  |
+  <CHAR>  |
+  <BOOLEAN>  | classNAme()
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void subroutineDec() #SubroutineDec :
-{}
+void subroutineDec() :
+{ Token t; }
 {
   [<CONSTRUCTOR> | <FUNCTION> | <METHOD>]
   [<VOID> | type()]
   subroutineName()
-  <LPAREN> #Symbol
+  <LPAREN>
   parameterList()
-  <RPAREN> #Symbol
+  <RPAREN>
   subroutineBody()
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void parameterList() #ParameterList :
-{}
+void parameterList() :
+{ Token t; }
 {
-  ((type() varName())
-   (<COMMA> #Symbol type() varName())*)?
+  ([type() varName()]
+   [<COMMA> type() varName()]*)?
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void subroutineBody() #SubroutineBody :
-{}
+void subroutineBody() :
+{ Token t; }
 {
-  <LCURLY> #Symbol
-  {String dummy="hack to bypass jjtree error";}
-  (varDec())* statements() <RCURLY> #Symbol
+  <LCURLY> varDec()* statements() <RCURLY>
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void varDec() #VarDec :
-{}
+void varDec() :
+{ Token t; }
 {
-  <VAR> #Keyword type() varName()
-  (<COMMA> #Symbol varName())* <SEMICOLON> #Symbol
+  <VAR> type() varNAme() [<COMMA> varName()]* <SEMICOLON>
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void statements() #Statements :
+void statements() :
 {}
 {
-  (statement())*
+  [statement()]*
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -205,177 +198,166 @@ void statement() :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void letStatement() #LetStatement :
-{}
+void letStatement() :
+{ Token t; }
 {
-  <LET> #Keyword varName() (<LBRAC> #Symbol expr() <RBRAC> #Symbol)?
-  {String dummy="hack to bypass jjtree error";}
-  <EQ> #Symbol expr() <SEMICOLON> #Symbol
+  <LET> varName() [<LBRAC> expr() <RBRAC>]?
+  <EQ> expr() <SEMICOLON>
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void ifStatement() #IfStatement :
-{}
+void ifStatement() :
+{ Token t; }
 {
-  <IF> #Keyword <LPAREN> #Symbol expr() <RPAREN> #Symbol
-  <LCURLY> #Symbol statements() <RCURLY> #Symbol
-  {String dummy="hack to bypass jjtree error";}
-  (<ELSE> #Keyword <LCURLY> #Symbol statements() <RCURLY> #Symbol)?
+  <IF> <LPAREN> expr() <RPAREN>
+  <LCURLY> statements() <RCURLY>
+  [<ELSE> <LCURLY> statements() <RCURLY>]?
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void whileStatement() #WhileStatement :
-{}
+void whileStatement() :
+{ Token t; }
 {
-  <WHILE> #Keyword <LPAREN> #Symbol expr() <RPAREN> #Symbol
-  <LCURLY> #Symbol statements() <RCURLY> #Symbol
+  <WHILE> <LPAREN> expr() <RPAREN>
+  <LCURLY> statements() <RCURLY>
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void doStatement() #DoStatement :
-{}
+void doStatement() :
+{ Token t; }
 {
-  <DO> #Keyword subroutineCall() <SEMICOLON> #Symbol
+  <DO> subroutineCall() <SEMICOLON>
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void returnStatement() #ReturnStatement :
-{}
+void returnStatement() :
+{ Token t; }
 {
-  <RETURN> #Keyword <SEMICOLON> #Symbol |
-  <RETURN> #Keyword expr() <SEMICOLON> #Symbol
+  <RETURN> <SEMICOLON>  |
+  <RETURN> expr() <SEMICOLON>
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void expr() #Expression :
-{}
+void expr() :
+{ Token t; }
 {
-  term() (op() term())*
+  term() [op() term()]*
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void term() #Term :
-{}
+void term() :
+{ Token t; }
 {
-  <LPAREN> #Symbol expr() <RPAREN> #Symbol  |
+  <LPAREN> expr() <RPAREN>  |
   unaryOp() term() |
   integerConstant() |
   stringConstant()  |
   keywordConstant()  |
   subroutineCall() |
-  varName() <LBRAC> #Symbol expr() <RBRAC> #Symbol | varName()
+  varName() <LBRAC> expr() <RBRAC>  | varName()
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
 void subroutineCall() :
-{}
+{ Token t; }
 {
-  subroutineName() <LPAREN> #Symbol exprList() <RPAREN> #Symbol |
-  scopedCall() <LPAREN> #Symbol exprList() <RPAREN> #Symbol
+  subroutineName() <LPAREN> exprList() <RPAREN> |
+  scopedCall() <LPAREN> exprList() <RPAREN>
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void exprList() #ExpressionList :
-{}
+void exprList() :
+{ Token t; }
 {
-  (expr() (<COMMA> #Symbol expr())*)?
+  (expr() [<COMMA> {} expr()]*)?
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void scopedCall() #ScopedCall :
-{}
+void scopedCall() :
+{ Token t; }
 {
   <SCOPEDINVOKER> {
     //System.out.println("scopedinvoker= " + t.image);
     //return t.image.split("\\.");
-    jjtThis.value=token.image;
   }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void op() #Keyword :
-{}
+void op() :
+{ Token t; }
 {
-  <PLUS> {jjtThis.value=token.image;} |
-  <MINUS> {jjtThis.value=token.image;} |
-  <STAR> {jjtThis.value=token.image;} |
-  <SLASH> {jjtThis.value=token.image;} |
-  <AND> {jjtThis.value=token.image;} |
-  <BAR> {jjtThis.value=token.image;} |
-  <LT> {jjtThis.value=token.image;} |
-  <GT> {jjtThis.value=token.image;} |
-  <EQ> {jjtThis.value=token.image;}
+  <PLUS> {} |
+  <MINUS> {} |
+  <STAR> {} |
+  <SLASH> {} |
+  <AND> {} |
+  <BAR> {} |
+  <LT> {} |
+  <GT> {} |
+  <EQ> {}
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void unaryOp() #Keyword :
-{}
+void unaryOp() :
+{ Token t; }
 {
-  <MINUS> {jjtThis.value=token.image;} |
-  <TILDA> {jjtThis.value=token.image;}
+  <MINUS> {} |
+  <TILDA> {}
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void integerConstant() #IntegerConstant :
-{}
-{ <NUMBER> {jjtThis.value=token.image;} }
+void integerConstant() :
+{ Token t; }
+{ <NUMBER> { } }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void stringConstant() #StringConstant :
-{String s;}
+void stringConstant() :
+{ String s; Token t; }
 {
   <QSTRING> {
-    s=token.image;
-    jjtThis.value=s.substring(1,s.length()-1);
   }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void keywordConstant() #Keyword :
-{}
+void keywordConstant() :
+{ Token t; }
 {
-  <TRUE> {jjtThis.value=token.image;} |
-  <FALSE> {jjtThis.value=token.image;} |
-  <NULL> {jjtThis.value=token.image;} |
-  <THIS> {jjtThis.value=token.image;}
+  <TRUE> {} |
+  <FALSE> {} |
+  <NULL> {} |
+  <THIS> {}
 }
 
-//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-//
-void subroutineName() #Identifier :
+void subroutineName() :
 {}
 {
-  <IDENTIFIER> {jjtThis.value=token.image;}
+  <IDENTIFIER>
 }
 
-//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-//
-void className() #Identifier :
+void className() :
 {}
 {
-  <IDENTIFIER> {jjtThis.value=token.image;}
+  <IDENTIFIER>
 }
 
-//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-//
-void varName() #Identifier :
+void varName() :
 {}
 {
-  <IDENTIFIER> {jjtThis.value=token.image;}
+  <IDENTIFIER>
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

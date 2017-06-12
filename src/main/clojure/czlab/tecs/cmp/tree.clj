@@ -23,19 +23,21 @@
   (:import [java.util.concurrent.atomic AtomicInteger]
            [czlab.basal.core GenericMutable]
            [java.io File LineNumberReader]
-           [czlab.tecs.ast AstGentor]
+           [czlab.tecs.ast SimpleNode ASTGentor]
            [java.net URL]
            [java.util Map]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- compilej "" [x] x)
+(defn- compilej "" [x]
+  (.dump ^SimpleNode x "")
+  "poo")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- tokenj "" [furl]
   (with-open [inp (.openStream ^URL furl)]
-    (let [p (AstGentor. inp)]
+    (let [p (ASTGentor. inp)]
       (c/prn!! "Parsing file...")
       (.parseOneUnit p))))
 
