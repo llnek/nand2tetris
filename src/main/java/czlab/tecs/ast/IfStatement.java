@@ -3,7 +3,7 @@
 package czlab.tecs.ast;
 
 public
-class IfStatement extends SimpleNode {
+class IfStatement extends ASTNode {
   public IfStatement(int id) {
     super(id);
   }
@@ -13,4 +13,4 @@ class IfStatement extends SimpleNode {
   }
 
 }
-/* JavaCC - OriginalChecksum=214f6852f66165e8ecb99a67c28c85e7 (do not edit this line) */
+/* JavaCC - OriginalChecksum=22bee4c4bb5e0b5266a132f980cf1078 (do not edit this line) */

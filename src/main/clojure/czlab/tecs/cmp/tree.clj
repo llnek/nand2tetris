@@ -20,18 +20,20 @@
 
   (:use [clojure.walk])
 
-  (:import [java.util.concurrent.atomic AtomicInteger]
+  (:import [java.io StringWriter File LineNumberReader]
+           [java.util.concurrent.atomic AtomicInteger]
            [czlab.basal.core GenericMutable]
-           [java.io File LineNumberReader]
-           [czlab.tecs.ast SimpleNode ASTGentor]
+           [czlab.tecs.ast ASTNode ASTGentor]
            [java.net URL]
            [java.util Map]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- compilej "" [x]
-  (.dump ^SimpleNode x "")
-  "poo")
+(defn- compilej "" [^ASTNode x]
+  (let [w (StringWriter.)
+        _ (.dump x "" w)]
+    (c/do-with [s (.toString w)]
+      (c/prn!! s))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

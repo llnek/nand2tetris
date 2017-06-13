@@ -3,7 +3,7 @@
 package czlab.tecs.ast;
 
 public
-class ParameterList extends SimpleNode {
+class ParameterList extends ASTNode {
   public ParameterList(int id) {
     super(id);
   }
@@ -13,4 +13,4 @@ class ParameterList extends SimpleNode {
   }
 
 }
-/* JavaCC - OriginalChecksum=10d801f8a794e751e28271b1dfacabd5 (do not edit this line) */
+/* JavaCC - OriginalChecksum=0ea93f498e9a20c043183d63b3cf556c (do not edit this line) */

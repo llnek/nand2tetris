@@ -3,7 +3,7 @@
 package czlab.tecs.ast;
 
 public
-class WhileStatement extends SimpleNode {
+class WhileStatement extends ASTNode {
   public WhileStatement(int id) {
     super(id);
   }
@@ -13,4 +13,4 @@ class WhileStatement extends SimpleNode {
   }
 
 }
-/* JavaCC - OriginalChecksum=80bf4a55cd867366101985c29b638d11 (do not edit this line) */
+/* JavaCC - OriginalChecksum=37d22f2b7244c54e667764d661180c20 (do not edit this line) */

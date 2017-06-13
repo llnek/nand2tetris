@@ -3,7 +3,7 @@
 package czlab.tecs.ast;
 
 public
-class Keyword extends SimpleNode {
+class Keyword extends ASTNode {
   public Keyword(int id) {
     super(id);
   }
@@ -13,4 +13,4 @@ class Keyword extends SimpleNode {
   }
 
 }
-/* JavaCC - OriginalChecksum=277145d3dc8a7b9dac2fb3d692754259 (do not edit this line) */
+/* JavaCC - OriginalChecksum=82ad690fbbe478d23c0b66abdfe92401 (do not edit this line) */

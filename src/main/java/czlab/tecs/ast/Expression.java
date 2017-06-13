@@ -3,7 +3,7 @@
 package czlab.tecs.ast;
 
 public
-class Expression extends SimpleNode {
+class Expression extends ASTNode {
   public Expression(int id) {
     super(id);
   }
@@ -13,4 +13,4 @@ class Expression extends SimpleNode {
   }
 
 }
-/* JavaCC - OriginalChecksum=2620c2112dddd66c07fe506178146844 (do not edit this line) */
+/* JavaCC - OriginalChecksum=32f747e0dc481fc13c8071802937de58 (do not edit this line) */

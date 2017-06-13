@@ -3,7 +3,7 @@
 package czlab.tecs.ast;
 
 public
-class Identifier extends SimpleNode {
+class Identifier extends ASTNode {
   public Identifier(int id) {
     super(id);
   }
@@ -13,4 +13,4 @@ class Identifier extends SimpleNode {
   }
 
 }
-/* JavaCC - OriginalChecksum=a71a9207e3de7da4ff297cab8cf1e912 (do not edit this line) */
+/* JavaCC - OriginalChecksum=aa1ad654c577942504aa502b4e74e0ec (do not edit this line) */

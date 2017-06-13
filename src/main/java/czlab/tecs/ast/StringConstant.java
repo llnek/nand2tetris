@@ -3,7 +3,7 @@
 package czlab.tecs.ast;
 
 public
-class StringConstant extends SimpleNode {
+class StringConstant extends ASTNode {
   public StringConstant(int id) {
     super(id);
   }
@@ -13,4 +13,4 @@ class StringConstant extends SimpleNode {
   }
 
 }
-/* JavaCC - OriginalChecksum=360fe9739c587a3cc1fdff9cafcdbb27 (do not edit this line) */
+/* JavaCC - OriginalChecksum=8aad8015d5e14110dead4f6dbf4e111f (do not edit this line) */

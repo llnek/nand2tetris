@@ -3,7 +3,7 @@
 package czlab.tecs.ast;
 
 public
-class SubroutineDec extends SimpleNode {
+class SubroutineDec extends ASTNode {
   public SubroutineDec(int id) {
     super(id);
   }
@@ -13,4 +13,4 @@ class SubroutineDec extends SimpleNode {
   }
 
 }
-/* JavaCC - OriginalChecksum=b0fedb7561e9bf828950d1c349561d9e (do not edit this line) */
+/* JavaCC - OriginalChecksum=cb40974e09449c825dbfbb76ed1c4295 (do not edit this line) */

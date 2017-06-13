@@ -3,7 +3,7 @@
 package czlab.tecs.ast;
 
 public
-class Symbol extends SimpleNode {
+class Symbol extends ASTNode {
   public Symbol(int id) {
     super(id);
   }
@@ -13,4 +13,4 @@ class Symbol extends SimpleNode {
   }
 
 }
-/* JavaCC - OriginalChecksum=38b9cc5e941089deab7aa472e28c7cfb (do not edit this line) */
+/* JavaCC - OriginalChecksum=200be4b2aea48bb979b42a274d6ee6e7 (do not edit this line) */

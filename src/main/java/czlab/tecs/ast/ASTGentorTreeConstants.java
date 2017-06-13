@@ -7,24 +7,26 @@ public interface ASTGentorTreeConstants
   public int JJTKEYWORD = 1;
   public int JJTSYMBOL = 2;
   public int JJTCLASSVARDEC = 3;
-  public int JJTVOID = 4;
+  public int JJTTYPE = 4;
   public int JJTSUBROUTINEDEC = 5;
   public int JJTPARAMETERLIST = 6;
   public int JJTSUBROUTINEBODY = 7;
   public int JJTVARDEC = 8;
   public int JJTSTATEMENTS = 9;
-  public int JJTLETSTATEMENT = 10;
-  public int JJTIFSTATEMENT = 11;
-  public int JJTWHILESTATEMENT = 12;
-  public int JJTDOSTATEMENT = 13;
-  public int JJTRETURNSTATEMENT = 14;
-  public int JJTEXPRESSION = 15;
-  public int JJTTERM = 16;
-  public int JJTEXPRESSIONLIST = 17;
-  public int JJTSCOPEDCALL = 18;
-  public int JJTINTEGERCONSTANT = 19;
-  public int JJTSTRINGCONSTANT = 20;
-  public int JJTIDENTIFIER = 21;
+  public int JJTVOID = 10;
+  public int JJTLETSTATEMENT = 11;
+  public int JJTIFSTATEMENT = 12;
+  public int JJTWHILESTATEMENT = 13;
+  public int JJTDOSTATEMENT = 14;
+  public int JJTRETURNSTATEMENT = 15;
+  public int JJTEXPRESSION = 16;
+  public int JJTTERM = 17;
+  public int JJTSUBROUTINECALL = 18;
+  public int JJTEXPRESSIONLIST = 19;
+  public int JJTSCOPEDCALL = 20;
+  public int JJTINTEGERCONSTANT = 21;
+  public int JJTSTRINGCONSTANT = 22;
+  public int JJTIDENTIFIER = 23;
 
 
   public String[] jjtNodeName = {
@@ -32,12 +34,13 @@ public interface ASTGentorTreeConstants
     "Keyword",
     "Symbol",
     "ClassVarDec",
-    "void",
+    "Type",
     "SubroutineDec",
     "ParameterList",
     "SubroutineBody",
     "VarDec",
     "Statements",
+    "void",
     "LetStatement",
     "IfStatement",
     "WhileStatement",
@@ -45,6 +48,7 @@ public interface ASTGentorTreeConstants
     "ReturnStatement",
     "Expression",
     "Term",
+    "SubroutineCall",
     "ExpressionList",
     "ScopedCall",
     "IntegerConstant",
@@ -52,4 +56,4 @@ public interface ASTGentorTreeConstants
     "Identifier",
   };
 }
-/* JavaCC - OriginalChecksum=8e21d8811fa6e2a48fbdacc17527a114 (do not edit this line) */
+/* JavaCC - OriginalChecksum=d0a32917bdd29480a25a24789ebcd972 (do not edit this line) */

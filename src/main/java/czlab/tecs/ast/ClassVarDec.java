@@ -3,7 +3,7 @@
 package czlab.tecs.ast;
 
 public
-class ClassVarDec extends SimpleNode {
+class ClassVarDec extends ASTNode {
   public ClassVarDec(int id) {
     super(id);
   }
@@ -13,4 +13,4 @@ class ClassVarDec extends SimpleNode {
   }
 
 }
-/* JavaCC - OriginalChecksum=7a47fd37a3037c87a0ff8dd6d9ba124c (do not edit this line) */
+/* JavaCC - OriginalChecksum=e37948ff8f6b498343a4fcf9a2bff787 (do not edit this line) */

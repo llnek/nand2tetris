@@ -3,6 +3,7 @@
 
 options {
                            
+                       
                    
              
   //FORCE_LA_CHECK=true;
@@ -220,35 +221,82 @@ void classVarDec()              :
 {/*@bgen(jjtree) ClassVarDec */
   try {
 /*@egen*/
-  [<STATIK> | <FIELD>]
+  [<STATIK>/*@bgen(jjtree) Keyword */
+            {
+              Keyword jjtn001 = new Keyword(JJTKEYWORD);
+              boolean jjtc001 = true;
+              jjtree.openNodeScope(jjtn001);
+            }
+            try {
+/*@egen*//*@bgen(jjtree)*/
+            {
+              jjtree.closeNodeScope(jjtn001, true);
+              jjtc001 = false;
+            }
+/*@egen*/ {jjtn001.value=token.image;}/*@bgen(jjtree)*/
+            } finally {
+              if (jjtc001) {
+                jjtree.closeNodeScope(jjtn001, true);
+              }
+            }
+/*@egen*/          | 
+   <FIELD>/*@bgen(jjtree) Keyword */
+           {
+             Keyword jjtn002 = new Keyword(JJTKEYWORD);
+             boolean jjtc002 = true;
+             jjtree.openNodeScope(jjtn002);
+           }
+           try {
+/*@egen*//*@bgen(jjtree)*/
+           {
+             jjtree.closeNodeScope(jjtn002, true);
+             jjtc002 = false;
+           }
+/*@egen*/ {jjtn002.value=token.image;}/*@bgen(jjtree)*/
+           } finally {
+             if (jjtc002) {
+               jjtree.closeNodeScope(jjtn002, true);
+             }
+           }
+/*@egen*/          ]
   type()
   varName()
-  (/*@bgen(jjtree) Symbol */
-   {
-     Symbol jjtn001 = new Symbol(JJTSYMBOL);
-     boolean jjtc001 = true;
-     jjtree.openNodeScope(jjtn001);
-   }
-   try {
-/*@egen*/<COMMA>/*@bgen(jjtree)*/
-   } finally {
-     if (jjtc001) {
-       jjtree.closeNodeScope(jjtn001, true);
-     }
-   }
-/*@egen*/         varName())*/*@bgen(jjtree) Symbol */
-                               {
-                                 Symbol jjtn002 = new Symbol(JJTSYMBOL);
-                                 boolean jjtc002 = true;
-                                 jjtree.openNodeScope(jjtn002);
-                               }
-                               try {
-/*@egen*/ <SEMICOLON>/*@bgen(jjtree)*/
-                               } finally {
-                                 if (jjtc002) {
-                                   jjtree.closeNodeScope(jjtn002, true);
-                                 }
-                               }
+  (<COMMA>/*@bgen(jjtree) Symbol */
+           {
+             Symbol jjtn003 = new Symbol(JJTSYMBOL);
+             boolean jjtc003 = true;
+             jjtree.openNodeScope(jjtn003);
+           }
+           try {
+/*@egen*//*@bgen(jjtree)*/
+           {
+             jjtree.closeNodeScope(jjtn003, true);
+             jjtc003 = false;
+           }
+/*@egen*/ {jjtn003.value=token.image;}/*@bgen(jjtree)*/
+           } finally {
+             if (jjtc003) {
+               jjtree.closeNodeScope(jjtn003, true);
+             }
+           }
+/*@egen*/         varName())* <SEMICOLON>/*@bgen(jjtree) Symbol */
+                                                                        {
+                                                                          Symbol jjtn004 = new Symbol(JJTSYMBOL);
+                                                                          boolean jjtc004 = true;
+                                                                          jjtree.openNodeScope(jjtn004);
+                                                                        }
+                                                                        try {
+/*@egen*//*@bgen(jjtree)*/
+                                                                        {
+                                                                          jjtree.closeNodeScope(jjtn004, true);
+                                                                          jjtc004 = false;
+                                                                        }
+/*@egen*/ {jjtn004.value=token.image;}/*@bgen(jjtree)*/
+                                                                        } finally {
+                                                                          if (jjtc004) {
+                                                                            jjtree.closeNodeScope(jjtn004, true);
+                                                                          }
+                                                                        }
 /*@egen*/        /*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
@@ -274,66 +322,46 @@ void classVarDec()              :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void type() :
-{}
-{
-  <INT>/*@bgen(jjtree) Keyword */
+void type()       :
+{/*@bgen(jjtree) Type */
+  Type jjtn000 = new Type(JJTTYPE);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) Type */
+  try {
+/*@egen*/
+  <INT>/*@bgen(jjtree)*/
          {
-           Keyword jjtn001 = new Keyword(JJTKEYWORD);
-           boolean jjtc001 = true;
-           jjtree.openNodeScope(jjtn001);
+           jjtree.closeNodeScope(jjtn000, true);
+           jjtc000 = false;
          }
-         try {
-/*@egen*//*@bgen(jjtree)*/
-         {
-           jjtree.closeNodeScope(jjtn001, true);
-           jjtc001 = false;
-         }
-/*@egen*/  {jjtn001.value=token.image;}/*@bgen(jjtree)*/
-         } finally {
-           if (jjtc001) {
-             jjtree.closeNodeScope(jjtn001, true);
-           }
-         }
-/*@egen*/          |
-  <CHAR>/*@bgen(jjtree) Keyword */
+/*@egen*/  {jjtn000.value=token.image;} |
+  <CHAR>/*@bgen(jjtree)*/
           {
-            Keyword jjtn002 = new Keyword(JJTKEYWORD);
-            boolean jjtc002 = true;
-            jjtree.openNodeScope(jjtn002);
+            jjtree.closeNodeScope(jjtn000, true);
+            jjtc000 = false;
           }
-          try {
-/*@egen*//*@bgen(jjtree)*/
-          {
-            jjtree.closeNodeScope(jjtn002, true);
-            jjtc002 = false;
-          }
-/*@egen*/  {jjtn002.value=token.image;}/*@bgen(jjtree)*/
-          } finally {
-            if (jjtc002) {
-              jjtree.closeNodeScope(jjtn002, true);
+/*@egen*/  {jjtn000.value=token.image;} |
+  <BOOLEAN>/*@bgen(jjtree)*/
+            {
+              jjtree.closeNodeScope(jjtn000, true);
+              jjtc000 = false;
             }
-          }
-/*@egen*/          |
-  <BOOLEAN>/*@bgen(jjtree) Keyword */
-             {
-               Keyword jjtn003 = new Keyword(JJTKEYWORD);
-               boolean jjtc003 = true;
-               jjtree.openNodeScope(jjtn003);
-             }
-             try {
-/*@egen*//*@bgen(jjtree)*/
-             {
-               jjtree.closeNodeScope(jjtn003, true);
-               jjtc003 = false;
-             }
-/*@egen*/  {jjtn003.value=token.image;}/*@bgen(jjtree)*/
-             } finally {
-               if (jjtc003) {
-                 jjtree.closeNodeScope(jjtn003, true);
+/*@egen*/ {jjtn000.value=token.image;} |
+  //classNAme()
+  <IDENTIFIER>/*@bgen(jjtree)*/
+               {
+                 jjtree.closeNodeScope(jjtn000, true);
+                 jjtc000 = false;
                }
-             }
-/*@egen*/          | className()
+/*@egen*/ {jjtn000.value=token.image;}/*@bgen(jjtree)*/
+  } finally {
+    if (jjtc000) {
+      jjtree.closeNodeScope(jjtn000, true);
+    }
+  }
+/*@egen*/
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -347,37 +375,121 @@ void subroutineDec()                :
 {/*@bgen(jjtree) SubroutineDec */
   try {
 /*@egen*/
-  [<CONSTRUCTOR> | <FUNCTION> | <METHOD>]
-  [<VOID> | type()]
-  subroutineName()/*@bgen(jjtree) Symbol */
-  {
-    Symbol jjtn001 = new Symbol(JJTSYMBOL);
-    boolean jjtc001 = true;
-    jjtree.openNodeScope(jjtn001);
-  }
-  try {
-/*@egen*/
-  <LPAREN>/*@bgen(jjtree)*/
-  } finally {
-    if (jjtc001) {
-      jjtree.closeNodeScope(jjtn001, true);
-    }
-  }
+  [<CONSTRUCTOR>/*@bgen(jjtree) Keyword */
+                 {
+                   Keyword jjtn001 = new Keyword(JJTKEYWORD);
+                   boolean jjtc001 = true;
+                   jjtree.openNodeScope(jjtn001);
+                 }
+                 try {
+/*@egen*//*@bgen(jjtree)*/
+                 {
+                   jjtree.closeNodeScope(jjtn001, true);
+                   jjtc001 = false;
+                 }
+/*@egen*/ {jjtn001.value=token.image;}/*@bgen(jjtree)*/
+                 } finally {
+                   if (jjtc001) {
+                     jjtree.closeNodeScope(jjtn001, true);
+                   }
+                 }
+/*@egen*/          |
+   <FUNCTION>/*@bgen(jjtree) Keyword */
+              {
+                Keyword jjtn002 = new Keyword(JJTKEYWORD);
+                boolean jjtc002 = true;
+                jjtree.openNodeScope(jjtn002);
+              }
+              try {
+/*@egen*//*@bgen(jjtree)*/
+              {
+                jjtree.closeNodeScope(jjtn002, true);
+                jjtc002 = false;
+              }
+/*@egen*/ {jjtn002.value=token.image;}/*@bgen(jjtree)*/
+              } finally {
+                if (jjtc002) {
+                  jjtree.closeNodeScope(jjtn002, true);
+                }
+              }
+/*@egen*/          |
+   <METHOD>/*@bgen(jjtree) Keyword */
+            {
+              Keyword jjtn003 = new Keyword(JJTKEYWORD);
+              boolean jjtc003 = true;
+              jjtree.openNodeScope(jjtn003);
+            }
+            try {
+/*@egen*//*@bgen(jjtree)*/
+            {
+              jjtree.closeNodeScope(jjtn003, true);
+              jjtc003 = false;
+            }
+/*@egen*/ {jjtn003.value=token.image;}/*@bgen(jjtree)*/
+            } finally {
+              if (jjtc003) {
+                jjtree.closeNodeScope(jjtn003, true);
+              }
+            }
+/*@egen*/         ]
+  [<VOID>/*@bgen(jjtree) Keyword */
+          {
+            Keyword jjtn004 = new Keyword(JJTKEYWORD);
+            boolean jjtc004 = true;
+            jjtree.openNodeScope(jjtn004);
+          }
+          try {
+/*@egen*//*@bgen(jjtree)*/
+          {
+            jjtree.closeNodeScope(jjtn004, true);
+            jjtc004 = false;
+          }
+/*@egen*/ {jjtn004.value=token.image;}/*@bgen(jjtree)*/
+          } finally {
+            if (jjtc004) {
+              jjtree.closeNodeScope(jjtn004, true);
+            }
+          }
+/*@egen*/          | type()]
+  subroutineName()
+  <LPAREN>/*@bgen(jjtree) Symbol */
+           {
+             Symbol jjtn005 = new Symbol(JJTSYMBOL);
+             boolean jjtc005 = true;
+             jjtree.openNodeScope(jjtn005);
+           }
+           try {
+/*@egen*//*@bgen(jjtree)*/
+           {
+             jjtree.closeNodeScope(jjtn005, true);
+             jjtc005 = false;
+           }
+/*@egen*/ {jjtn005.value=token.image;}/*@bgen(jjtree)*/
+           } finally {
+             if (jjtc005) {
+               jjtree.closeNodeScope(jjtn005, true);
+             }
+           }
 /*@egen*/        
-  parameterList()/*@bgen(jjtree) Symbol */
-  {
-    Symbol jjtn002 = new Symbol(JJTSYMBOL);
-    boolean jjtc002 = true;
-    jjtree.openNodeScope(jjtn002);
-  }
-  try {
-/*@egen*/
-  <RPAREN>/*@bgen(jjtree)*/
-  } finally {
-    if (jjtc002) {
-      jjtree.closeNodeScope(jjtn002, true);
-    }
-  }
+  parameterList()
+  <RPAREN>/*@bgen(jjtree) Symbol */
+           {
+             Symbol jjtn006 = new Symbol(JJTSYMBOL);
+             boolean jjtc006 = true;
+             jjtree.openNodeScope(jjtn006);
+           }
+           try {
+/*@egen*//*@bgen(jjtree)*/
+           {
+             jjtree.closeNodeScope(jjtn006, true);
+             jjtc006 = false;
+           }
+/*@egen*/ {jjtn006.value=token.image;}/*@bgen(jjtree)*/
+           } finally {
+             if (jjtc006) {
+               jjtree.closeNodeScope(jjtn006, true);
+             }
+           }
 /*@egen*/        
   subroutineBody()/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
@@ -414,19 +526,24 @@ void parameterList()                :
   try {
 /*@egen*/
   ((type() varName())
-   (/*@bgen(jjtree) Symbol */
-    {
-      Symbol jjtn001 = new Symbol(JJTSYMBOL);
-      boolean jjtc001 = true;
-      jjtree.openNodeScope(jjtn001);
-    }
-    try {
-/*@egen*/<COMMA>/*@bgen(jjtree)*/
-    } finally {
-      if (jjtc001) {
-        jjtree.closeNodeScope(jjtn001, true);
-      }
-    }
+   (<COMMA>/*@bgen(jjtree) Symbol */
+            {
+              Symbol jjtn001 = new Symbol(JJTSYMBOL);
+              boolean jjtc001 = true;
+              jjtree.openNodeScope(jjtn001);
+            }
+            try {
+/*@egen*//*@bgen(jjtree)*/
+            {
+              jjtree.closeNodeScope(jjtn001, true);
+              jjtc001 = false;
+            }
+/*@egen*/ {jjtn001.value=token.image;}/*@bgen(jjtree)*/
+            } finally {
+              if (jjtc001) {
+                jjtree.closeNodeScope(jjtn001, true);
+              }
+            }
 /*@egen*/         type() varName())*)?/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
@@ -460,35 +577,45 @@ void subroutineBody()                 :
 /*@egen*/}
 {/*@bgen(jjtree) SubroutineBody */
   try {
-/*@egen*//*@bgen(jjtree) Symbol */
-  {
-    Symbol jjtn001 = new Symbol(JJTSYMBOL);
-    boolean jjtc001 = true;
-    jjtree.openNodeScope(jjtn001);
-  }
-  try {
 /*@egen*/
-  <LCURLY>/*@bgen(jjtree)*/
-  } finally {
-    if (jjtc001) {
-      jjtree.closeNodeScope(jjtn001, true);
-    }
-  }
+  <LCURLY>/*@bgen(jjtree) Symbol */
+           {
+             Symbol jjtn001 = new Symbol(JJTSYMBOL);
+             boolean jjtc001 = true;
+             jjtree.openNodeScope(jjtn001);
+           }
+           try {
+/*@egen*//*@bgen(jjtree)*/
+           {
+             jjtree.closeNodeScope(jjtn001, true);
+             jjtc001 = false;
+           }
+/*@egen*/ {jjtn001.value=token.image;}/*@bgen(jjtree)*/
+           } finally {
+             if (jjtc001) {
+               jjtree.closeNodeScope(jjtn001, true);
+             }
+           }
 /*@egen*/        
   {String dummy="hack to bypass jjtree error";}
-  (varDec())* statements()/*@bgen(jjtree) Symbol */
-                           {
-                             Symbol jjtn002 = new Symbol(JJTSYMBOL);
-                             boolean jjtc002 = true;
-                             jjtree.openNodeScope(jjtn002);
-                           }
-                           try {
-/*@egen*/ <RCURLY>/*@bgen(jjtree)*/
-                           } finally {
-                             if (jjtc002) {
-                               jjtree.closeNodeScope(jjtn002, true);
-                             }
-                           }
+  (varDec())* statements() <RCURLY>/*@bgen(jjtree) Symbol */
+                                    {
+                                      Symbol jjtn002 = new Symbol(JJTSYMBOL);
+                                      boolean jjtc002 = true;
+                                      jjtree.openNodeScope(jjtn002);
+                                    }
+                                    try {
+/*@egen*//*@bgen(jjtree)*/
+                                    {
+                                      jjtree.closeNodeScope(jjtn002, true);
+                                      jjtc002 = false;
+                                    }
+/*@egen*/ {jjtn002.value=token.image;}/*@bgen(jjtree)*/
+                                    } finally {
+                                      if (jjtc002) {
+                                        jjtree.closeNodeScope(jjtn002, true);
+                                      }
+                                    }
 /*@egen*/        /*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
@@ -522,47 +649,62 @@ void varDec()         :
 /*@egen*/}
 {/*@bgen(jjtree) VarDec */
   try {
-/*@egen*//*@bgen(jjtree) Keyword */
-  {
-    Keyword jjtn001 = new Keyword(JJTKEYWORD);
-    boolean jjtc001 = true;
-    jjtree.openNodeScope(jjtn001);
-  }
-  try {
 /*@egen*/
-  <VAR>/*@bgen(jjtree)*/
-  } finally {
-    if (jjtc001) {
-      jjtree.closeNodeScope(jjtn001, true);
-    }
-  }
+  <VAR>/*@bgen(jjtree) Keyword */
+        {
+          Keyword jjtn001 = new Keyword(JJTKEYWORD);
+          boolean jjtc001 = true;
+          jjtree.openNodeScope(jjtn001);
+        }
+        try {
+/*@egen*//*@bgen(jjtree)*/
+        {
+          jjtree.closeNodeScope(jjtn001, true);
+          jjtc001 = false;
+        }
+/*@egen*/ {jjtn001.value=token.image;}/*@bgen(jjtree)*/
+        } finally {
+          if (jjtc001) {
+            jjtree.closeNodeScope(jjtn001, true);
+          }
+        }
 /*@egen*/          type() varName()
-  (/*@bgen(jjtree) Symbol */
-   {
-     Symbol jjtn002 = new Symbol(JJTSYMBOL);
-     boolean jjtc002 = true;
-     jjtree.openNodeScope(jjtn002);
-   }
-   try {
-/*@egen*/<COMMA>/*@bgen(jjtree)*/
-   } finally {
-     if (jjtc002) {
-       jjtree.closeNodeScope(jjtn002, true);
-     }
-   }
-/*@egen*/         varName())*/*@bgen(jjtree) Symbol */
-                               {
-                                 Symbol jjtn003 = new Symbol(JJTSYMBOL);
-                                 boolean jjtc003 = true;
-                                 jjtree.openNodeScope(jjtn003);
-                               }
-                               try {
-/*@egen*/ <SEMICOLON>/*@bgen(jjtree)*/
-                               } finally {
-                                 if (jjtc003) {
-                                   jjtree.closeNodeScope(jjtn003, true);
-                                 }
-                               }
+  (<COMMA>/*@bgen(jjtree) Symbol */
+           {
+             Symbol jjtn002 = new Symbol(JJTSYMBOL);
+             boolean jjtc002 = true;
+             jjtree.openNodeScope(jjtn002);
+           }
+           try {
+/*@egen*//*@bgen(jjtree)*/
+           {
+             jjtree.closeNodeScope(jjtn002, true);
+             jjtc002 = false;
+           }
+/*@egen*/ {jjtn002.value=token.image;}/*@bgen(jjtree)*/
+           } finally {
+             if (jjtc002) {
+               jjtree.closeNodeScope(jjtn002, true);
+             }
+           }
+/*@egen*/         varName())* <SEMICOLON>/*@bgen(jjtree) Symbol */
+                                                                        {
+                                                                          Symbol jjtn003 = new Symbol(JJTSYMBOL);
+                                                                          boolean jjtc003 = true;
+                                                                          jjtree.openNodeScope(jjtn003);
+                                                                        }
+                                                                        try {
+/*@egen*//*@bgen(jjtree)*/
+                                                                        {
+                                                                          jjtree.closeNodeScope(jjtn003, true);
+                                                                          jjtc003 = false;
+                                                                        }
+/*@egen*/ {jjtn003.value=token.image;}/*@bgen(jjtree)*/
+                                                                        } finally {
+                                                                          if (jjtc003) {
+                                                                            jjtree.closeNodeScope(jjtn003, true);
+                                                                          }
+                                                                        }
 /*@egen*/        /*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
@@ -642,74 +784,99 @@ void letStatement()               :
 /*@egen*/}
 {/*@bgen(jjtree) LetStatement */
   try {
-/*@egen*//*@bgen(jjtree) Keyword */
-  {
-    Keyword jjtn001 = new Keyword(JJTKEYWORD);
-    boolean jjtc001 = true;
-    jjtree.openNodeScope(jjtn001);
-  }
-  try {
 /*@egen*/
-  <LET>/*@bgen(jjtree)*/
-  } finally {
-    if (jjtc001) {
-      jjtree.closeNodeScope(jjtn001, true);
-    }
-  }
-/*@egen*/          varName() (/*@bgen(jjtree) Symbol */
-                            {
-                              Symbol jjtn002 = new Symbol(JJTSYMBOL);
-                              boolean jjtc002 = true;
-                              jjtree.openNodeScope(jjtn002);
-                            }
-                            try {
-/*@egen*/<LBRAC>/*@bgen(jjtree)*/
-                            } finally {
-                              if (jjtc002) {
-                                jjtree.closeNodeScope(jjtn002, true);
-                              }
-                            }
-/*@egen*/         expr()/*@bgen(jjtree) Symbol */
-                                                   {
-                                                     Symbol jjtn003 = new Symbol(JJTSYMBOL);
-                                                     boolean jjtc003 = true;
-                                                     jjtree.openNodeScope(jjtn003);
-                                                   }
-                                                   try {
-/*@egen*/ <RBRAC>/*@bgen(jjtree)*/
-                                                   } finally {
-                                                     if (jjtc003) {
-                                                       jjtree.closeNodeScope(jjtn003, true);
-                                                     }
-                                                   }
+  <LET>/*@bgen(jjtree) Keyword */
+        {
+          Keyword jjtn001 = new Keyword(JJTKEYWORD);
+          boolean jjtc001 = true;
+          jjtree.openNodeScope(jjtn001);
+        }
+        try {
+/*@egen*//*@bgen(jjtree)*/
+        {
+          jjtree.closeNodeScope(jjtn001, true);
+          jjtc001 = false;
+        }
+/*@egen*/ {jjtn001.value=token.image;}/*@bgen(jjtree)*/
+        } finally {
+          if (jjtc001) {
+            jjtree.closeNodeScope(jjtn001, true);
+          }
+        }
+/*@egen*/          varName() (<LBRAC>/*@bgen(jjtree) Symbol */
+                                                                 {
+                                                                   Symbol jjtn002 = new Symbol(JJTSYMBOL);
+                                                                   boolean jjtc002 = true;
+                                                                   jjtree.openNodeScope(jjtn002);
+                                                                 }
+                                                                 try {
+/*@egen*//*@bgen(jjtree)*/
+                                                                 {
+                                                                   jjtree.closeNodeScope(jjtn002, true);
+                                                                   jjtc002 = false;
+                                                                 }
+/*@egen*/ {jjtn002.value=token.image;}/*@bgen(jjtree)*/
+                                                                 } finally {
+                                                                   if (jjtc002) {
+                                                                     jjtree.closeNodeScope(jjtn002, true);
+                                                                   }
+                                                                 }
+/*@egen*/         expr() <RBRAC>/*@bgen(jjtree) Symbol */
+                                                                                                                     {
+                                                                                                                       Symbol jjtn003 = new Symbol(JJTSYMBOL);
+                                                                                                                       boolean jjtc003 = true;
+                                                                                                                       jjtree.openNodeScope(jjtn003);
+                                                                                                                     }
+                                                                                                                     try {
+/*@egen*//*@bgen(jjtree)*/
+                                                                                                                     {
+                                                                                                                       jjtree.closeNodeScope(jjtn003, true);
+                                                                                                                       jjtc003 = false;
+                                                                                                                     }
+/*@egen*/ {jjtn003.value=token.image;}/*@bgen(jjtree)*/
+                                                                                                                     } finally {
+                                                                                                                       if (jjtc003) {
+                                                                                                                         jjtree.closeNodeScope(jjtn003, true);
+                                                                                                                       }
+                                                                                                                     }
 /*@egen*/        )?
-  {String dummy="hack to bypass jjtree error";}/*@bgen(jjtree) Symbol */
-  {
-    Symbol jjtn004 = new Symbol(JJTSYMBOL);
-    boolean jjtc004 = true;
-    jjtree.openNodeScope(jjtn004);
-  }
-  try {
-/*@egen*/
-  <EQ>/*@bgen(jjtree)*/
-  } finally {
-    if (jjtc004) {
-      jjtree.closeNodeScope(jjtn004, true);
-    }
-  }
-/*@egen*/         expr()/*@bgen(jjtree) Symbol */
-                      {
-                        Symbol jjtn005 = new Symbol(JJTSYMBOL);
-                        boolean jjtc005 = true;
-                        jjtree.openNodeScope(jjtn005);
-                      }
-                      try {
-/*@egen*/ <SEMICOLON>/*@bgen(jjtree)*/
-                      } finally {
-                        if (jjtc005) {
-                          jjtree.closeNodeScope(jjtn005, true);
-                        }
-                      }
+  {String dummy="hack to bypass jjtree error";}
+  <EQ>/*@bgen(jjtree) Symbol */
+       {
+         Symbol jjtn004 = new Symbol(JJTSYMBOL);
+         boolean jjtc004 = true;
+         jjtree.openNodeScope(jjtn004);
+       }
+       try {
+/*@egen*//*@bgen(jjtree)*/
+       {
+         jjtree.closeNodeScope(jjtn004, true);
+         jjtc004 = false;
+       }
+/*@egen*/ {jjtn004.value=token.image;}/*@bgen(jjtree)*/
+       } finally {
+         if (jjtc004) {
+           jjtree.closeNodeScope(jjtn004, true);
+         }
+       }
+/*@egen*/         expr() <SEMICOLON>/*@bgen(jjtree) Symbol */
+                                                               {
+                                                                 Symbol jjtn005 = new Symbol(JJTSYMBOL);
+                                                                 boolean jjtc005 = true;
+                                                                 jjtree.openNodeScope(jjtn005);
+                                                               }
+                                                               try {
+/*@egen*//*@bgen(jjtree)*/
+                                                               {
+                                                                 jjtree.closeNodeScope(jjtn005, true);
+                                                                 jjtc005 = false;
+                                                               }
+/*@egen*/ {jjtn005.value=token.image;}/*@bgen(jjtree)*/
+                                                               } finally {
+                                                                 if (jjtc005) {
+                                                                   jjtree.closeNodeScope(jjtn005, true);
+                                                                 }
+                                                               }
 /*@egen*/        /*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
@@ -743,114 +910,154 @@ void ifStatement()              :
 /*@egen*/}
 {/*@bgen(jjtree) IfStatement */
   try {
-/*@egen*//*@bgen(jjtree) Keyword */
-  {
-    Keyword jjtn001 = new Keyword(JJTKEYWORD);
-    boolean jjtc001 = true;
-    jjtree.openNodeScope(jjtn001);
-  }
-  try {
 /*@egen*/
-  <IF>/*@bgen(jjtree)*/
-  } finally {
-    if (jjtc001) {
-      jjtree.closeNodeScope(jjtn001, true);
-    }
-  }
-/*@egen*/         /*@bgen(jjtree) Symbol */
-                {
-                  Symbol jjtn002 = new Symbol(JJTSYMBOL);
-                  boolean jjtc002 = true;
-                  jjtree.openNodeScope(jjtn002);
-                }
-                try {
-/*@egen*/ <LPAREN>/*@bgen(jjtree)*/
-                } finally {
-                  if (jjtc002) {
-                    jjtree.closeNodeScope(jjtn002, true);
-                  }
-                }
-/*@egen*/         expr()/*@bgen(jjtree) Symbol */
-                                        {
-                                          Symbol jjtn003 = new Symbol(JJTSYMBOL);
-                                          boolean jjtc003 = true;
-                                          jjtree.openNodeScope(jjtn003);
-                                        }
-                                        try {
-/*@egen*/ <RPAREN>/*@bgen(jjtree)*/
-                                        } finally {
-                                          if (jjtc003) {
-                                            jjtree.closeNodeScope(jjtn003, true);
-                                          }
-                                        }
-/*@egen*/        /*@bgen(jjtree) Symbol */
-  {
-    Symbol jjtn004 = new Symbol(JJTSYMBOL);
-    boolean jjtc004 = true;
-    jjtree.openNodeScope(jjtn004);
-  }
-  try {
-/*@egen*/
-  <LCURLY>/*@bgen(jjtree)*/
-  } finally {
-    if (jjtc004) {
-      jjtree.closeNodeScope(jjtn004, true);
-    }
-  }
-/*@egen*/         statements()/*@bgen(jjtree) Symbol */
-                                {
-                                  Symbol jjtn005 = new Symbol(JJTSYMBOL);
-                                  boolean jjtc005 = true;
-                                  jjtree.openNodeScope(jjtn005);
-                                }
-                                try {
-/*@egen*/ <RCURLY>/*@bgen(jjtree)*/
-                                } finally {
-                                  if (jjtc005) {
-                                    jjtree.closeNodeScope(jjtn005, true);
-                                  }
-                                }
+  <IF>/*@bgen(jjtree) Keyword */
+       {
+         Keyword jjtn001 = new Keyword(JJTKEYWORD);
+         boolean jjtc001 = true;
+         jjtree.openNodeScope(jjtn001);
+       }
+       try {
+/*@egen*//*@bgen(jjtree)*/
+       {
+         jjtree.closeNodeScope(jjtn001, true);
+         jjtc001 = false;
+       }
+/*@egen*/ {jjtn001.value=token.image;}/*@bgen(jjtree)*/
+       } finally {
+         if (jjtc001) {
+           jjtree.closeNodeScope(jjtn001, true);
+         }
+       }
+/*@egen*/          <LPAREN>/*@bgen(jjtree) Symbol */
+                                                      {
+                                                        Symbol jjtn002 = new Symbol(JJTSYMBOL);
+                                                        boolean jjtc002 = true;
+                                                        jjtree.openNodeScope(jjtn002);
+                                                      }
+                                                      try {
+/*@egen*//*@bgen(jjtree)*/
+                                                      {
+                                                        jjtree.closeNodeScope(jjtn002, true);
+                                                        jjtc002 = false;
+                                                      }
+/*@egen*/ {jjtn002.value=token.image;}/*@bgen(jjtree)*/
+                                                      } finally {
+                                                        if (jjtc002) {
+                                                          jjtree.closeNodeScope(jjtn002, true);
+                                                        }
+                                                      }
+/*@egen*/         expr() <RPAREN>/*@bgen(jjtree) Symbol */
+                                                                                                           {
+                                                                                                             Symbol jjtn003 = new Symbol(JJTSYMBOL);
+                                                                                                             boolean jjtc003 = true;
+                                                                                                             jjtree.openNodeScope(jjtn003);
+                                                                                                           }
+                                                                                                           try {
+/*@egen*//*@bgen(jjtree)*/
+                                                                                                           {
+                                                                                                             jjtree.closeNodeScope(jjtn003, true);
+                                                                                                             jjtc003 = false;
+                                                                                                           }
+/*@egen*/ {jjtn003.value=token.image;}/*@bgen(jjtree)*/
+                                                                                                           } finally {
+                                                                                                             if (jjtc003) {
+                                                                                                               jjtree.closeNodeScope(jjtn003, true);
+                                                                                                             }
+                                                                                                           }
+/*@egen*/        
+  <LCURLY>/*@bgen(jjtree) Symbol */
+           {
+             Symbol jjtn004 = new Symbol(JJTSYMBOL);
+             boolean jjtc004 = true;
+             jjtree.openNodeScope(jjtn004);
+           }
+           try {
+/*@egen*//*@bgen(jjtree)*/
+           {
+             jjtree.closeNodeScope(jjtn004, true);
+             jjtc004 = false;
+           }
+/*@egen*/ {jjtn004.value=token.image;}/*@bgen(jjtree)*/
+           } finally {
+             if (jjtc004) {
+               jjtree.closeNodeScope(jjtn004, true);
+             }
+           }
+/*@egen*/         statements() <RCURLY>/*@bgen(jjtree) Symbol */
+                                                                      {
+                                                                        Symbol jjtn005 = new Symbol(JJTSYMBOL);
+                                                                        boolean jjtc005 = true;
+                                                                        jjtree.openNodeScope(jjtn005);
+                                                                      }
+                                                                      try {
+/*@egen*//*@bgen(jjtree)*/
+                                                                      {
+                                                                        jjtree.closeNodeScope(jjtn005, true);
+                                                                        jjtc005 = false;
+                                                                      }
+/*@egen*/ {}/*@bgen(jjtree)*/
+                                                                      } finally {
+                                                                        if (jjtc005) {
+                                                                          jjtree.closeNodeScope(jjtn005, true);
+                                                                        }
+                                                                      }
 /*@egen*/        
   {String dummy="hack to bypass jjtree error";}
-  (/*@bgen(jjtree) Keyword */
-   {
-     Keyword jjtn006 = new Keyword(JJTKEYWORD);
-     boolean jjtc006 = true;
-     jjtree.openNodeScope(jjtn006);
-   }
-   try {
-/*@egen*/<ELSE>/*@bgen(jjtree)*/
-   } finally {
-     if (jjtc006) {
-       jjtree.closeNodeScope(jjtn006, true);
-     }
-   }
-/*@egen*/         /*@bgen(jjtree) Symbol */
-                   {
-                     Symbol jjtn007 = new Symbol(JJTSYMBOL);
-                     boolean jjtc007 = true;
-                     jjtree.openNodeScope(jjtn007);
-                   }
-                   try {
-/*@egen*/ <LCURLY>/*@bgen(jjtree)*/
-                   } finally {
-                     if (jjtc007) {
-                       jjtree.closeNodeScope(jjtn007, true);
-                     }
-                   }
-/*@egen*/         statements()/*@bgen(jjtree) Symbol */
-                                                 {
-                                                   Symbol jjtn008 = new Symbol(JJTSYMBOL);
-                                                   boolean jjtc008 = true;
-                                                   jjtree.openNodeScope(jjtn008);
-                                                 }
-                                                 try {
-/*@egen*/ <RCURLY>/*@bgen(jjtree)*/
-                                                 } finally {
-                                                   if (jjtc008) {
-                                                     jjtree.closeNodeScope(jjtn008, true);
-                                                   }
-                                                 }
+  (<ELSE>/*@bgen(jjtree) Keyword */
+          {
+            Keyword jjtn006 = new Keyword(JJTKEYWORD);
+            boolean jjtc006 = true;
+            jjtree.openNodeScope(jjtn006);
+          }
+          try {
+/*@egen*//*@bgen(jjtree)*/
+          {
+            jjtree.closeNodeScope(jjtn006, true);
+            jjtc006 = false;
+          }
+/*@egen*/ {jjtn006.value=token.image;}/*@bgen(jjtree)*/
+          } finally {
+            if (jjtc006) {
+              jjtree.closeNodeScope(jjtn006, true);
+            }
+          }
+/*@egen*/          <LCURLY>/*@bgen(jjtree) Symbol */
+                                                         {
+                                                           Symbol jjtn007 = new Symbol(JJTSYMBOL);
+                                                           boolean jjtc007 = true;
+                                                           jjtree.openNodeScope(jjtn007);
+                                                         }
+                                                         try {
+/*@egen*//*@bgen(jjtree)*/
+                                                         {
+                                                           jjtree.closeNodeScope(jjtn007, true);
+                                                           jjtc007 = false;
+                                                         }
+/*@egen*/ {jjtn007.value=token.image;}/*@bgen(jjtree)*/
+                                                         } finally {
+                                                           if (jjtc007) {
+                                                             jjtree.closeNodeScope(jjtn007, true);
+                                                           }
+                                                         }
+/*@egen*/         statements() <RCURLY>/*@bgen(jjtree) Symbol */
+                                                                                                                    {
+                                                                                                                      Symbol jjtn008 = new Symbol(JJTSYMBOL);
+                                                                                                                      boolean jjtc008 = true;
+                                                                                                                      jjtree.openNodeScope(jjtn008);
+                                                                                                                    }
+                                                                                                                    try {
+/*@egen*//*@bgen(jjtree)*/
+                                                                                                                    {
+                                                                                                                      jjtree.closeNodeScope(jjtn008, true);
+                                                                                                                      jjtc008 = false;
+                                                                                                                    }
+/*@egen*/ {jjtn008.value=token.image;}/*@bgen(jjtree)*/
+                                                                                                                    } finally {
+                                                                                                                      if (jjtc008) {
+                                                                                                                        jjtree.closeNodeScope(jjtn008, true);
+                                                                                                                      }
+                                                                                                                    }
 /*@egen*/        )?/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
@@ -884,73 +1091,98 @@ void whileStatement()                 :
 /*@egen*/}
 {/*@bgen(jjtree) WhileStatement */
   try {
-/*@egen*//*@bgen(jjtree) Keyword */
-  {
-    Keyword jjtn001 = new Keyword(JJTKEYWORD);
-    boolean jjtc001 = true;
-    jjtree.openNodeScope(jjtn001);
-  }
-  try {
 /*@egen*/
-  <WHILE>/*@bgen(jjtree)*/
-  } finally {
-    if (jjtc001) {
-      jjtree.closeNodeScope(jjtn001, true);
-    }
-  }
-/*@egen*/         /*@bgen(jjtree) Symbol */
-                   {
-                     Symbol jjtn002 = new Symbol(JJTSYMBOL);
-                     boolean jjtc002 = true;
-                     jjtree.openNodeScope(jjtn002);
-                   }
-                   try {
-/*@egen*/ <LPAREN>/*@bgen(jjtree)*/
-                   } finally {
-                     if (jjtc002) {
-                       jjtree.closeNodeScope(jjtn002, true);
-                     }
-                   }
-/*@egen*/         expr()/*@bgen(jjtree) Symbol */
-                                           {
-                                             Symbol jjtn003 = new Symbol(JJTSYMBOL);
-                                             boolean jjtc003 = true;
-                                             jjtree.openNodeScope(jjtn003);
-                                           }
-                                           try {
-/*@egen*/ <RPAREN>/*@bgen(jjtree)*/
-                                           } finally {
-                                             if (jjtc003) {
-                                               jjtree.closeNodeScope(jjtn003, true);
-                                             }
-                                           }
-/*@egen*/        /*@bgen(jjtree) Symbol */
-  {
-    Symbol jjtn004 = new Symbol(JJTSYMBOL);
-    boolean jjtc004 = true;
-    jjtree.openNodeScope(jjtn004);
-  }
-  try {
-/*@egen*/
-  <LCURLY>/*@bgen(jjtree)*/
-  } finally {
-    if (jjtc004) {
-      jjtree.closeNodeScope(jjtn004, true);
-    }
-  }
-/*@egen*/         statements()/*@bgen(jjtree) Symbol */
-                                {
-                                  Symbol jjtn005 = new Symbol(JJTSYMBOL);
-                                  boolean jjtc005 = true;
-                                  jjtree.openNodeScope(jjtn005);
-                                }
-                                try {
-/*@egen*/ <RCURLY>/*@bgen(jjtree)*/
-                                } finally {
-                                  if (jjtc005) {
-                                    jjtree.closeNodeScope(jjtn005, true);
-                                  }
-                                }
+  <WHILE>/*@bgen(jjtree) Keyword */
+          {
+            Keyword jjtn001 = new Keyword(JJTKEYWORD);
+            boolean jjtc001 = true;
+            jjtree.openNodeScope(jjtn001);
+          }
+          try {
+/*@egen*//*@bgen(jjtree)*/
+          {
+            jjtree.closeNodeScope(jjtn001, true);
+            jjtc001 = false;
+          }
+/*@egen*/ {jjtn001.value=token.image;}/*@bgen(jjtree)*/
+          } finally {
+            if (jjtc001) {
+              jjtree.closeNodeScope(jjtn001, true);
+            }
+          }
+/*@egen*/          <LPAREN>/*@bgen(jjtree) Symbol */
+                                                         {
+                                                           Symbol jjtn002 = new Symbol(JJTSYMBOL);
+                                                           boolean jjtc002 = true;
+                                                           jjtree.openNodeScope(jjtn002);
+                                                         }
+                                                         try {
+/*@egen*//*@bgen(jjtree)*/
+                                                         {
+                                                           jjtree.closeNodeScope(jjtn002, true);
+                                                           jjtc002 = false;
+                                                         }
+/*@egen*/ {jjtn002.value=token.image;}/*@bgen(jjtree)*/
+                                                         } finally {
+                                                           if (jjtc002) {
+                                                             jjtree.closeNodeScope(jjtn002, true);
+                                                           }
+                                                         }
+/*@egen*/         expr() <RPAREN>/*@bgen(jjtree) Symbol */
+                                                                                                              {
+                                                                                                                Symbol jjtn003 = new Symbol(JJTSYMBOL);
+                                                                                                                boolean jjtc003 = true;
+                                                                                                                jjtree.openNodeScope(jjtn003);
+                                                                                                              }
+                                                                                                              try {
+/*@egen*//*@bgen(jjtree)*/
+                                                                                                              {
+                                                                                                                jjtree.closeNodeScope(jjtn003, true);
+                                                                                                                jjtc003 = false;
+                                                                                                              }
+/*@egen*/ {jjtn003.value=token.image;}/*@bgen(jjtree)*/
+                                                                                                              } finally {
+                                                                                                                if (jjtc003) {
+                                                                                                                  jjtree.closeNodeScope(jjtn003, true);
+                                                                                                                }
+                                                                                                              }
+/*@egen*/        
+  <LCURLY>/*@bgen(jjtree) Symbol */
+           {
+             Symbol jjtn004 = new Symbol(JJTSYMBOL);
+             boolean jjtc004 = true;
+             jjtree.openNodeScope(jjtn004);
+           }
+           try {
+/*@egen*//*@bgen(jjtree)*/
+           {
+             jjtree.closeNodeScope(jjtn004, true);
+             jjtc004 = false;
+           }
+/*@egen*/ {jjtn004.value=token.image;}/*@bgen(jjtree)*/
+           } finally {
+             if (jjtc004) {
+               jjtree.closeNodeScope(jjtn004, true);
+             }
+           }
+/*@egen*/         statements() <RCURLY>/*@bgen(jjtree) Symbol */
+                                                                      {
+                                                                        Symbol jjtn005 = new Symbol(JJTSYMBOL);
+                                                                        boolean jjtc005 = true;
+                                                                        jjtree.openNodeScope(jjtn005);
+                                                                      }
+                                                                      try {
+/*@egen*//*@bgen(jjtree)*/
+                                                                      {
+                                                                        jjtree.closeNodeScope(jjtn005, true);
+                                                                        jjtc005 = false;
+                                                                      }
+/*@egen*/ {jjtn005.value=token.image;}/*@bgen(jjtree)*/
+                                                                      } finally {
+                                                                        if (jjtc005) {
+                                                                          jjtree.closeNodeScope(jjtn005, true);
+                                                                        }
+                                                                      }
 /*@egen*/        /*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
@@ -984,33 +1216,43 @@ void doStatement()              :
 /*@egen*/}
 {/*@bgen(jjtree) DoStatement */
   try {
-/*@egen*//*@bgen(jjtree) Keyword */
-  {
-    Keyword jjtn001 = new Keyword(JJTKEYWORD);
-    boolean jjtc001 = true;
-    jjtree.openNodeScope(jjtn001);
-  }
-  try {
 /*@egen*/
-  <DO>/*@bgen(jjtree)*/
-  } finally {
-    if (jjtc001) {
-      jjtree.closeNodeScope(jjtn001, true);
-    }
-  }
-/*@egen*/          subroutineCall()/*@bgen(jjtree) Symbol */
-                                 {
-                                   Symbol jjtn002 = new Symbol(JJTSYMBOL);
-                                   boolean jjtc002 = true;
-                                   jjtree.openNodeScope(jjtn002);
-                                 }
-                                 try {
-/*@egen*/ <SEMICOLON>/*@bgen(jjtree)*/
-                                 } finally {
-                                   if (jjtc002) {
-                                     jjtree.closeNodeScope(jjtn002, true);
-                                   }
-                                 }
+  <DO>/*@bgen(jjtree) Keyword */
+       {
+         Keyword jjtn001 = new Keyword(JJTKEYWORD);
+         boolean jjtc001 = true;
+         jjtree.openNodeScope(jjtn001);
+       }
+       try {
+/*@egen*//*@bgen(jjtree)*/
+       {
+         jjtree.closeNodeScope(jjtn001, true);
+         jjtc001 = false;
+       }
+/*@egen*/ {jjtn001.value=token.image;}/*@bgen(jjtree)*/
+       } finally {
+         if (jjtc001) {
+           jjtree.closeNodeScope(jjtn001, true);
+         }
+       }
+/*@egen*/          subroutineCall() <SEMICOLON>/*@bgen(jjtree) Symbol */
+                                                                          {
+                                                                            Symbol jjtn002 = new Symbol(JJTSYMBOL);
+                                                                            boolean jjtc002 = true;
+                                                                            jjtree.openNodeScope(jjtn002);
+                                                                          }
+                                                                          try {
+/*@egen*//*@bgen(jjtree)*/
+                                                                          {
+                                                                            jjtree.closeNodeScope(jjtn002, true);
+                                                                            jjtc002 = false;
+                                                                          }
+/*@egen*/ {jjtn002.value=token.image;}/*@bgen(jjtree)*/
+                                                                          } finally {
+                                                                            if (jjtc002) {
+                                                                              jjtree.closeNodeScope(jjtn002, true);
+                                                                            }
+                                                                          }
 /*@egen*/        /*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
@@ -1044,60 +1286,80 @@ void returnStatement()                  :
 /*@egen*/}
 {/*@bgen(jjtree) ReturnStatement */
   try {
-/*@egen*//*@bgen(jjtree) Keyword */
-  {
-    Keyword jjtn001 = new Keyword(JJTKEYWORD);
-    boolean jjtc001 = true;
-    jjtree.openNodeScope(jjtn001);
-  }
-  try {
 /*@egen*/
-  <RETURN>/*@bgen(jjtree)*/
-  } finally {
-    if (jjtc001) {
-      jjtree.closeNodeScope(jjtn001, true);
-    }
-  }
-/*@egen*/         /*@bgen(jjtree) Symbol */
-                    {
-                      Symbol jjtn002 = new Symbol(JJTSYMBOL);
-                      boolean jjtc002 = true;
-                      jjtree.openNodeScope(jjtn002);
-                    }
-                    try {
-/*@egen*/ <SEMICOLON>/*@bgen(jjtree)*/
-                    } finally {
-                      if (jjtc002) {
-                        jjtree.closeNodeScope(jjtn002, true);
-                      }
-                    }
-/*@egen*/         |/*@bgen(jjtree) Keyword */
-  {
-    Keyword jjtn003 = new Keyword(JJTKEYWORD);
-    boolean jjtc003 = true;
-    jjtree.openNodeScope(jjtn003);
-  }
-  try {
-/*@egen*/
-  <RETURN>/*@bgen(jjtree)*/
-  } finally {
-    if (jjtc003) {
-      jjtree.closeNodeScope(jjtn003, true);
-    }
-  }
-/*@egen*/          expr()/*@bgen(jjtree) Symbol */
-                           {
-                             Symbol jjtn004 = new Symbol(JJTSYMBOL);
-                             boolean jjtc004 = true;
-                             jjtree.openNodeScope(jjtn004);
-                           }
-                           try {
-/*@egen*/ <SEMICOLON>/*@bgen(jjtree)*/
-                           } finally {
-                             if (jjtc004) {
-                               jjtree.closeNodeScope(jjtn004, true);
-                             }
-                           }
+  <RETURN>/*@bgen(jjtree) Keyword */
+           {
+             Keyword jjtn001 = new Keyword(JJTKEYWORD);
+             boolean jjtc001 = true;
+             jjtree.openNodeScope(jjtn001);
+           }
+           try {
+/*@egen*//*@bgen(jjtree)*/
+           {
+             jjtree.closeNodeScope(jjtn001, true);
+             jjtc001 = false;
+           }
+/*@egen*/ {jjtn001.value=token.image;}/*@bgen(jjtree)*/
+           } finally {
+             if (jjtc001) {
+               jjtree.closeNodeScope(jjtn001, true);
+             }
+           }
+/*@egen*/          <SEMICOLON>/*@bgen(jjtree) Symbol */
+                                                             {
+                                                               Symbol jjtn002 = new Symbol(JJTSYMBOL);
+                                                               boolean jjtc002 = true;
+                                                               jjtree.openNodeScope(jjtn002);
+                                                             }
+                                                             try {
+/*@egen*//*@bgen(jjtree)*/
+                                                             {
+                                                               jjtree.closeNodeScope(jjtn002, true);
+                                                               jjtc002 = false;
+                                                             }
+/*@egen*/ {jjtn002.value=token.image;}/*@bgen(jjtree)*/
+                                                             } finally {
+                                                               if (jjtc002) {
+                                                                 jjtree.closeNodeScope(jjtn002, true);
+                                                               }
+                                                             }
+/*@egen*/         |
+  <RETURN>/*@bgen(jjtree) Keyword */
+           {
+             Keyword jjtn003 = new Keyword(JJTKEYWORD);
+             boolean jjtc003 = true;
+             jjtree.openNodeScope(jjtn003);
+           }
+           try {
+/*@egen*//*@bgen(jjtree)*/
+           {
+             jjtree.closeNodeScope(jjtn003, true);
+             jjtc003 = false;
+           }
+/*@egen*/ {jjtn003.value=token.image;}/*@bgen(jjtree)*/
+           } finally {
+             if (jjtc003) {
+               jjtree.closeNodeScope(jjtn003, true);
+             }
+           }
+/*@egen*/          expr() <SEMICOLON>/*@bgen(jjtree) Symbol */
+                                                                    {
+                                                                      Symbol jjtn004 = new Symbol(JJTSYMBOL);
+                                                                      boolean jjtc004 = true;
+                                                                      jjtree.openNodeScope(jjtn004);
+                                                                    }
+                                                                    try {
+/*@egen*//*@bgen(jjtree)*/
+                                                                    {
+                                                                      jjtree.closeNodeScope(jjtn004, true);
+                                                                      jjtc004 = false;
+                                                                    }
+/*@egen*/ {jjtn004.value=token.image;}/*@bgen(jjtree)*/
+                                                                    } finally {
+                                                                      if (jjtc004) {
+                                                                        jjtree.closeNodeScope(jjtn004, true);
+                                                                      }
+                                                                    }
 /*@egen*/        /*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
@@ -1165,65 +1427,85 @@ void term()       :
 /*@egen*/}
 {/*@bgen(jjtree) Term */
   try {
-/*@egen*//*@bgen(jjtree) Symbol */
-  {
-    Symbol jjtn001 = new Symbol(JJTSYMBOL);
-    boolean jjtc001 = true;
-    jjtree.openNodeScope(jjtn001);
-  }
-  try {
 /*@egen*/
-  <LPAREN>/*@bgen(jjtree)*/
-  } finally {
-    if (jjtc001) {
-      jjtree.closeNodeScope(jjtn001, true);
-    }
-  }
-/*@egen*/         expr()/*@bgen(jjtree) Symbol */
-                          {
-                            Symbol jjtn002 = new Symbol(JJTSYMBOL);
-                            boolean jjtc002 = true;
-                            jjtree.openNodeScope(jjtn002);
-                          }
-                          try {
-/*@egen*/ <RPAREN>/*@bgen(jjtree)*/
-                          } finally {
-                            if (jjtc002) {
-                              jjtree.closeNodeScope(jjtn002, true);
-                            }
-                          }
+  <LPAREN>/*@bgen(jjtree) Symbol */
+           {
+             Symbol jjtn001 = new Symbol(JJTSYMBOL);
+             boolean jjtc001 = true;
+             jjtree.openNodeScope(jjtn001);
+           }
+           try {
+/*@egen*//*@bgen(jjtree)*/
+           {
+             jjtree.closeNodeScope(jjtn001, true);
+             jjtc001 = false;
+           }
+/*@egen*/ {jjtn001.value=token.image;}/*@bgen(jjtree)*/
+           } finally {
+             if (jjtc001) {
+               jjtree.closeNodeScope(jjtn001, true);
+             }
+           }
+/*@egen*/         expr() <RPAREN>/*@bgen(jjtree) Symbol */
+                                                                {
+                                                                  Symbol jjtn002 = new Symbol(JJTSYMBOL);
+                                                                  boolean jjtc002 = true;
+                                                                  jjtree.openNodeScope(jjtn002);
+                                                                }
+                                                                try {
+/*@egen*//*@bgen(jjtree)*/
+                                                                {
+                                                                  jjtree.closeNodeScope(jjtn002, true);
+                                                                  jjtc002 = false;
+                                                                }
+/*@egen*/ {jjtn002.value=token.image;}/*@bgen(jjtree)*/
+                                                                } finally {
+                                                                  if (jjtc002) {
+                                                                    jjtree.closeNodeScope(jjtn002, true);
+                                                                  }
+                                                                }
 /*@egen*/          |
   unaryOp() term() |
   integerConstant() |
   stringConstant()  |
   keywordConstant()  |
   subroutineCall() |
-  varName()/*@bgen(jjtree) Symbol */
-            {
-              Symbol jjtn003 = new Symbol(JJTSYMBOL);
-              boolean jjtc003 = true;
-              jjtree.openNodeScope(jjtn003);
-            }
-            try {
-/*@egen*/ <LBRAC>/*@bgen(jjtree)*/
-            } finally {
-              if (jjtc003) {
-                jjtree.closeNodeScope(jjtn003, true);
-              }
-            }
-/*@egen*/         expr()/*@bgen(jjtree) Symbol */
-                                   {
-                                     Symbol jjtn004 = new Symbol(JJTSYMBOL);
-                                     boolean jjtc004 = true;
-                                     jjtree.openNodeScope(jjtn004);
-                                   }
-                                   try {
-/*@egen*/ <RBRAC>/*@bgen(jjtree)*/
-                                   } finally {
-                                     if (jjtc004) {
-                                       jjtree.closeNodeScope(jjtn004, true);
-                                     }
-                                   }
+  varName() <LBRAC>/*@bgen(jjtree) Symbol */
+                    {
+                      Symbol jjtn003 = new Symbol(JJTSYMBOL);
+                      boolean jjtc003 = true;
+                      jjtree.openNodeScope(jjtn003);
+                    }
+                    try {
+/*@egen*//*@bgen(jjtree)*/
+                    {
+                      jjtree.closeNodeScope(jjtn003, true);
+                      jjtc003 = false;
+                    }
+/*@egen*/ {jjtn003.value=token.image;}/*@bgen(jjtree)*/
+                    } finally {
+                      if (jjtc003) {
+                        jjtree.closeNodeScope(jjtn003, true);
+                      }
+                    }
+/*@egen*/         expr() <RBRAC>/*@bgen(jjtree) Symbol */
+                                                                        {
+                                                                          Symbol jjtn004 = new Symbol(JJTSYMBOL);
+                                                                          boolean jjtc004 = true;
+                                                                          jjtree.openNodeScope(jjtn004);
+                                                                        }
+                                                                        try {
+/*@egen*//*@bgen(jjtree)*/
+                                                                        {
+                                                                          jjtree.closeNodeScope(jjtn004, true);
+                                                                          jjtc004 = false;
+                                                                        }
+/*@egen*/ {jjtn004.value=token.image;}/*@bgen(jjtree)*/
+                                                                        } finally {
+                                                                          if (jjtc004) {
+                                                                            jjtree.closeNodeScope(jjtn004, true);
+                                                                          }
+                                                                        }
 /*@egen*/         | varName()/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
@@ -1249,63 +1531,109 @@ void term()       :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void subroutineCall() :
-{}
-{
-  subroutineName()/*@bgen(jjtree) Symbol */
-                   {
-                     Symbol jjtn001 = new Symbol(JJTSYMBOL);
-                     boolean jjtc001 = true;
-                     jjtree.openNodeScope(jjtn001);
-                   }
-                   try {
-/*@egen*/ <LPAREN>/*@bgen(jjtree)*/
-                   } finally {
-                     if (jjtc001) {
-                       jjtree.closeNodeScope(jjtn001, true);
-                     }
-                   }
-/*@egen*/         exprList()/*@bgen(jjtree) Symbol */
-                                               {
-                                                 Symbol jjtn002 = new Symbol(JJTSYMBOL);
-                                                 boolean jjtc002 = true;
-                                                 jjtree.openNodeScope(jjtn002);
-                                               }
-                                               try {
-/*@egen*/ <RPAREN>/*@bgen(jjtree)*/
-                                               } finally {
-                                                 if (jjtc002) {
-                                                   jjtree.closeNodeScope(jjtn002, true);
-                                                 }
-                                               }
+void subroutineCall()                 :
+{/*@bgen(jjtree) SubroutineCall */
+  SubroutineCall jjtn000 = new SubroutineCall(JJTSUBROUTINECALL);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) SubroutineCall */
+  try {
+/*@egen*/
+  subroutineName() <LPAREN>/*@bgen(jjtree) Symbol */
+                            {
+                              Symbol jjtn001 = new Symbol(JJTSYMBOL);
+                              boolean jjtc001 = true;
+                              jjtree.openNodeScope(jjtn001);
+                            }
+                            try {
+/*@egen*//*@bgen(jjtree)*/
+                            {
+                              jjtree.closeNodeScope(jjtn001, true);
+                              jjtc001 = false;
+                            }
+/*@egen*/ {jjtn001.value=token.image;}/*@bgen(jjtree)*/
+                            } finally {
+                              if (jjtc001) {
+                                jjtree.closeNodeScope(jjtn001, true);
+                              }
+                            }
+/*@egen*/         exprList() <RPAREN>/*@bgen(jjtree) Symbol */
+                                                                                     {
+                                                                                       Symbol jjtn002 = new Symbol(JJTSYMBOL);
+                                                                                       boolean jjtc002 = true;
+                                                                                       jjtree.openNodeScope(jjtn002);
+                                                                                     }
+                                                                                     try {
+/*@egen*//*@bgen(jjtree)*/
+                                                                                     {
+                                                                                       jjtree.closeNodeScope(jjtn002, true);
+                                                                                       jjtc002 = false;
+                                                                                     }
+/*@egen*/ {jjtn002.value=token.image;}/*@bgen(jjtree)*/
+                                                                                     } finally {
+                                                                                       if (jjtc002) {
+                                                                                         jjtree.closeNodeScope(jjtn002, true);
+                                                                                       }
+                                                                                     }
 /*@egen*/         |
-  scopedCall()/*@bgen(jjtree) Symbol */
-               {
-                 Symbol jjtn003 = new Symbol(JJTSYMBOL);
-                 boolean jjtc003 = true;
-                 jjtree.openNodeScope(jjtn003);
-               }
-               try {
-/*@egen*/ <LPAREN>/*@bgen(jjtree)*/
-               } finally {
-                 if (jjtc003) {
-                   jjtree.closeNodeScope(jjtn003, true);
-                 }
-               }
-/*@egen*/         exprList()/*@bgen(jjtree) Symbol */
-                                           {
-                                             Symbol jjtn004 = new Symbol(JJTSYMBOL);
-                                             boolean jjtc004 = true;
-                                             jjtree.openNodeScope(jjtn004);
-                                           }
-                                           try {
-/*@egen*/ <RPAREN>/*@bgen(jjtree)*/
-                                           } finally {
-                                             if (jjtc004) {
-                                               jjtree.closeNodeScope(jjtn004, true);
-                                             }
-                                           }
-/*@egen*/        
+  scopedCall() <LPAREN>/*@bgen(jjtree) Symbol */
+                        {
+                          Symbol jjtn003 = new Symbol(JJTSYMBOL);
+                          boolean jjtc003 = true;
+                          jjtree.openNodeScope(jjtn003);
+                        }
+                        try {
+/*@egen*//*@bgen(jjtree)*/
+                        {
+                          jjtree.closeNodeScope(jjtn003, true);
+                          jjtc003 = false;
+                        }
+/*@egen*/ {jjtn003.value=token.image;}/*@bgen(jjtree)*/
+                        } finally {
+                          if (jjtc003) {
+                            jjtree.closeNodeScope(jjtn003, true);
+                          }
+                        }
+/*@egen*/         exprList() <RPAREN>/*@bgen(jjtree) Symbol */
+                                                                                 {
+                                                                                   Symbol jjtn004 = new Symbol(JJTSYMBOL);
+                                                                                   boolean jjtc004 = true;
+                                                                                   jjtree.openNodeScope(jjtn004);
+                                                                                 }
+                                                                                 try {
+/*@egen*//*@bgen(jjtree)*/
+                                                                                 {
+                                                                                   jjtree.closeNodeScope(jjtn004, true);
+                                                                                   jjtc004 = false;
+                                                                                 }
+/*@egen*/ {jjtn004.value=token.image;}/*@bgen(jjtree)*/
+                                                                                 } finally {
+                                                                                   if (jjtc004) {
+                                                                                     jjtree.closeNodeScope(jjtn004, true);
+                                                                                   }
+                                                                                 }
+/*@egen*/        /*@bgen(jjtree)*/
+  } catch (Throwable jjte000) {
+    if (jjtc000) {
+      jjtree.clearNodeScope(jjtn000);
+      jjtc000 = false;
+    } else {
+      jjtree.popNode();
+    }
+    if (jjte000 instanceof RuntimeException) {
+      throw (RuntimeException)jjte000;
+    }
+    if (jjte000 instanceof ParseException) {
+      throw (ParseException)jjte000;
+    }
+    throw (Error)jjte000;
+  } finally {
+    if (jjtc000) {
+      jjtree.closeNodeScope(jjtn000, true);
+    }
+  }
+/*@egen*/
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1319,19 +1647,24 @@ void exprList()                 :
 {/*@bgen(jjtree) ExpressionList */
   try {
 /*@egen*/
-  (expr() (/*@bgen(jjtree) Symbol */
-           {
-             Symbol jjtn001 = new Symbol(JJTSYMBOL);
-             boolean jjtc001 = true;
-             jjtree.openNodeScope(jjtn001);
-           }
-           try {
-/*@egen*/<COMMA>/*@bgen(jjtree)*/
-           } finally {
-             if (jjtc001) {
-               jjtree.closeNodeScope(jjtn001, true);
-             }
-           }
+  (expr() (<COMMA>/*@bgen(jjtree) Symbol */
+                   {
+                     Symbol jjtn001 = new Symbol(JJTSYMBOL);
+                     boolean jjtc001 = true;
+                     jjtree.openNodeScope(jjtn001);
+                   }
+                   try {
+/*@egen*//*@bgen(jjtree)*/
+                   {
+                     jjtree.closeNodeScope(jjtn001, true);
+                     jjtc001 = false;
+                   }
+/*@egen*/ {jjtn001.value=token.image;}/*@bgen(jjtree)*/
+                   } finally {
+                     if (jjtc001) {
+                       jjtree.closeNodeScope(jjtn001, true);
+                     }
+                   }
 /*@egen*/         expr())*)?/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {

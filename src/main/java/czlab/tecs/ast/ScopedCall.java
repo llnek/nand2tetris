@@ -3,7 +3,7 @@
 package czlab.tecs.ast;
 
 public
-class ScopedCall extends SimpleNode {
+class ScopedCall extends ASTNode {
   public ScopedCall(int id) {
     super(id);
   }
@@ -13,4 +13,4 @@ class ScopedCall extends SimpleNode {
   }
 
 }
-/* JavaCC - OriginalChecksum=f3533c9608bb127331076ecbb46e3ef8 (do not edit this line) */
+/* JavaCC - OriginalChecksum=3c1ff3cbd1e1eaf006714fa8d2e7d40d (do not edit this line) */

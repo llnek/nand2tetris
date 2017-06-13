@@ -3,7 +3,7 @@
 package czlab.tecs.ast;
 
 public
-class Term extends SimpleNode {
+class Term extends ASTNode {
   public Term(int id) {
     super(id);
   }
@@ -13,4 +13,4 @@ class Term extends SimpleNode {
   }
 
 }
-/* JavaCC - OriginalChecksum=03f7538c6e91102297d639f65a37b354 (do not edit this line) */
+/* JavaCC - OriginalChecksum=9bbf107f023040e91330a793c87506ac (do not edit this line) */

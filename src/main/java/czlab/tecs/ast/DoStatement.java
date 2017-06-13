@@ -3,7 +3,7 @@
 package czlab.tecs.ast;
 
 public
-class DoStatement extends SimpleNode {
+class DoStatement extends ASTNode {
   public DoStatement(int id) {
     super(id);
   }
@@ -13,4 +13,4 @@ class DoStatement extends SimpleNode {
   }
 
 }
-/* JavaCC - OriginalChecksum=354e816cdf1021c99d47b7ced25e0ef0 (do not edit this line) */
+/* JavaCC - OriginalChecksum=8b8796d7120a11496411430c94c2f573 (do not edit this line) */
