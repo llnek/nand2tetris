@@ -7,7 +7,7 @@ options {
 }
 
 PARSER_BEGIN(JackParser)
-package czlab.tecs.cmp;
+package czlab.tecs.p10;
 
 public class JackParser {
 
@@ -624,6 +624,5 @@ Token varName():
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //EOF
-
 
 

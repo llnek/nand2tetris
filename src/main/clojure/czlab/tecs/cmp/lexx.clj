@@ -23,7 +23,7 @@
   (:import [java.util.concurrent.atomic AtomicInteger]
            [czlab.basal.core GenericMutable]
            [java.io File LineNumberReader]
-           [czlab.tecs.cmp JackParser]
+           [czlab.tecs.p10 JackParser]
            [java.net URL]
            [java.util Map]))
 

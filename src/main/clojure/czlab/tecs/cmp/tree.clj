@@ -31,9 +31,10 @@
 ;;
 (defn- compilej "" [^ASTNode x]
   (let [w (StringWriter.)
-        _ (.dump x "" w)]
-    (c/do-with [s (.toString w)]
-      (c/prn!! s))))
+        ;_ (.dumpXML x w)
+        _ (.dumpEDN x w)]
+    (c/do-with
+      [s (.toString w)] (c/prn!! s))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
