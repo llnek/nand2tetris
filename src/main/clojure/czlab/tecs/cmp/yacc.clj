@@ -9,7 +9,7 @@
 (ns ^{:doc ""
       :author "Kenneth Leung"}
 
-  czlab.tecs.cmp.lexx
+  czlab.tecs.cmp.yacc
 
   (:require [czlab.basal.log :as log]
             [czlab.basal.core :as c]
@@ -20,24 +20,29 @@
 
   (:use [clojure.walk])
 
-  (:import [java.util.concurrent.atomic AtomicInteger]
+  (:import [java.io StringWriter File LineNumberReader]
+           [java.util.concurrent.atomic AtomicInteger]
            [czlab.basal.core GenericMutable]
-           [java.io File LineNumberReader]
-           [czlab.tecs.cmp JackParser]
+           [czlab.tecs.p11 ASTNode ASTGentor]
            [java.net URL]
            [java.util Map]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- compilej "" [x] x)
+(defn- compilej "" [^ASTNode x]
+  (let [w (StringWriter.)
+        ;_ (.dumpXML x w)
+        _ (.dumpEDN x w)]
+    (c/do-with
+      [s (.toString w)] (c/prn!! s))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- tokenj "" [furl]
   (with-open [inp (.openStream ^URL furl)]
-    (let [p (JackParser. inp)]
-      (c/prn!! "compiling file...")
-      (.compileOneUnit p))))
+    (let [p (ASTGentor. inp)]
+      (c/prn!! "Parsing file...")
+      (ASTGentor/parseOneUnit))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -78,5 +83,6 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;EOF
+
 
 

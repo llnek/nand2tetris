@@ -1,0 +1,392 @@
+
+
+options {
+  NODE_DEFAULT_VOID = true;
+  NODE_CLASS="ASTNode";
+  NODE_PREFIX = "";
+  MULTI=true;
+  //FORCE_LA_CHECK=true;
+  LOOKAHEAD=2;
+  STATIC=true;
+}
+
+PARSER_BEGIN(ASTGentor)
+package czlab.tecs.p11;
+
+public class ASTGentor {
+
+  public static SimpleNode parseOneUnit() 
+  throws Exception {
+    return parseClazz();
+  }
+
+}
+
+PARSER_END(ASTGentor)
+
+SKIP :
+{
+  < " " >
+  | < "\t" >
+  | < "\n" >
+  | < "\r" >
+  | < "//" (~["\n"])* "\n" >
+  | <"/*" (~["*"])* "*" (~["/"] (~["*"])* "*")* "/">
+}
+
+
+/**********************************************
+ * THE Jack TOKEN SPECIFICATION STARTS HERE *
+ **********************************************/
+
+TOKEN :
+{
+  < CLASS: "class" >
+  | < CONSTRUCTOR: "constructor" >
+  | < FUNCTION: "function" >
+  | < METHOD: "method" >
+  | < FIELD: "field" >
+  | < STATIK: "static" >
+  | < VAR: "var" >
+  | < INT: "int" >
+  | < CHAR: "char" >
+  | < BOOLEAN: "boolean" >
+  | < VOID: "void" >
+  | < TRUE: "true" >
+  | < FALSE: "false" >
+  | < NULL: "null" >
+  | < THIS: "this" >
+  | < LET: "let" >
+  | < DO: "do" >
+  | < IF: "if" >
+  | < ELSE: "else" >
+  | < WHILE: "while" >
+  | < RETURN: "return" >
+  | < LCURLY: "{" >
+  | < RCURLY: "}" >
+  | < LPAREN: "(" >
+  | < RPAREN: ")" >
+  | < LBRAC: "[" >
+  | < RBRAC: "]" >
+  | < DOT: "." >
+  | < COMMA: "," >
+  | < SEMICOLON: ";" >
+  | < PLUS: "+" >
+  | < MINUS: "-" >
+  | < STAR: "*" >
+  | < SLASH: "/" >
+  | < AND: "&" >
+  | < BAR: "|" >
+  | < LT: "<" >
+  | < GT: ">" >
+  | < EQ: "=" >
+  | < TILDA: "~" >
+
+}
+
+TOKEN :
+{
+  < QSTRING: "\"" (~["\"", "\\"] | "\\\"" | "\\\\")* "\"" >
+  |
+  < NUMBER: "0" | ["1" - "9"] (["0" - "9"])* >
+}
+
+TOKEN :
+{
+  < IDENTIFIER: <ALPHA> (<ALPHA>|<DIGIT>)* >
+  |
+  < #ALPHA: "_" | ["a"-"z", "A"-"Z"]>
+  |
+  < #DIGIT: ["0"-"9"]>
+}
+
+TOKEN :
+{
+  < SCOPEDINVOKER: <IDENTIFIER> <DOT> <IDENTIFIER> >
+}
+
+/************************************************
+ * THE Jack GRAMMAR SPECIFICATION STARTS HERE *
+ ************************************************/
+//kenl
+ClassDec parseClazz() #ClassDec :
+{}
+{
+  <CLASS> {jjtThis.value=token.image;} #Keyword
+  className()
+  <LCURLY> {jjtThis.value=token.image;} #Symbol
+  {String dummy="hack to bypass jjtree error";}
+  (classVarDec())*
+  (subroutineDec())*
+  <RCURLY> {jjtThis.value=token.image;} #Symbol
+  { return jjtThis; }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
+void classVarDec() #ClassVarDec :
+{}
+{
+  [<STATIK> {jjtThis.value=token.image;} #Keyword | 
+   <FIELD> {jjtThis.value=token.image;} #Keyword ]
+  type()
+  varName()
+  (<COMMA> {jjtThis.value=token.image;} #Symbol varName())* <SEMICOLON> {jjtThis.value=token.image;} #Symbol
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void type() #Type :
+{}
+{
+  <INT>  {jjtThis.value=token.image;} |
+  <CHAR>  {jjtThis.value=token.image;} |
+  <BOOLEAN> {jjtThis.value=token.image;} |
+  //classNAme()
+  <IDENTIFIER> {jjtThis.value=token.image;}
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void subroutineDec() #SubroutineDec :
+{}
+{
+  [<CONSTRUCTOR> {jjtThis.value=token.image;} #Keyword |
+   <FUNCTION> {jjtThis.value=token.image;} #Keyword |
+   <METHOD> {jjtThis.value=token.image;} #Keyword]
+  [<VOID> {jjtThis.value=token.image;} #Keyword | type()]
+  subroutineName()
+  <LPAREN> {jjtThis.value=token.image;} #Symbol
+  parameterList()
+  <RPAREN> {jjtThis.value=token.image;} #Symbol
+  subroutineBody()
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void parameterList() #ParameterList :
+{}
+{
+  ((type() varName())
+   (<COMMA> {jjtThis.value=token.image;} #Symbol type() varName())*)?
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void subroutineBody() #SubroutineBody :
+{}
+{
+  <LCURLY> {jjtThis.value=token.image;} #Symbol
+  {String dummy="hack to bypass jjtree error";}
+  (varDec())* statements() <RCURLY> {jjtThis.value=token.image;} #Symbol
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void varDec() #VarDec :
+{}
+{
+  <VAR> {jjtThis.value=token.image;} #Keyword type() varName()
+  (<COMMA> {jjtThis.value=token.image;} #Symbol varName())* <SEMICOLON> {jjtThis.value=token.image;} #Symbol
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void statements() #Statements :
+{}
+{
+  (statement())*
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void statement() :
+{}
+{
+  letStatement()  |
+  ifStatement()  |
+  whileStatement()  |
+  doStatement()  |
+  returnStatement()
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void letStatement() #LetStatement :
+{}
+{
+  <LET> {jjtThis.value=token.image;} #Keyword varName() (<LBRAC> {jjtThis.value=token.image;} #Symbol expr() <RBRAC> {jjtThis.value=token.image;} #Symbol)?
+  {String dummy="hack to bypass jjtree error";}
+  <EQ> {jjtThis.value=token.image;} #Symbol expr() <SEMICOLON> {jjtThis.value=token.image;} #Symbol
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void ifStatement() #IfStatement :
+{}
+{
+  <IF> {jjtThis.value=token.image;} #Keyword <LPAREN> {jjtThis.value=token.image;} #Symbol expr() <RPAREN> {jjtThis.value=token.image;} #Symbol
+  <LCURLY> {jjtThis.value=token.image;} #Symbol statements() <RCURLY> {} #Symbol
+  {String dummy="hack to bypass jjtree error";}
+  (<ELSE> {jjtThis.value=token.image;} #Keyword <LCURLY> {jjtThis.value=token.image;} #Symbol statements() <RCURLY> {jjtThis.value=token.image;} #Symbol)?
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void whileStatement() #WhileStatement :
+{}
+{
+  <WHILE> {jjtThis.value=token.image;} #Keyword <LPAREN> {jjtThis.value=token.image;} #Symbol expr() <RPAREN> {jjtThis.value=token.image;} #Symbol
+  <LCURLY> {jjtThis.value=token.image;} #Symbol statements() <RCURLY> {jjtThis.value=token.image;} #Symbol
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void doStatement() #DoStatement :
+{}
+{
+  <DO> {jjtThis.value=token.image;} #Keyword subroutineCall() <SEMICOLON> {jjtThis.value=token.image;} #Symbol
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void returnStatement() #ReturnStatement :
+{}
+{
+  <RETURN> {jjtThis.value=token.image;} #Keyword <SEMICOLON> {jjtThis.value=token.image;} #Symbol |
+  <RETURN> {jjtThis.value=token.image;} #Keyword expr() <SEMICOLON> {jjtThis.value=token.image;} #Symbol
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void expr() #Expression :
+{}
+{
+  term() (op() term())*
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void term() #Term :
+{}
+{
+  <LPAREN> {jjtThis.value=token.image;} #Symbol expr() <RPAREN> {jjtThis.value=token.image;} #Symbol  |
+  unaryOp() term() |
+  integerConstant() |
+  stringConstant()  |
+  keywordConstant()  |
+  subroutineCall() |
+  varName() <LBRAC> {jjtThis.value=token.image;} #Symbol expr() <RBRAC> {jjtThis.value=token.image;} #Symbol | varName()
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void subroutineCall() #SubroutineCall :
+{}
+{
+  subroutineName() <LPAREN> {jjtThis.value=token.image;} #Symbol exprList() <RPAREN> {jjtThis.value=token.image;} #Symbol |
+  scopedCall() <LPAREN> {jjtThis.value=token.image;} #Symbol exprList() <RPAREN> {jjtThis.value=token.image;} #Symbol
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void exprList() #ExpressionList :
+{}
+{
+  (expr() (<COMMA> {jjtThis.value=token.image;} #Symbol expr())*)?
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void scopedCall() #ScopedCall :
+{}
+{
+  <SCOPEDINVOKER> {
+    //System.out.println("scopedinvoker= " + t.image);
+    //return t.image.split("\\.");
+    jjtThis.value=token.image;
+  }
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void op() #Keyword :
+{}
+{
+  <PLUS> {jjtThis.value=token.image;} |
+  <MINUS> {jjtThis.value=token.image;} |
+  <STAR> {jjtThis.value=token.image;} |
+  <SLASH> {jjtThis.value=token.image;} |
+  <AND> {jjtThis.value=token.image;} |
+  <BAR> {jjtThis.value=token.image;} |
+  <LT> {jjtThis.value=token.image;} |
+  <GT> {jjtThis.value=token.image;} |
+  <EQ> {jjtThis.value=token.image;}
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void unaryOp() #Keyword :
+{}
+{
+  <MINUS> {jjtThis.value=token.image;} |
+  <TILDA> {jjtThis.value=token.image;}
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void integerConstant() #IntegerConstant :
+{}
+{ <NUMBER> {jjtThis.value=token.image;} }
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void stringConstant() #StringConstant :
+{String s;}
+{
+  <QSTRING> {
+    s=token.image;
+    jjtThis.value=s.substring(1,s.length()-1);
+  }
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void keywordConstant() #Keyword :
+{}
+{
+  <TRUE> {jjtThis.value=token.image;} |
+  <FALSE> {jjtThis.value=token.image;} |
+  <NULL> {jjtThis.value=token.image;} |
+  <THIS> {jjtThis.value=token.image;}
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void subroutineName() #Identifier :
+{}
+{
+  <IDENTIFIER> {jjtThis.value=token.image;}
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void className() #Identifier :
+{}
+{
+  <IDENTIFIER> {jjtThis.value=token.image;}
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//
+void varName() #Identifier :
+{}
+{
+  <IDENTIFIER> {jjtThis.value=token.image;}
+}
+
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//EOF
+
+
+
