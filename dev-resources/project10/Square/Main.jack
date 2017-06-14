@@ -1,5 +1,5 @@
-// This file is part of the materials accompanying the book 
-// "The Elements of Computing Systems" by Nisan and Schocken, 
+// This file is part of the materials accompanying the book
+// "The Elements of Computing Systems" by Nisan and Schocken,
 // MIT Press. Book site: www.idc.ac.il/tecs
 // File name: projects/10/Square/Main.jack
 
@@ -11,14 +11,20 @@ class Main {
   field char ch1;
 field boolean boo;
 
-    /** Initializes a new game and starts it. */    
-    function void main() {
+    /** Initializes a new game and starts it. */
+    function void main(int dummy, boolean bummy) {
         var SquareGame game;
-
+var SquareGame silly, billy;
+let pooface[0] = false;
         let game = SquareGame.new();
+        if (3 > 0) {
+          let game=null;
+        } else {
+          do x.y();
+        }
         do game.run();
-	do game.dispose();
+  do game.dispose();
 
-        return;
+        return this;
     }
 }

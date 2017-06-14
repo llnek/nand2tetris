@@ -53,7 +53,7 @@
     [out (->> (io/as-url fp) tokenj compilej)]
     (let [nm (.getName ^File fp)
           t (io/file outDir
-                     (str nm ".xml"))]
+                     (str nm ".clj"))]
       (c/prn!! "Writing file: %s" t)
       (spit t out))))
 

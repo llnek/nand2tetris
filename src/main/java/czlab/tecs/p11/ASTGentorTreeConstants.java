@@ -5,55 +5,51 @@ public interface ASTGentorTreeConstants
 {
   public int JJTCLASSDEC = 0;
   public int JJTCLASSVARDEC = 1;
-  public int JJTKEYWORD = 2;
-  public int JJTSYMBOL = 3;
-  public int JJTTYPE = 4;
-  public int JJTSUBROUTINEDEC = 5;
-  public int JJTPARAMETERLIST = 6;
-  public int JJTSUBROUTINEBODY = 7;
-  public int JJTVARDEC = 8;
-  public int JJTSTATEMENTS = 9;
-  public int JJTVOID = 10;
-  public int JJTLETSTATEMENT = 11;
-  public int JJTIFSTATEMENT = 12;
-  public int JJTWHILESTATEMENT = 13;
-  public int JJTDOSTATEMENT = 14;
-  public int JJTRETURNSTATEMENT = 15;
-  public int JJTEXPRESSION = 16;
-  public int JJTTERM = 17;
-  public int JJTSUBROUTINECALL = 18;
-  public int JJTEXPRESSIONLIST = 19;
-  public int JJTSCOPEDCALL = 20;
-  public int JJTINTEGERCONSTANT = 21;
-  public int JJTSTRINGCONSTANT = 22;
-  public int JJTIDENTIFIER = 23;
+  public int JJTVOID = 2;
+  public int JJTSUBROUTINEDEC = 3;
+  public int JJTLETSTATEMENT = 4;
+  public int JJTIFSTATEMENT = 5;
+  public int JJTCONDITION = 6;
+  public int JJTIFBLOCK = 7;
+  public int JJTELSEBLOCK = 8;
+  public int JJTWHILESTATEMENT = 9;
+  public int JJTWHILEBLOCK = 10;
+  public int JJTDOSTATEMENT = 11;
+  public int JJTRETURNSTATEMENT = 12;
+  public int JJTEXPRESSION = 13;
+  public int JJTTERM = 14;
+  public int JJTSUBROUTINECALL = 15;
+  public int JJTEXPRESSIONLIST = 16;
+  public int JJTOPERATION = 17;
+  public int JJTUNARYOPERATION = 18;
+  public int JJTINTEGERCONSTANT = 19;
+  public int JJTSTRINGCONSTANT = 20;
+  public int JJTKEYWORD = 21;
 
 
   public String[] jjtNodeName = {
     "ClassDec",
     "ClassVarDec",
-    "Keyword",
-    "Symbol",
-    "Type",
-    "SubroutineDec",
-    "ParameterList",
-    "SubroutineBody",
-    "VarDec",
-    "Statements",
     "void",
+    "SubroutineDec",
     "LetStatement",
     "IfStatement",
+    "Condition",
+    "IfBlock",
+    "ElseBlock",
     "WhileStatement",
+    "WhileBlock",
     "DoStatement",
     "ReturnStatement",
     "Expression",
     "Term",
     "SubroutineCall",
     "ExpressionList",
-    "ScopedCall",
+    "Operation",
+    "UnaryOperation",
     "IntegerConstant",
     "StringConstant",
-    "Identifier",
+    "Keyword",
   };
 }
-/* JavaCC - OriginalChecksum=000186a7aebb57ad619afb1f67114cd0 (do not edit this line) */
+/* JavaCC - OriginalChecksum=02969366526d624672ffeca892c4bc19 (do not edit this line) */

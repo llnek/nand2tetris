@@ -25,9 +25,7 @@ public class ASTNode extends SimpleNode {
   }
 
   public void dumpEDN(Writer w) throws Exception {
-    w.write("[\n");
     dumpEDN(0,w);
-    w.write("\n]\n");
   }
 
   /**
@@ -41,30 +39,42 @@ public class ASTNode extends SimpleNode {
     boolean hasC= children != null &&
                   children.length > 0;
 
-    if (v==null && !hasC) {return;}
-
-    w.write(pad + stag);
-    w.write(" {");
-    for (Object p: props.keySet()) {
-      w.write(" " + ":" + p + " " + props.get(p));
+    w.write(pad + "{\n");
+    w.write(pad + ":tag " + stag + "\n");
+    if (v != null) {
+      w.write(pad + ":value " + "\"" + v + "\"" +"\n");
     }
-    w.write("} ");
+
+    if (props.size() > 0) {
+      w.write(pad + ":attrs {");
+      for (Object p: props.keySet()) {
+        w.write(" " + ":" + p +
+            " " + "\"" + props.get(p) + "\"");
+      }
+      w.write("}\n");
+    } else {
+      //w.write(pad + ":options {}\n");
+    }
 
     if (hasC) {
-      w.write(" [\n");
+      w.write(pad + ":nodes [\n");
+    } else {
+      //w.write(pad + ":nodes []\n");
+    }
+    if (hasC) {
       for (int i = 0; i < children.length; ++i) {
         ASTNode n = (ASTNode)children[i];
         if (n != null) {
           n.dumpEDN(level+1, w);
         }
       }
-      w.write(pad + mkStr(slen) + " ]\n");
-    } else {
-      w.write(pad + stag + " " +
-              (v==null
-               ? "nil"
-               : "\"" +v + "\"") + "\n");
     }
+
+    if (hasC) {
+      w.write(pad + mkStr(slen) + " ]\n");
+    }
+
+    w.write(pad +"}\n");
   }
 
   public void dumpXML(Writer w) throws Exception {

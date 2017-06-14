@@ -12,6 +12,9 @@ options {
 PARSER_BEGIN(ASTGentor)
 package czlab.tecs.p11;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ASTGentor {
 
   public static SimpleNode parseOneUnit()
@@ -123,74 +126,100 @@ ClassDec parseClazz() #ClassDec :
 //////////////////////////////////////////////////////////////////////////////
 //
 void classVarDec() #ClassVarDec :
-{}
+{List<String> vs= new ArrayList<String>();
+ Token v, t;
+ String q="";}
 {
-  [<STATIK> {jjtThis.value=token.image;} #Keyword |
-   <FIELD> {jjtThis.value=token.image;} #Keyword ]
-  type()
-  varName()
-  (<COMMA> {jjtThis.value=token.image;} #Symbol varName())* <SEMICOLON> {jjtThis.value=token.image;} #Symbol
+  [<STATIK> {q=token.image;} |
+   <FIELD> {q=token.image;}]
+  t=type()
+  v=varName()
+  { vs.add(v.image); }
+  (<COMMA> v=varName()
+  { vs.add(v.image); })* <SEMICOLON> {
+    jjtThis.props.put("qualifier", q);
+    jjtThis.props.put("type", t.image);
+    jjtThis.props.put("vars", vs);
+  }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void type() #Type :
+Token type() :
 {}
 {
-  <INT>  {jjtThis.value=token.image;} |
-  <CHAR>  {jjtThis.value=token.image;} |
-  <BOOLEAN> {jjtThis.value=token.image;} |
+  <INT>  { return token;} |
+  <CHAR>  { return token;} |
+  <BOOLEAN> { return token;} |
   //classNAme()
-  <IDENTIFIER> {jjtThis.value=token.image;}
+  <IDENTIFIER> { return token;}
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
 void subroutineDec() #SubroutineDec :
-{}
+{String r="", q="";
+ Object vs=null; 
+ Object pml=null;
+ Token sn,t;}
 {
-  [<CONSTRUCTOR> {jjtThis.value=token.image;} #Keyword |
-   <FUNCTION> {jjtThis.value=token.image;} #Keyword |
-   <METHOD> {jjtThis.value=token.image;} #Keyword]
-  [<VOID> {jjtThis.value=token.image;} #Keyword | type()]
-  subroutineName()
-  <LPAREN> {jjtThis.value=token.image;} #Symbol
-  parameterList()
-  <RPAREN> {jjtThis.value=token.image;} #Symbol
-  subroutineBody()
+  [<CONSTRUCTOR> {q=token.image;} |
+   <FUNCTION> {q=token.image;} |
+   <METHOD> {q=token.image;}]
+  [<VOID> {r=token.image;} |
+   t=type() {r=t.image;}]
+  sn=subroutineName()
+  <LPAREN>
+  pml=parameterList()
+  <RPAREN>
+  <LCURLY> (vs=varDec())* statements() <RCURLY> {
+    jjtThis.props.put("qualifier", q);
+    jjtThis.props.put("type", r);
+    jjtThis.props.put("name", sn);
+    if (pml != null) {
+      jjtThis.props.put("args", pml);
+    }
+    if (vs != null) {
+      jjtThis.props.put("vars", vs);
+    }
+  }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void parameterList() #ParameterList :
-{}
+Object parameterList() :
+{List<String> ps= new ArrayList<String>();
+ Token vn, t;}
 {
-  ((type() varName())
-   (<COMMA> {jjtThis.value=token.image;} #Symbol type() varName())*)?
+  ((t=type() vn=varName() {
+    ps.add(t.image); ps.add(vn.image);
+    })
+   (<COMMA> t=type() vn=varName() {
+    ps.add(t.image); ps.add(vn.image);
+    })*)? {
+    return ps;
+  }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void subroutineBody() #SubroutineBody :
-{}
+Object varDec() :
+{List<String> ps=new ArrayList<String>();
+Token vn, t;}
 {
-  <LCURLY> {jjtThis.value=token.image;} #Symbol
-  {String dummy="hack to bypass jjtree error";}
-  (varDec())* statements() <RCURLY> {jjtThis.value=token.image;} #Symbol
+  <VAR> t=type() vn=varName() {
+    ps.add(t.image); ps.add(vn.image);
+  }
+  (<COMMA> vn=varName() {
+    ps.add(t.image); ps.add(vn.image);
+   })* <SEMICOLON> {
+    return ps;
+  }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void varDec() #VarDec :
-{}
-{
-  <VAR> {jjtThis.value=token.image;} #Keyword type() varName()
-  (<COMMA> {jjtThis.value=token.image;} #Symbol varName())* <SEMICOLON> {jjtThis.value=token.image;} #Symbol
-}
-
-//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-//
-void statements() #Statements :
+void statements() :
 {}
 {
   (statement())*
@@ -211,11 +240,13 @@ void statement() :
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
 void letStatement() #LetStatement :
-{}
+{Token vn;}
 {
-  <LET> {jjtThis.value=token.image;} #Keyword varName() (<LBRAC> {jjtThis.value=token.image;} #Symbol expr() <RBRAC> {jjtThis.value=token.image;} #Symbol)?
-  {String dummy="hack to bypass jjtree error";}
-  <EQ> {jjtThis.value=token.image;} #Symbol expr() <SEMICOLON> {jjtThis.value=token.image;} #Symbol
+  <LET> vn=varName()
+  (<LBRAC> expr() <RBRAC>)?
+  <EQ> expr() <SEMICOLON> {
+    jjtThis.props.put("var", vn.image);
+  }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -223,10 +254,9 @@ void letStatement() #LetStatement :
 void ifStatement() #IfStatement :
 {}
 {
-  <IF> {jjtThis.value=token.image;} #Keyword <LPAREN> {jjtThis.value=token.image;} #Symbol expr() <RPAREN> {jjtThis.value=token.image;} #Symbol
-  <LCURLY> {jjtThis.value=token.image;} #Symbol statements() <RCURLY> {} #Symbol
-  {String dummy="hack to bypass jjtree error";}
-  (<ELSE> {jjtThis.value=token.image;} #Keyword <LCURLY> {jjtThis.value=token.image;} #Symbol statements() <RCURLY> {jjtThis.value=token.image;} #Symbol)?
+  <IF> <LPAREN> expr() <RPAREN> #Condition(1)
+  <LCURLY> statements() <RCURLY> #IfBlock(1)
+  (<ELSE> <LCURLY> statements() <RCURLY> #ElseBlock(1))?
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -234,8 +264,8 @@ void ifStatement() #IfStatement :
 void whileStatement() #WhileStatement :
 {}
 {
-  <WHILE> {jjtThis.value=token.image;} #Keyword <LPAREN> {jjtThis.value=token.image;} #Symbol expr() <RPAREN> {jjtThis.value=token.image;} #Symbol
-  <LCURLY> {jjtThis.value=token.image;} #Symbol statements() <RCURLY> {jjtThis.value=token.image;} #Symbol
+  <WHILE> <LPAREN> expr() <RPAREN> #Condition(1)
+  <LCURLY> statements() <RCURLY> #WhileBlock(1)
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -243,7 +273,7 @@ void whileStatement() #WhileStatement :
 void doStatement() #DoStatement :
 {}
 {
-  <DO> {jjtThis.value=token.image;} #Keyword subroutineCall() <SEMICOLON> {jjtThis.value=token.image;} #Symbol
+  <DO> subroutineCall() <SEMICOLON>
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -251,8 +281,8 @@ void doStatement() #DoStatement :
 void returnStatement() #ReturnStatement :
 {}
 {
-  <RETURN> {jjtThis.value=token.image;} #Keyword <SEMICOLON> {jjtThis.value=token.image;} #Symbol |
-  <RETURN> {jjtThis.value=token.image;} #Keyword expr() <SEMICOLON> {jjtThis.value=token.image;} #Symbol
+  <RETURN> <SEMICOLON> |
+  <RETURN> expr() <SEMICOLON>
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -268,22 +298,28 @@ void expr() #Expression :
 void term() #Term :
 {}
 {
-  <LPAREN> {jjtThis.value=token.image;} #Symbol expr() <RPAREN> {jjtThis.value=token.image;} #Symbol  |
+  <LPAREN> expr() <RPAREN> |
   unaryOp() term() |
   integerConstant() |
   stringConstant()  |
   keywordConstant()  |
   subroutineCall() |
-  varName() <LBRAC> {jjtThis.value=token.image;} #Symbol expr() <RBRAC> {jjtThis.value=token.image;} #Symbol | varName()
+  varName() <LBRAC> expr() <RBRAC>  {} | varName()
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
 void subroutineCall() #SubroutineCall :
-{}
+{Token sn;}
 {
-  subroutineName() <LPAREN> {jjtThis.value=token.image;} #Symbol exprList() <RPAREN> {jjtThis.value=token.image;} #Symbol |
-  scopedCall() <LPAREN> {jjtThis.value=token.image;} #Symbol exprList() <RPAREN> {jjtThis.value=token.image;} #Symbol
+  sn=subroutineName()
+    <LPAREN> exprList() <RPAREN> {
+    jjtThis.props.put("subroutine", sn.image);
+  } |
+  sn=scopedCall()
+  <LPAREN> exprList() <RPAREN> {
+    jjtThis.props.put("subroutine", sn.image);
+  }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -291,24 +327,24 @@ void subroutineCall() #SubroutineCall :
 void exprList() #ExpressionList :
 {}
 {
-  (expr() (<COMMA> {jjtThis.value=token.image;} #Symbol expr())*)?
+  (expr() (<COMMA> expr())*)?
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void scopedCall() #ScopedCall :
+Token scopedCall() :
 {}
 {
   <SCOPEDINVOKER> {
     //System.out.println("scopedinvoker= " + t.image);
     //return t.image.split("\\.");
-    jjtThis.value=token.image;
+    return token;
   }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void op() #Keyword :
+void op() #Operation :
 {}
 {
   <PLUS> {jjtThis.value=token.image;} |
@@ -324,7 +360,7 @@ void op() #Keyword :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void unaryOp() #Keyword :
+void unaryOp() #UnaryOperation :
 {}
 {
   <MINUS> {jjtThis.value=token.image;} |
@@ -361,10 +397,10 @@ void keywordConstant() #Keyword :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void subroutineName() #Identifier :
+Token subroutineName() :
 {}
 {
-  <IDENTIFIER> {jjtThis.value=token.image;}
+  <IDENTIFIER> { return token;}
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -377,10 +413,10 @@ Token className() :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void varName() #Identifier :
+Token varName() :
 {}
 {
-  <IDENTIFIER> {jjtThis.value=token.image;}
+  <IDENTIFIER> { return token;}
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
