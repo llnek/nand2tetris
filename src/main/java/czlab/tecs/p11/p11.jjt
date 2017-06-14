@@ -5,7 +5,6 @@ options {
   NODE_CLASS="ASTNode";
   NODE_PREFIX = "";
   MULTI=true;
-  //FORCE_LA_CHECK=true;
   LOOKAHEAD=2;
   STATIC=true;
 }
@@ -15,7 +14,7 @@ package czlab.tecs.p11;
 
 public class ASTGentor {
 
-  public static SimpleNode parseOneUnit() 
+  public static SimpleNode parseOneUnit()
   throws Exception {
     return parseClazz();
   }
@@ -110,16 +109,15 @@ TOKEN :
  ************************************************/
 //kenl
 ClassDec parseClazz() #ClassDec :
-{}
+{Token z;}
 {
-  <CLASS> {jjtThis.value=token.image;} #Keyword
-  className()
-  <LCURLY> {jjtThis.value=token.image;} #Symbol
-  {String dummy="hack to bypass jjtree error";}
+  <CLASS> z=className() <LCURLY>
   (classVarDec())*
   (subroutineDec())*
-  <RCURLY> {jjtThis.value=token.image;} #Symbol
-  { return jjtThis; }
+  <RCURLY> {
+    jjtThis.props.put("name", z.image);
+    return jjtThis;
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -127,7 +125,7 @@ ClassDec parseClazz() #ClassDec :
 void classVarDec() #ClassVarDec :
 {}
 {
-  [<STATIK> {jjtThis.value=token.image;} #Keyword | 
+  [<STATIK> {jjtThis.value=token.image;} #Keyword |
    <FIELD> {jjtThis.value=token.image;} #Keyword ]
   type()
   varName()
@@ -371,10 +369,10 @@ void subroutineName() #Identifier :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void className() #Identifier :
+Token className() :
 {}
 {
-  <IDENTIFIER> {jjtThis.value=token.image;}
+  <IDENTIFIER> {return token;}
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

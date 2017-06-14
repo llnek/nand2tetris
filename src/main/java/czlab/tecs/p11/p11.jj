@@ -6,7 +6,6 @@ options {
                        
                    
              
-  //FORCE_LA_CHECK=true;
   LOOKAHEAD=2;
   STATIC=true;
 }
@@ -19,7 +18,7 @@ public class ASTGentor/*@bgen(jjtree)*/implements ASTGentorTreeConstants/*@egen*
 
 /*@egen*/
 
-  public static SimpleNode parseOneUnit() 
+  public static SimpleNode parseOneUnit()
   throws Exception {
     return parseClazz();
   }
@@ -115,80 +114,27 @@ TOKEN :
 //kenl
 ClassDec parseClazz()           :
 {/*@bgen(jjtree) ClassDec */
-  ClassDec jjtn000 = new ClassDec(JJTCLASSDEC);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-/*@egen*/}
+ ClassDec jjtn000 = new ClassDec(JJTCLASSDEC);
+ boolean jjtc000 = true;
+ jjtree.openNodeScope(jjtn000);
+/*@egen*/Token z;}
 {/*@bgen(jjtree) ClassDec */
   try {
 /*@egen*/
-  <CLASS>/*@bgen(jjtree) Keyword */
-          {
-            Keyword jjtn001 = new Keyword(JJTKEYWORD);
-            boolean jjtc001 = true;
-            jjtree.openNodeScope(jjtn001);
-          }
-          try {
-/*@egen*//*@bgen(jjtree)*/
-          {
-            jjtree.closeNodeScope(jjtn001, true);
-            jjtc001 = false;
-          }
-/*@egen*/ {jjtn001.value=token.image;}/*@bgen(jjtree)*/
-          } finally {
-            if (jjtc001) {
-              jjtree.closeNodeScope(jjtn001, true);
-            }
-          }
-/*@egen*/         
-  className()
-  <LCURLY>/*@bgen(jjtree) Symbol */
-           {
-             Symbol jjtn002 = new Symbol(JJTSYMBOL);
-             boolean jjtc002 = true;
-             jjtree.openNodeScope(jjtn002);
-           }
-           try {
-/*@egen*//*@bgen(jjtree)*/
-           {
-             jjtree.closeNodeScope(jjtn002, true);
-             jjtc002 = false;
-           }
-/*@egen*/ {jjtn002.value=token.image;}/*@bgen(jjtree)*/
-           } finally {
-             if (jjtc002) {
-               jjtree.closeNodeScope(jjtn002, true);
-             }
-           }
-/*@egen*/        
-  {String dummy="hack to bypass jjtree error";}
+  <CLASS>
+  z=className()
+  <LCURLY>
   (classVarDec())*
   (subroutineDec())*
-  <RCURLY>/*@bgen(jjtree) Symbol */
-           {
-             Symbol jjtn003 = new Symbol(JJTSYMBOL);
-             boolean jjtc003 = true;
-             jjtree.openNodeScope(jjtn003);
-           }
-           try {
-/*@egen*//*@bgen(jjtree)*/
-           {
-             jjtree.closeNodeScope(jjtn003, true);
-             jjtc003 = false;
-           }
-/*@egen*/ {jjtn003.value=token.image;}/*@bgen(jjtree)*/
-           } finally {
-             if (jjtc003) {
-               jjtree.closeNodeScope(jjtn003, true);
-             }
-           }
-/*@egen*/        /*@bgen(jjtree)*/
+  <RCURLY>/*@bgen(jjtree)*/
   {
     jjtree.closeNodeScope(jjtn000, true);
     jjtc000 = false;
   }
 /*@egen*/
-  { return jjtn000; }/*@bgen(jjtree)*/
+  {
+    jjtn000.props.put("name", z.image);
+    return jjtn000;}/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
       jjtree.clearNodeScope(jjtn000);
@@ -240,7 +186,7 @@ void classVarDec()              :
                 jjtree.closeNodeScope(jjtn001, true);
               }
             }
-/*@egen*/          | 
+/*@egen*/          |
    <FIELD>/*@bgen(jjtree) Keyword */
            {
              Keyword jjtn002 = new Keyword(JJTKEYWORD);
@@ -1943,27 +1889,10 @@ void subroutineName()             :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void className()             :
-{/*@bgen(jjtree) Identifier */
-  Identifier jjtn000 = new Identifier(JJTIDENTIFIER);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-/*@egen*/}
-{/*@bgen(jjtree) Identifier */
-  try {
-/*@egen*/
-  <IDENTIFIER>/*@bgen(jjtree)*/
-               {
-                 jjtree.closeNodeScope(jjtn000, true);
-                 jjtc000 = false;
-               }
-/*@egen*/ {jjtn000.value=token.image;}/*@bgen(jjtree)*/
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-    }
-  }
-/*@egen*/
+Token className() :
+{}
+{
+  <IDENTIFIER> {return token;}
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

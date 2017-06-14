@@ -7,6 +7,9 @@
  * The Main class initializes a new Square Dance game and starts it.
  */
 class Main {
+  static  int poo, foo;
+  field char ch1;
+field boolean boo;
 
     /** Initializes a new game and starts it. */    
     function void main() {

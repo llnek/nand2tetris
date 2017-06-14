@@ -1,11 +1,16 @@
 package czlab.tecs.p11;
 
+import java.util.HashMap;
 import java.io.Writer;
+import java.util.Map;
+
 
 /**
  * @author Kenneth Leung
  */
 public class ASTNode extends SimpleNode {
+
+  public Map<Object,Object> props=new HashMap<>();
 
   /**
    */
@@ -36,8 +41,17 @@ public class ASTNode extends SimpleNode {
     boolean hasC= children != null &&
                   children.length > 0;
 
+    if (v==null && !hasC) {return;}
+
+    w.write(pad + stag);
+    w.write(" {");
+    for (Object p: props.keySet()) {
+      w.write(" " + ":" + p + " " + props.get(p));
+    }
+    w.write("} ");
+
     if (hasC) {
-      w.write(pad + stag + " [\n");
+      w.write(" [\n");
       for (int i = 0; i < children.length; ++i) {
         ASTNode n = (ASTNode)children[i];
         if (n != null) {

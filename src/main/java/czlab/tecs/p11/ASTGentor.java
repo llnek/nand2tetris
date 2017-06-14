@@ -14,38 +14,13 @@ public class ASTGentor/*@bgen(jjtree)*/implements ASTGentorTreeConstants, ASTGen
  ************************************************/
 //kenl
   static final public ClassDec parseClazz() throws ParseException {/*@bgen(jjtree) ClassDec */
-  ClassDec jjtn000 = new ClassDec(JJTCLASSDEC);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
+ ClassDec jjtn000 = new ClassDec(JJTCLASSDEC);
+ boolean jjtc000 = true;
+ jjtree.openNodeScope(jjtn000);Token z;
     try {
       jj_consume_token(CLASS);
-Keyword jjtn001 = new Keyword(JJTKEYWORD);
-            boolean jjtc001 = true;
-            jjtree.openNodeScope(jjtn001);
-      try {
-jjtree.closeNodeScope(jjtn001, true);
-            jjtc001 = false;
-jjtn001.value=token.image;
-      } finally {
-if (jjtc001) {
-              jjtree.closeNodeScope(jjtn001, true);
-            }
-      }
-      className();
+      z = className();
       jj_consume_token(LCURLY);
-Symbol jjtn002 = new Symbol(JJTSYMBOL);
-             boolean jjtc002 = true;
-             jjtree.openNodeScope(jjtn002);
-      try {
-jjtree.closeNodeScope(jjtn002, true);
-             jjtc002 = false;
-jjtn002.value=token.image;
-      } finally {
-if (jjtc002) {
-               jjtree.closeNodeScope(jjtn002, true);
-             }
-      }
-String dummy="hack to bypass jjtree error";
       label_1:
       while (true) {
         if (jj_2_1(2)) {
@@ -65,21 +40,10 @@ String dummy="hack to bypass jjtree error";
         subroutineDec();
       }
       jj_consume_token(RCURLY);
-Symbol jjtn003 = new Symbol(JJTSYMBOL);
-             boolean jjtc003 = true;
-             jjtree.openNodeScope(jjtn003);
-      try {
-jjtree.closeNodeScope(jjtn003, true);
-             jjtc003 = false;
-jjtn003.value=token.image;
-      } finally {
-if (jjtc003) {
-               jjtree.closeNodeScope(jjtn003, true);
-             }
-      }
 jjtree.closeNodeScope(jjtn000, true);
     jjtc000 = false;
-{if ("" != null) return jjtn000;}
+jjtn000.props.put("name", z.image);
+    {if ("" != null) return jjtn000;}
     } catch (Throwable jjte000) {
 if (jjtc000) {
       jjtree.clearNodeScope(jjtn000);
@@ -1598,20 +1562,10 @@ if (jjtc000) {
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-  static final public void className() throws ParseException {/*@bgen(jjtree) Identifier */
-  Identifier jjtn000 = new Identifier(JJTIDENTIFIER);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-    try {
-      jj_consume_token(IDENTIFIER);
-jjtree.closeNodeScope(jjtn000, true);
-                 jjtc000 = false;
-jjtn000.value=token.image;
-    } finally {
-if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-    }
-    }
+  static final public Token className() throws ParseException {
+    jj_consume_token(IDENTIFIER);
+{if ("" != null) return token;}
+    throw new Error("Missing return statement in function");
   }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

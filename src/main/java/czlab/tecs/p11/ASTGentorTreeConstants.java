@@ -4,9 +4,9 @@ package czlab.tecs.p11;
 public interface ASTGentorTreeConstants
 {
   public int JJTCLASSDEC = 0;
-  public int JJTKEYWORD = 1;
-  public int JJTSYMBOL = 2;
-  public int JJTCLASSVARDEC = 3;
+  public int JJTCLASSVARDEC = 1;
+  public int JJTKEYWORD = 2;
+  public int JJTSYMBOL = 3;
   public int JJTTYPE = 4;
   public int JJTSUBROUTINEDEC = 5;
   public int JJTPARAMETERLIST = 6;
@@ -31,9 +31,9 @@ public interface ASTGentorTreeConstants
 
   public String[] jjtNodeName = {
     "ClassDec",
+    "ClassVarDec",
     "Keyword",
     "Symbol",
-    "ClassVarDec",
     "Type",
     "SubroutineDec",
     "ParameterList",
@@ -56,4 +56,4 @@ public interface ASTGentorTreeConstants
     "Identifier",
   };
 }
-/* JavaCC - OriginalChecksum=24cf2f5c74e3c9f70963349e814a0b5d (do not edit this line) */
+/* JavaCC - OriginalChecksum=000186a7aebb57ad619afb1f67114cd0 (do not edit this line) */
