@@ -161,6 +161,7 @@ void subroutineDec() #SubroutineDec :
 {String r="", q="";
  Object vs=null; 
  Object pml=null;
+ ASTNode ss;
  Token sn,t;}
 {
   [<CONSTRUCTOR> {q=token.image;} |
@@ -182,6 +183,8 @@ void subroutineDec() #SubroutineDec :
     if (vs != null) {
       jjtThis.props.put("vars", vs);
     }
+    ss=(ASTNode)jjtThis.popChild();
+    jjtThis.nested.put("statements",ss.popAll());
   }
 }
 
@@ -260,12 +263,18 @@ void letStatement() #LetStatement :
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
 void ifStatement() #IfStatement :
-{}
+{ASTNode n;}
 {
   <IF> <LPAREN> expr() <RPAREN>
   <LCURLY> statements() <RCURLY> #IfBlock(1)
   (<ELSE> <LCURLY> statements() <RCURLY> #ElseBlock(1))? {
     jjtThis.nested.put("test", jjtThis.popChild());
+    n= (ASTNode)jjtThis.popChild(); //if
+    jjtThis.nested.put("if", n.popChild().popAll());
+    n= (ASTNode)jjtThis.popChild(); //else?
+    if (n != null) {
+      jjtThis.nested.put("else", n.popChild().popAll());
+    }
   }
 }
 
@@ -277,6 +286,7 @@ void whileStatement() #WhileStatement :
   <WHILE> <LPAREN> expr() <RPAREN>
     <LCURLY> statements() <RCURLY> #WhileBlock(1) {
     jjtThis.nested.put("test", jjtThis.popChild());
+    jjtThis.nested.put("body", jjtThis.popChild().popAll());
   }
 }
 

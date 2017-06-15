@@ -231,6 +231,7 @@ void subroutineDec()                :
 /*@egen*/String r="", q="";
  Object vs=null; 
  Object pml=null;
+ ASTNode ss;
  Token sn,t;}
 {/*@bgen(jjtree) SubroutineDec */
   try {
@@ -259,6 +260,8 @@ void subroutineDec()                :
     if (vs != null) {
       jjtn000.props.put("vars", vs);
     }
+    ss=(ASTNode)jjtn000.popChild();
+    jjtn000.nested.put("statements",ss.popAll());
   }/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
@@ -415,10 +418,10 @@ void letStatement()               :
 //
 void ifStatement()              :
 {/*@bgen(jjtree) IfStatement */
-  IfStatement jjtn000 = new IfStatement(JJTIFSTATEMENT);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-/*@egen*/}
+ IfStatement jjtn000 = new IfStatement(JJTIFSTATEMENT);
+ boolean jjtc000 = true;
+ jjtree.openNodeScope(jjtn000);
+/*@egen*/ASTNode n;}
 {/*@bgen(jjtree) IfStatement */
   try {
 /*@egen*/
@@ -457,6 +460,12 @@ void ifStatement()              :
                                                          }
 /*@egen*/ {
     jjtn000.nested.put("test", jjtn000.popChild());
+    n= (ASTNode)jjtn000.popChild(); //if
+    jjtn000.nested.put("if", n.popChild().popAll());
+    n= (ASTNode)jjtn000.popChild(); //else?
+    if (n != null) {
+      jjtn000.nested.put("else", n.popChild().popAll());
+    }
   }/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
@@ -512,6 +521,7 @@ void whileStatement()                 :
                                                   }
 /*@egen*/ {
     jjtn000.nested.put("test", jjtn000.popChild());
+    jjtn000.nested.put("body", jjtn000.popChild().popAll());
   }/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
