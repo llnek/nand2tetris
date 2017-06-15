@@ -229,7 +229,7 @@ void subroutineDec()                :
  boolean jjtc000 = true;
  jjtree.openNodeScope(jjtn000);
 /*@egen*/String r="", q="";
- Object vs=null; 
+ Object vs=null;
  Object pml=null;
  ASTNode ss;
  Token sn,t;}
@@ -521,7 +521,7 @@ void whileStatement()                 :
                                                   }
 /*@egen*/ {
     jjtn000.nested.put("test", jjtn000.popChild());
-    jjtn000.nested.put("body", jjtn000.popChild().popAll());
+    jjtn000.nested.put("body", jjtn000.popChild().popChild().popAll());
   }/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
@@ -663,21 +663,40 @@ void term()       :
  boolean jjtc000 = true;
  jjtree.openNodeScope(jjtn000);
 /*@egen*/Object e=null;
- Token vn;}
+ String s;
+ Token t, vn;}
 {/*@bgen(jjtree) Term */
   try {
 /*@egen*/
-  <LPAREN> expr() <RPAREN>/*@bgen(jjtree)*/
-                           {
-                             jjtree.closeNodeScope(jjtn000, true);
-                             jjtc000 = false;
-                           }
-/*@egen*/ {
-  } |
+  <LPAREN> expr() <RPAREN> |
   unaryOp() term() |
-  integerConstant() |
-  stringConstant()  |
-  keywordConstant()  |
+  t= integerConstant()/*@bgen(jjtree)*/
+                       {
+                         jjtree.closeNodeScope(jjtn000, true);
+                         jjtc000 = false;
+                       }
+/*@egen*/ {
+    jjtn000.nested.put("literal", "integer");
+    jjtn000.value=t.image;
+  } |
+  s=stringConstant()/*@bgen(jjtree)*/
+                     {
+                       jjtree.closeNodeScope(jjtn000, true);
+                       jjtc000 = false;
+                     }
+/*@egen*/ {
+    jjtn000.nested.put("literal", "string");
+    jjtn000.value=s;
+  }  |
+  t=keywordConstant()/*@bgen(jjtree)*/
+                      {
+                        jjtree.closeNodeScope(jjtn000, true);
+                        jjtc000 = false;
+                      }
+/*@egen*/ {
+    jjtn000.nested.put("literal", "keyword");
+    jjtn000.value=t.image;
+  } |
   subroutineCall() |
   vn=varName() <LBRAC> expr() <RBRAC>/*@bgen(jjtree)*/
                                        {
@@ -734,7 +753,8 @@ void subroutineCall()                 :
                                    jjtc000 = false;
                                  }
 /*@egen*/ {
-    jjtn000.props.put("subroutine", sn.image);
+    jjtn000.props.put("target", sn.image);
+    jjtn000.nested.put("params", jjtn000.popChild().popAll());
   } |
   sn=scopedCall()
   <LPAREN> exprList() <RPAREN>/*@bgen(jjtree)*/
@@ -743,7 +763,8 @@ void subroutineCall()                 :
                                  jjtc000 = false;
                                }
 /*@egen*/ {
-    jjtn000.props.put("subroutine", sn.image);
+    jjtn000.props.put("target", sn.image);
+    jjtn000.nested.put("params", jjtn000.popChild().popAll());
   }/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
@@ -779,13 +800,6 @@ void exprList()                 :
   try {
 /*@egen*/
   (expr() (<COMMA> expr() )*)?/*@bgen(jjtree)*/
-                               {
-                                 jjtree.closeNodeScope(jjtn000, true);
-                                 jjtc000 = false;
-                               }
-/*@egen*/ {
-    //jjtThis.nested.put("elist", jjtThis.popAll());
-  }/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
       jjtree.clearNodeScope(jjtn000);
@@ -822,13 +836,13 @@ Token scopedCall() :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void op()            :
-{/*@bgen(jjtree) Operation */
-  Operation jjtn000 = new Operation(JJTOPERATION);
+void op()     :
+{/*@bgen(jjtree) OP */
+  OP jjtn000 = new OP(JJTOP);
   boolean jjtc000 = true;
   jjtree.openNodeScope(jjtn000);
 /*@egen*/}
-{/*@bgen(jjtree) Operation */
+{/*@bgen(jjtree) OP */
   try {
 /*@egen*/
   <PLUS>/*@bgen(jjtree)*/
@@ -895,13 +909,13 @@ void op()            :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void unaryOp()                 :
-{/*@bgen(jjtree) UnaryOperation */
-  UnaryOperation jjtn000 = new UnaryOperation(JJTUNARYOPERATION);
+void unaryOp()          :
+{/*@bgen(jjtree) UnaryOP */
+  UnaryOP jjtn000 = new UnaryOP(JJTUNARYOP);
   boolean jjtc000 = true;
   jjtree.openNodeScope(jjtn000);
 /*@egen*/}
-{/*@bgen(jjtree) UnaryOperation */
+{/*@bgen(jjtree) UnaryOP */
   try {
 /*@egen*/
   <MINUS>/*@bgen(jjtree)*/
@@ -926,96 +940,30 @@ void unaryOp()                 :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void integerConstant()                  :
-{/*@bgen(jjtree) IntegerConstant */
-  IntegerConstant jjtn000 = new IntegerConstant(JJTINTEGERCONSTANT);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-/*@egen*/}
-{/*@bgen(jjtree) IntegerConstant */
-  try {
-/*@egen*/ <NUMBER>/*@bgen(jjtree)*/
-           {
-             jjtree.closeNodeScope(jjtn000, true);
-             jjtc000 = false;
-           }
-/*@egen*/ {jjtn000.value=token.image;}/*@bgen(jjtree)*/
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-    }
-  }
-/*@egen*/ }
+Token integerConstant() :
+{}
+{ <NUMBER> { return token;} }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void stringConstant()                 :
-{/*@bgen(jjtree) StringConstant */
- StringConstant jjtn000 = new StringConstant(JJTSTRINGCONSTANT);
- boolean jjtc000 = true;
- jjtree.openNodeScope(jjtn000);
-/*@egen*/String s;}
-{/*@bgen(jjtree) StringConstant */
-  try {
-/*@egen*/
-  <QSTRING>/*@bgen(jjtree)*/
-            {
-              jjtree.closeNodeScope(jjtn000, true);
-              jjtc000 = false;
-            }
-/*@egen*/ {
+String stringConstant() :
+{String s;}
+{
+  <QSTRING> {
     s=token.image;
-    jjtn000.value=s.substring(1,s.length()-1);
-  }/*@bgen(jjtree)*/
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-    }
+    return s.substring(1,s.length()-1);
   }
-/*@egen*/
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void keywordConstant()          :
-{/*@bgen(jjtree) Keyword */
-  Keyword jjtn000 = new Keyword(JJTKEYWORD);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-/*@egen*/}
-{/*@bgen(jjtree) Keyword */
-  try {
-/*@egen*/
-  <TRUE>/*@bgen(jjtree)*/
-         {
-           jjtree.closeNodeScope(jjtn000, true);
-           jjtc000 = false;
-         }
-/*@egen*/ {jjtn000.value=token.image;} |
-  <FALSE>/*@bgen(jjtree)*/
-          {
-            jjtree.closeNodeScope(jjtn000, true);
-            jjtc000 = false;
-          }
-/*@egen*/ {jjtn000.value=token.image;} |
-  <NULL>/*@bgen(jjtree)*/
-         {
-           jjtree.closeNodeScope(jjtn000, true);
-           jjtc000 = false;
-         }
-/*@egen*/ {jjtn000.value=token.image;} |
-  <THIS>/*@bgen(jjtree)*/
-         {
-           jjtree.closeNodeScope(jjtn000, true);
-           jjtc000 = false;
-         }
-/*@egen*/ {jjtn000.value=token.image;}/*@bgen(jjtree)*/
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-    }
-  }
-/*@egen*/
+Token keywordConstant() :
+{}
+{
+  <TRUE> { return token; } |
+  <FALSE> { return token; } |
+  <NULL> { return token; } |
+  <THIS> { return token; }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -159,7 +159,7 @@ Token type() :
 //
 void subroutineDec() #SubroutineDec :
 {String r="", q="";
- Object vs=null; 
+ Object vs=null;
  Object pml=null;
  ASTNode ss;
  Token sn,t;}
@@ -286,7 +286,7 @@ void whileStatement() #WhileStatement :
   <WHILE> <LPAREN> expr() <RPAREN>
     <LCURLY> statements() <RCURLY> #WhileBlock(1) {
     jjtThis.nested.put("test", jjtThis.popChild());
-    jjtThis.nested.put("body", jjtThis.popChild().popAll());
+    jjtThis.nested.put("body", jjtThis.popChild().popChild().popAll());
   }
 }
 
@@ -321,14 +321,23 @@ void expr() #Expression :
 //
 void term() #Term :
 {Object e=null;
- Token vn;}
+ String s;
+ Token t, vn;}
 {
-  <LPAREN> expr() <RPAREN> {
-  } |
+  <LPAREN> expr() <RPAREN> |
   unaryOp() term() |
-  integerConstant() |
-  stringConstant()  |
-  keywordConstant()  |
+  t= integerConstant() {
+    jjtThis.nested.put("literal", "int");
+    jjtThis.value=t.image;
+  } |
+  s=stringConstant() {
+    jjtThis.nested.put("literal", "String");
+    jjtThis.value=s;
+  }  |
+  t=keywordConstant() {
+    jjtThis.nested.put("literal", "keyword");
+    jjtThis.value=t.image;
+  } |
   subroutineCall() |
   vn=varName() <LBRAC> expr() <RBRAC>  {
     jjtThis.props.put("var", vn.image);
@@ -344,11 +353,13 @@ void subroutineCall() #SubroutineCall :
 {
   sn=subroutineName()
     <LPAREN> exprList() <RPAREN> {
-    jjtThis.props.put("subroutine", sn.image);
+    jjtThis.props.put("target", sn.image);
+    jjtThis.nested.put("params", jjtThis.popChild().popAll());
   } |
   sn=scopedCall()
   <LPAREN> exprList() <RPAREN> {
-    jjtThis.props.put("subroutine", sn.image);
+    jjtThis.props.put("target", sn.image);
+    jjtThis.nested.put("params", jjtThis.popChild().popAll());
   }
 }
 
@@ -357,9 +368,7 @@ void subroutineCall() #SubroutineCall :
 void exprList() #ExpressionList :
 {}
 {
-  (expr() (<COMMA> expr() )*)? {
-    //jjtThis.nested.put("elist", jjtThis.popAll());
-  }
+  (expr() (<COMMA> expr() )*)?
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -376,7 +385,7 @@ Token scopedCall() :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void op() #Operation :
+void op() #OP :
 {}
 {
   <PLUS> {jjtThis.value=token.image;} |
@@ -392,7 +401,7 @@ void op() #Operation :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void unaryOp() #UnaryOperation :
+void unaryOp() #UnaryOP :
 {}
 {
   <MINUS> {jjtThis.value=token.image;} |
@@ -401,30 +410,30 @@ void unaryOp() #UnaryOperation :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void integerConstant() #IntegerConstant :
+Token integerConstant() :
 {}
-{ <NUMBER> {jjtThis.value=token.image;} }
+{ <NUMBER> { return token;} }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void stringConstant() #StringConstant :
+String stringConstant() :
 {String s;}
 {
   <QSTRING> {
     s=token.image;
-    jjtThis.value=s.substring(1,s.length()-1);
+    return s.substring(1,s.length()-1);
   }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void keywordConstant() #Keyword :
+Token keywordConstant() :
 {}
 {
-  <TRUE> {jjtThis.value=token.image;} |
-  <FALSE> {jjtThis.value=token.image;} |
-  <NULL> {jjtThis.value=token.image;} |
-  <THIS> {jjtThis.value=token.image;}
+  <TRUE> { return token; } |
+  <FALSE> { return token; } |
+  <NULL> { return token; } |
+  <THIS> { return token; }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

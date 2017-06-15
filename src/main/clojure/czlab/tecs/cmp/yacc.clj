@@ -30,6 +30,13 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+(def ^:private ^AtomicInteger static-cntr (AtomicInteger.))
+(def ^:private ^AtomicInteger class-cntr (AtomicInteger.))
+(def ^:private static-vars (GenericMutable. {}))
+(def ^:private class-vars (GenericMutable. {}))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 (defn- printj "" [^ASTNode x]
   (let [w (StringWriter.)
         ;_ (.dumpXML x w)
@@ -87,12 +94,55 @@
                (recur len (inc pos))))))
     (deref ctx)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- doFuncVar "" [{:keys [attrs statements] :as node}]
+  (let [{:keys [args name type
+                qualifier vars]}
+        attrs
+        pc (AtomicInteger.)
+        lc (AtomicInteger.)
+        px (GenericMutable. {})
+        lx (GenericMutable. {})
+        args (partition 2 args)
+        vars (partition 2 vars)]
+    ))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- doClassVar "" [{:keys [attrs] :as node}]
+  (let [{:keys [type
+                vars
+                qualifier]} attrs
+        dft {:type type}
+        [ctx ^AtomicInteger ctr]
+        (condp = qualifier
+          "static" [static-vars static-cntr]
+          "field"  [class-vars class-cntr]
+          (c/trap! Exception "bad qualifier"))]
+    (if (string? vars)
+      (->> {:index (.getAndIncrement ctr)}
+           (merge dft)
+           (c/setf! ctx vars))
+      (doseq [s (seq vars)]
+        (->> {:index (.getAndIncrement ctr)}
+             (merge dft)
+             (c/setf! ctx s))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- compilej "" [^ASTNode x]
-  (let [node (toAST x)
-        s (f/writeEdnStr node)]
-    (c/prn!! s)
+  (let [root (toAST x)
+        s (f/writeEdnStr root)]
+    (doseq [c (:children root)
+            :let [tag (:tag c)]]
+      (cond
+        (= :ClassVarDec tag)
+        (doClassVar c)
+        (= :SubroutineDec tag)
+        (doFuncVar c)))
+    (c/prn!! (f/writeEdnStr @static-vars))
+    (c/prn!! (f/writeEdnStr @class-vars))
     s))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -20,11 +20,8 @@ public interface ASTGentorTreeConstants
   public int JJTTERM = 14;
   public int JJTSUBROUTINECALL = 15;
   public int JJTEXPRESSIONLIST = 16;
-  public int JJTOPERATION = 17;
-  public int JJTUNARYOPERATION = 18;
-  public int JJTINTEGERCONSTANT = 19;
-  public int JJTSTRINGCONSTANT = 20;
-  public int JJTKEYWORD = 21;
+  public int JJTOP = 17;
+  public int JJTUNARYOP = 18;
 
 
   public String[] jjtNodeName = {
@@ -45,11 +42,8 @@ public interface ASTGentorTreeConstants
     "Term",
     "SubroutineCall",
     "ExpressionList",
-    "Operation",
-    "UnaryOperation",
-    "IntegerConstant",
-    "StringConstant",
-    "Keyword",
+    "OP",
+    "UnaryOP",
   };
 }
-/* JavaCC - OriginalChecksum=d9a18f9df9b1b414fc9d1c270da2894d (do not edit this line) */
+/* JavaCC - OriginalChecksum=439dea8d90b04a2bea750bfdb7c91bc2 (do not edit this line) */
