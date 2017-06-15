@@ -771,7 +771,7 @@ if (jjtc000) {
       }
 jjtree.closeNodeScope(jjtn000, true);
                                  jjtc000 = false;
-jjtn000.nested.put("elist", jjtn000.popAll());
+
     } catch (Throwable jjte000) {
 if (jjtc000) {
       jjtree.clearNodeScope(jjtn000);

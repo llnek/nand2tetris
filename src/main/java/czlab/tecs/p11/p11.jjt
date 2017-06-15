@@ -358,7 +358,7 @@ void exprList() #ExpressionList :
 {}
 {
   (expr() (<COMMA> expr() )*)? {
-    jjtThis.nested.put("elist", jjtThis.popAll());
+    //jjtThis.nested.put("elist", jjtThis.popAll());
   }
 }
 

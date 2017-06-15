@@ -11,8 +11,8 @@ import java.util.List;
  */
 public class ASTNode extends SimpleNode {
 
-  public Map<Object,Object> props=new HashMap<>();
   public Map<String,Object> nested=new HashMap<>();
+  public Map<Object,Object> props=new HashMap<>();
 
   /**
    */

@@ -784,7 +784,7 @@ void exprList()                 :
                                  jjtc000 = false;
                                }
 /*@egen*/ {
-    jjtn000.nested.put("elist", jjtn000.popAll());
+    //jjtThis.nested.put("elist", jjtThis.popAll());
   }/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
