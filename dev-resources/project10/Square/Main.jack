@@ -16,13 +16,17 @@ field boolean boo;
         var SquareGame game;
 var SquareGame silly, billy;
 let pooface[0] = false;
-        let game = SquareGame.new();
+        let game = SquareGame.new(3,4+5);
         if (3 > 0) {
           let game=null;
         } else {
           do x.y();
         }
-        do game.run();
+        while (3 < 5) {
+          do game.run();
+          do game.poo();
+        }
+
   do game.dispose();
 
         return this;

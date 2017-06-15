@@ -219,7 +219,7 @@ Token vn, t;}
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void statements() :
+void statements() #Statements :
 {}
 {
   (statement())*
@@ -246,6 +246,14 @@ void letStatement() #LetStatement :
   (<LBRAC> expr() <RBRAC>)?
   <EQ> expr() <SEMICOLON> {
     jjtThis.props.put("var", vn.image);
+    int cnt= jjtThis.jjtGetNumChildren();
+    if (cnt == 2) {
+      jjtThis.nested.put("lhs", jjtThis.jjtGetChild(0));
+      jjtThis.nested.put("rhs", jjtThis.jjtGetChild(1));
+    } else {
+      jjtThis.nested.put("rhs", jjtThis.jjtGetChild(0));
+    }
+    jjtThis.removeChildren();
   }
 }
 
@@ -254,9 +262,11 @@ void letStatement() #LetStatement :
 void ifStatement() #IfStatement :
 {}
 {
-  <IF> <LPAREN> expr() <RPAREN> #Condition(1)
+  <IF> <LPAREN> expr() <RPAREN>
   <LCURLY> statements() <RCURLY> #IfBlock(1)
-  (<ELSE> <LCURLY> statements() <RCURLY> #ElseBlock(1))?
+  (<ELSE> <LCURLY> statements() <RCURLY> #ElseBlock(1))? {
+    jjtThis.nested.put("test", jjtThis.popChild());
+  }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -264,8 +274,10 @@ void ifStatement() #IfStatement :
 void whileStatement() #WhileStatement :
 {}
 {
-  <WHILE> <LPAREN> expr() <RPAREN> #Condition(1)
-  <LCURLY> statements() <RCURLY> #WhileBlock(1)
+  <WHILE> <LPAREN> expr() <RPAREN>
+    <LCURLY> statements() <RCURLY> #WhileBlock(1) {
+    jjtThis.nested.put("test", jjtThis.popChild());
+  }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -282,7 +294,9 @@ void returnStatement() #ReturnStatement :
 {}
 {
   <RETURN> <SEMICOLON> |
-  <RETURN> expr() <SEMICOLON>
+  <RETURN> expr() <SEMICOLON> {
+    jjtThis.nested.put("value", jjtThis.popChild());
+  }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -296,15 +310,21 @@ void expr() #Expression :
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
 void term() #Term :
-{}
+{Object e=null;
+ Token vn;}
 {
-  <LPAREN> expr() <RPAREN> |
+  <LPAREN> expr() <RPAREN> {
+  } |
   unaryOp() term() |
   integerConstant() |
   stringConstant()  |
   keywordConstant()  |
   subroutineCall() |
-  varName() <LBRAC> expr() <RBRAC>  {} | varName()
+  vn=varName() <LBRAC> expr() <RBRAC>  {
+    jjtThis.props.put("var", vn.image);
+  } | vn=varName() {
+    jjtThis.props.put("var", vn.image);
+  }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -327,7 +347,9 @@ void subroutineCall() #SubroutineCall :
 void exprList() #ExpressionList :
 {}
 {
-  (expr() (<COMMA> expr())*)?
+  (expr() (<COMMA> expr() )*)? {
+    jjtThis.nested.put("elist", jjtThis.popAll());
+  }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

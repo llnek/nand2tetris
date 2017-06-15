@@ -1,9 +1,10 @@
 package czlab.tecs.p11;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.io.Writer;
 import java.util.Map;
-
+import java.util.List;
 
 /**
  * @author Kenneth Leung
@@ -11,6 +12,7 @@ import java.util.Map;
 public class ASTNode extends SimpleNode {
 
   public Map<Object,Object> props=new HashMap<>();
+  public Map<String,Object> nested=new HashMap<>();
 
   /**
    */
@@ -24,6 +26,34 @@ public class ASTNode extends SimpleNode {
     super(p,i);
   }
 
+  public ASTNode popChild() {
+    if (children==null) {return null;}
+    ASTNode h= (ASTNode) children[0];
+    int len=children.length;
+    if (len == 1) {
+      children=null;
+    } else {
+      Node c[] = new Node[len-1];
+      System.arraycopy(children, 1, c, 0, len-1);
+      children=c;
+    }
+    return h;
+  }
+
+  public List<ASTNode> popAll() {
+    List<ASTNode> rc= new ArrayList<>();
+    if (children != null)
+      for (int i=0; i < children.length; ++i) {
+        rc.add((ASTNode)children[i]);
+      }
+    children=null;
+    return rc;
+  }
+
+  public void removeChildren() {
+    children=null;
+  }
+
   public void dumpEDN(Writer w) throws Exception {
     dumpEDN(0,w);
   }
@@ -33,6 +63,8 @@ public class ASTNode extends SimpleNode {
   private void dumpEDN(int level, Writer w) throws Exception {
     String pad=mkStr(level *2);
     Object v= jjtGetValue();
+    Object pv;
+    ASTNode n;
     String k= toString();
     String stag= ":" + k;
     int slen=stag.length();
@@ -48,12 +80,36 @@ public class ASTNode extends SimpleNode {
     if (props.size() > 0) {
       w.write(pad + ":attrs {");
       for (Object p: props.keySet()) {
-        w.write(" " + ":" + p +
-            " " + "\"" + props.get(p) + "\"");
+        pv=props.get(p);
+        if (pv instanceof Node) {
+          w.write(" " + ":" + p + " ");
+          ((ASTNode)pv).dumpEDN(level+1,w);
+        } else {
+          pv= "\"" + pv + "\"";
+          w.write(" " + ":" + p + " " + pv);
+        }
       }
       w.write("}\n");
     } else {
       //w.write(pad + ":options {}\n");
+    }
+
+    if (nested.size() > 0) {
+      Object obj;
+      for (Object p: nested.keySet()) {
+        obj=nested.get(p);
+        w.write(pad + ":" + p + " ");
+        if (obj instanceof Node) {
+          ((ASTNode)obj).dumpEDN(level+1,w);
+        }
+        else if (obj instanceof List) {
+          w.write("[\n");
+          for (Object x: (List)obj) {
+            ((ASTNode)x).dumpEDN(level+1,w);
+          }
+          w.write("]\n");
+        }
+      }
     }
 
     if (hasC) {
@@ -63,7 +119,7 @@ public class ASTNode extends SimpleNode {
     }
     if (hasC) {
       for (int i = 0; i < children.length; ++i) {
-        ASTNode n = (ASTNode)children[i];
+        n = (ASTNode)children[i];
         if (n != null) {
           n.dumpEDN(level+1, w);
         }

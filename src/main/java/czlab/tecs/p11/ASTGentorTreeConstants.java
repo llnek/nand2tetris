@@ -7,9 +7,9 @@ public interface ASTGentorTreeConstants
   public int JJTCLASSVARDEC = 1;
   public int JJTVOID = 2;
   public int JJTSUBROUTINEDEC = 3;
-  public int JJTLETSTATEMENT = 4;
-  public int JJTIFSTATEMENT = 5;
-  public int JJTCONDITION = 6;
+  public int JJTSTATEMENTS = 4;
+  public int JJTLETSTATEMENT = 5;
+  public int JJTIFSTATEMENT = 6;
   public int JJTIFBLOCK = 7;
   public int JJTELSEBLOCK = 8;
   public int JJTWHILESTATEMENT = 9;
@@ -32,9 +32,9 @@ public interface ASTGentorTreeConstants
     "ClassVarDec",
     "void",
     "SubroutineDec",
+    "Statements",
     "LetStatement",
     "IfStatement",
-    "Condition",
     "IfBlock",
     "ElseBlock",
     "WhileStatement",
@@ -52,4 +52,4 @@ public interface ASTGentorTreeConstants
     "Keyword",
   };
 }
-/* JavaCC - OriginalChecksum=02969366526d624672ffeca892c4bc19 (do not edit this line) */
+/* JavaCC - OriginalChecksum=d9a18f9df9b1b414fc9d1c270da2894d (do not edit this line) */
