@@ -375,7 +375,7 @@ if (jjtc000) {
       jj_consume_token(SEMICOLON);
 jjtree.closeNodeScope(jjtn000, true);
                             jjtc000 = false;
-jjtn000.props.put("varr", vn.image);
+jjtn000.nested.put("varr", vn.image);
     int cnt= jjtn000.jjtGetNumChildren();
     if (cnt == 2) {
       jjtn000.nested.put("lhs", jjtn000.jjtGetChild(0));
@@ -681,6 +681,9 @@ jjtn000.nested.put("literal", "keyword");
     jjtn000.value=t.image;
       } else if (jj_2_38(2)) {
         subroutineCall();
+jjtree.closeNodeScope(jjtn000, true);
+                     jjtc000 = false;
+jjtn000.nested.put("call", jjtn000.popChild());
       } else if (jj_2_39(2)) {
         vn = varName();
         jj_consume_token(LBRAC);
@@ -1468,12 +1471,6 @@ s=token.image;
     return false;
   }
 
-  static private boolean jj_3_16()
- {
-    if (jj_3R_13()) return true;
-    return false;
-  }
-
   static private boolean jj_3R_28()
  {
     Token xsp;
@@ -1482,6 +1479,19 @@ s=token.image;
     jj_scanpos = xsp;
     if (jj_3_42()) return true;
     }
+    return false;
+  }
+
+  static private boolean jj_3_41()
+ {
+    if (jj_3R_29()) return true;
+    if (jj_scan_token(LPAREN)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_16()
+ {
+    if (jj_3R_13()) return true;
     return false;
   }
 
@@ -1499,13 +1509,6 @@ s=token.image;
     jj_scanpos = xsp;
     if (jj_3_16()) return true;
     }
-    return false;
-  }
-
-  static private boolean jj_3_41()
- {
-    if (jj_3R_29()) return true;
-    if (jj_scan_token(LPAREN)) return true;
     return false;
   }
 
@@ -1843,16 +1846,16 @@ s=token.image;
     return false;
   }
 
+  static private boolean jj_3R_26()
+ {
+    if (jj_scan_token(QSTRING)) return true;
+    return false;
+  }
+
   static private boolean jj_3R_17()
  {
     if (jj_scan_token(IF)) return true;
     if (jj_scan_token(LPAREN)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_26()
- {
-    if (jj_scan_token(QSTRING)) return true;
     return false;
   }
 
@@ -1917,6 +1920,12 @@ s=token.image;
     return false;
   }
 
+  static private boolean jj_3_52()
+ {
+    if (jj_scan_token(PLUS)) return true;
+    return false;
+  }
+
   static private boolean jj_3_25()
  {
     if (jj_3R_18()) return true;
@@ -1926,12 +1935,6 @@ s=token.image;
   static private boolean jj_3_24()
  {
     if (jj_3R_17()) return true;
-    return false;
-  }
-
-  static private boolean jj_3_52()
- {
-    if (jj_scan_token(PLUS)) return true;
     return false;
   }
 
@@ -1967,15 +1970,15 @@ s=token.image;
     return false;
   }
 
-  static private boolean jj_3_22()
- {
-    if (jj_3R_15()) return true;
-    return false;
-  }
-
   static private boolean jj_3_50()
  {
     if (jj_scan_token(STAR)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_22()
+ {
+    if (jj_3R_15()) return true;
     return false;
   }
 
@@ -1991,6 +1994,12 @@ s=token.image;
     return false;
   }
 
+  static private boolean jj_3_47()
+ {
+    if (jj_scan_token(EQ)) return true;
+    return false;
+  }
+
   static private boolean jj_3_21()
  {
     if (jj_scan_token(COMMA)) return true;
@@ -1998,9 +2007,9 @@ s=token.image;
     return false;
   }
 
-  static private boolean jj_3_47()
+  static private boolean jj_3_46()
  {
-    if (jj_scan_token(EQ)) return true;
+    if (jj_scan_token(AND)) return true;
     return false;
   }
 
@@ -2008,12 +2017,6 @@ s=token.image;
  {
     if (jj_scan_token(VAR)) return true;
     if (jj_3R_13()) return true;
-    return false;
-  }
-
-  static private boolean jj_3_46()
- {
-    if (jj_scan_token(AND)) return true;
     return false;
   }
 
@@ -2062,13 +2065,6 @@ s=token.image;
     return false;
   }
 
-  static private boolean jj_3_20()
- {
-    if (jj_3R_13()) return true;
-    if (jj_3R_12()) return true;
-    return false;
-  }
-
   static private boolean jj_3_43()
  {
     if (jj_scan_token(COMMA)) return true;
@@ -2079,6 +2075,13 @@ s=token.image;
   static private boolean jj_3R_30()
  {
     if (jj_scan_token(SCOPEDINVOKER)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_20()
+ {
+    if (jj_3R_13()) return true;
+    if (jj_3R_12()) return true;
     return false;
   }
 

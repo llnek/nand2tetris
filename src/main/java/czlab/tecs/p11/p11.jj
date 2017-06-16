@@ -382,7 +382,7 @@ void letStatement()               :
                             jjtc000 = false;
                           }
 /*@egen*/ {
-    jjtn000.props.put("varr", vn.image);
+    jjtn000.nested.put("varr", vn.image);
     int cnt= jjtn000.jjtGetNumChildren();
     if (cnt == 2) {
       jjtn000.nested.put("lhs", jjtn000.jjtGetChild(0));
@@ -719,7 +719,14 @@ void term()       :
     jjtn000.nested.put("literal", "keyword");
     jjtn000.value=t.image;
   } |
-  subroutineCall() |
+  subroutineCall()/*@bgen(jjtree)*/
+                   {
+                     jjtree.closeNodeScope(jjtn000, true);
+                     jjtc000 = false;
+                   }
+/*@egen*/ {
+    jjtn000.nested.put("call", jjtn000.popChild());
+  } |
   vn=varName() <LBRAC> expr() <RBRAC>/*@bgen(jjtree)*/
                                        {
                                          jjtree.closeNodeScope(jjtn000, true);
