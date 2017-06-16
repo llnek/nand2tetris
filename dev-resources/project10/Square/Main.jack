@@ -20,7 +20,7 @@ let pooface[0] = false;
         if (3 > 0) {
           let game=null;
         }
-        else { do x.y(); }
+        else { do x.y(~silly, billy, game[i], 3 + (5+7)); }
         while (3 < 5) {
           do game.run();
           do game.poo();

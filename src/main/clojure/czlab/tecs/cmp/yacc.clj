@@ -26,7 +26,7 @@
            [czlab.tecs.p11 Node ASTNode ASTGentor]
            [czlab.basal.core GenericMutable]
            [java.net URL]
-           [java.util List Map]))
+           [java.util Stack ArrayList List Map]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -94,6 +94,124 @@
                (recur len (inc pos))))))
     (deref ctx)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(declare eval-expr eval-term)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- speek "" [^Stack s]
+  (if-not (.empty s) (.peek s)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- spop "" [^Stack s]
+  (if-not (.empty s) (.pop s)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- fakeUnary "" [unary]
+  (doto {:tag :OP :value unary :rank 99 :bind "right"}))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- eval-op ""
+  [{:keys [value rank bind] :as node} ^List out ^Stack stk]
+
+  (let [top (speek stk)]
+    (if (and (some? top)
+             (not= "(" (:value top))
+             (or (< rank (:rank top))
+                 (and (= rank (:rank top))
+                      (= "left" bind))))
+      (do
+        (.add out (.pop stk))
+        (eval-op node out stk))
+      (.push stk node))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;unwind the stack until we find the opening "(" during
+;;which operators are popped off to the output queue
+(defn- eval-group "" [group ^List out ^Stack stk]
+  (eval-expr group out stk)
+  (loop [top (speek stk)]
+    (let [{:keys [tag value]} top]
+      (cond
+        (nil? top) (c/trap! Exception "bad group")
+        (and (= :OP tag)
+             (= "(" value))
+        (.pop stk)
+        :else
+        (do (.add out (.pop stk))
+            (recur (speek stk) ))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- eval-unary "" [unary term ^List out ^Stack stk]
+  (eval-term term out stk)
+  (loop [top (speek stk)]
+    (let [{:keys [tag value]} top]
+      (cond
+        (nil? top) (c/trap! Exception "bad unary")
+        (and (= :OP tag)
+             (= "(" value))
+        (do (.pop stk)
+            (.add out (fakeUnary unary)))
+        :else
+        (do (.add out (.pop stk))
+            (recur (speek stk) ))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- fakeGroup-B "" []
+  (doto {:tag :OP :value "("}))
+(defn- fakeGroup-E "" []
+  (doto {:tag :OP :value ")"}))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- eval-term ""
+  [{:keys [literal group
+           unary varr index] :as node} ^List out ^Stack stk]
+
+  (cond
+    (some? unary)
+    (do (.push stk (fakeGroup-B))
+        (eval-unary unary (:term node) out stk))
+    (some? literal)
+    (.add out node)
+    (some? varr)
+    (do (.add out node)
+        (if (some? index)
+          (eval-expr index out stk)))
+    (some? group)
+    (do (.push stk (fakeGroup-B))
+        (eval-group group out stk))
+    :else nil))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- eval-expr "" [expr out stk]
+  (doseq [c (:children expr)
+          :let [tag (:tag c)]]
+    (condp = tag
+      :Term (eval-term c out stk)
+      :OP (eval-op c out stk)
+      (c/trap! Exception "bad expr"))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- eval-do-stmt "" [{:keys [call] :as stmt}]
+  (let [{:keys [target params]}
+        call
+        [z m](.split target "\\.")]
+    (c/prn!! "z = %s" z)
+    (c/prn!! "m = %s" m)
+    (doseq [e params]
+      (let [out (ArrayList.)
+            stk (Stack.)]
+        (eval-expr e out stk)
+        (doseq [x out]
+          (c/prn!! "poo>> %s" x))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- doFuncVar "" [{:keys [attrs statements] :as node}]
@@ -106,7 +224,16 @@
         lx (GenericMutable. {})
         args (partition 2 args)
         vars (partition 2 vars)]
-    ))
+    (c/prn!! "doFuncVar %s" name)
+    (doseq [s statements
+            :let [t (:tag s)]]
+      (cond
+        (= :WhileStatement t) nil
+        (= :LetStatement t) nil
+        (= :DoStatement t)
+        (eval-do-stmt s)
+        (= :IfStatement t) nil
+        (= :ReturnStatement t) nil ))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

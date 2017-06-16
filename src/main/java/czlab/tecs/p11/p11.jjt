@@ -248,7 +248,7 @@ void letStatement() #LetStatement :
   <LET> vn=varName()
   (<LBRAC> expr() <RBRAC>)?
   <EQ> expr() <SEMICOLON> {
-    jjtThis.props.put("var", vn.image);
+    jjtThis.props.put("varr", vn.image);
     int cnt= jjtThis.jjtGetNumChildren();
     if (cnt == 2) {
       jjtThis.nested.put("lhs", jjtThis.jjtGetChild(0));
@@ -295,7 +295,9 @@ void whileStatement() #WhileStatement :
 void doStatement() #DoStatement :
 {}
 {
-  <DO> subroutineCall() <SEMICOLON>
+  <DO> subroutineCall() <SEMICOLON> {
+    jjtThis.nested.put("call", jjtThis.popChild());
+  }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -324,8 +326,13 @@ void term() #Term :
  String s;
  Token t, vn;}
 {
-  <LPAREN> expr() <RPAREN> |
-  unaryOp() term() |
+  <LPAREN> expr() <RPAREN> {
+    jjtThis.nested.put("group", jjtThis.popChild());
+  } |
+  t=unaryOp() term() {
+    jjtThis.nested.put("unary", t.image);
+    jjtThis.nested.put("term", jjtThis.popChild());
+  } |
   t= integerConstant() {
     jjtThis.nested.put("literal", "int");
     jjtThis.value=t.image;
@@ -340,9 +347,10 @@ void term() #Term :
   } |
   subroutineCall() |
   vn=varName() <LBRAC> expr() <RBRAC>  {
-    jjtThis.props.put("var", vn.image);
+    jjtThis.nested.put("index", jjtThis.popChild());
+    jjtThis.nested.put("varr", vn.image);
   } | vn=varName() {
-    jjtThis.props.put("var", vn.image);
+    jjtThis.nested.put("varr", vn.image);
   }
 }
 
@@ -353,12 +361,12 @@ void subroutineCall() #SubroutineCall :
 {
   sn=subroutineName()
     <LPAREN> exprList() <RPAREN> {
-    jjtThis.props.put("target", sn.image);
+    jjtThis.nested.put("target", sn.image);
     jjtThis.nested.put("params", jjtThis.popChild().popAll());
   } |
   sn=scopedCall()
   <LPAREN> exprList() <RPAREN> {
-    jjtThis.props.put("target", sn.image);
+    jjtThis.nested.put("target", sn.image);
     jjtThis.nested.put("params", jjtThis.popChild().popAll());
   }
 }
@@ -388,24 +396,52 @@ Token scopedCall() :
 void op() #OP :
 {}
 {
-  <PLUS> {jjtThis.value=token.image;} |
-  <MINUS> {jjtThis.value=token.image;} |
-  <STAR> {jjtThis.value=token.image;} |
-  <SLASH> {jjtThis.value=token.image;} |
-  <AND> {jjtThis.value=token.image;} |
-  <BAR> {jjtThis.value=token.image;} |
-  <LT> {jjtThis.value=token.image;} |
-  <GT> {jjtThis.value=token.image;} |
-  <EQ> {jjtThis.value=token.image;}
+  //precedence top to bottom
+  <BAR> {
+    jjtThis.nested.put("bind", "left");
+    jjtThis.nested.put("rank", 13);
+    jjtThis.value=token.image;} |
+  <AND> {
+    jjtThis.nested.put("bind", "left");
+    jjtThis.nested.put("rank", 12);
+    jjtThis.value=token.image;} |
+  <EQ> {
+    jjtThis.nested.put("bind", "left");
+    jjtThis.nested.put("rank", 8);
+    jjtThis.value=token.image;} |
+  <LT> {
+    jjtThis.nested.put("bind", "left");
+    jjtThis.nested.put("rank", 7);
+    jjtThis.value=token.image;} |
+  <GT> {
+    jjtThis.nested.put("bind", "left");
+    jjtThis.nested.put("rank", 7);
+    jjtThis.value=token.image;} |
+  <STAR> {
+    jjtThis.nested.put("bind", "left");
+    jjtThis.nested.put("rank", 4);
+    jjtThis.value=token.image;} |
+  <SLASH> {
+    jjtThis.nested.put("bind", "left");
+    jjtThis.nested.put("rank", 4);
+    jjtThis.value=token.image;} |
+  <PLUS> {
+    jjtThis.nested.put("bind", "right");
+    jjtThis.nested.put("rank", 2);
+    jjtThis.value=token.image;} |
+  <MINUS> {
+    jjtThis.nested.put("bind", "right");
+    jjtThis.nested.put("rank", 2);
+    jjtThis.value=token.image;}
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void unaryOp() #UnaryOP :
+Token unaryOp() :
 {}
 {
-  <MINUS> {jjtThis.value=token.image;} |
-  <TILDA> {jjtThis.value=token.image;}
+  <MINUS> {return token;} |
+  <TILDA> {return token;}
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

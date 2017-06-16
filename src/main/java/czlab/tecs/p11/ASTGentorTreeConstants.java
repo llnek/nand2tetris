@@ -21,7 +21,6 @@ public interface ASTGentorTreeConstants
   public int JJTSUBROUTINECALL = 15;
   public int JJTEXPRESSIONLIST = 16;
   public int JJTOP = 17;
-  public int JJTUNARYOP = 18;
 
 
   public String[] jjtNodeName = {
@@ -43,7 +42,6 @@ public interface ASTGentorTreeConstants
     "SubroutineCall",
     "ExpressionList",
     "OP",
-    "UnaryOP",
   };
 }
-/* JavaCC - OriginalChecksum=439dea8d90b04a2bea750bfdb7c91bc2 (do not edit this line) */
+/* JavaCC - OriginalChecksum=1a8fa70114db9ef60471c53606d61c0d (do not edit this line) */

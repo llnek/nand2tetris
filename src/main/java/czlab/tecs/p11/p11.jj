@@ -382,7 +382,7 @@ void letStatement()               :
                             jjtc000 = false;
                           }
 /*@egen*/ {
-    jjtn000.props.put("var", vn.image);
+    jjtn000.props.put("varr", vn.image);
     int cnt= jjtn000.jjtGetNumChildren();
     if (cnt == 2) {
       jjtn000.nested.put("lhs", jjtn000.jjtGetChild(0));
@@ -557,6 +557,13 @@ void doStatement()              :
   try {
 /*@egen*/
   <DO> subroutineCall() <SEMICOLON>/*@bgen(jjtree)*/
+                                    {
+                                      jjtree.closeNodeScope(jjtn000, true);
+                                      jjtc000 = false;
+                                    }
+/*@egen*/ {
+    jjtn000.nested.put("call", jjtn000.popChild());
+  }/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
       jjtree.clearNodeScope(jjtn000);
@@ -668,15 +675,30 @@ void term()       :
 {/*@bgen(jjtree) Term */
   try {
 /*@egen*/
-  <LPAREN> expr() <RPAREN> |
-  unaryOp() term() |
+  <LPAREN> expr() <RPAREN>/*@bgen(jjtree)*/
+                           {
+                             jjtree.closeNodeScope(jjtn000, true);
+                             jjtc000 = false;
+                           }
+/*@egen*/ {
+    jjtn000.nested.put("group", jjtn000.popChild());
+  } |
+  t=unaryOp() term()/*@bgen(jjtree)*/
+                     {
+                       jjtree.closeNodeScope(jjtn000, true);
+                       jjtc000 = false;
+                     }
+/*@egen*/ {
+    jjtn000.nested.put("unary", t.image);
+    jjtn000.nested.put("term", jjtn000.popChild());
+  } |
   t= integerConstant()/*@bgen(jjtree)*/
                        {
                          jjtree.closeNodeScope(jjtn000, true);
                          jjtc000 = false;
                        }
 /*@egen*/ {
-    jjtn000.nested.put("literal", "integer");
+    jjtn000.nested.put("literal", "int");
     jjtn000.value=t.image;
   } |
   s=stringConstant()/*@bgen(jjtree)*/
@@ -685,7 +707,7 @@ void term()       :
                        jjtc000 = false;
                      }
 /*@egen*/ {
-    jjtn000.nested.put("literal", "string");
+    jjtn000.nested.put("literal", "String");
     jjtn000.value=s;
   }  |
   t=keywordConstant()/*@bgen(jjtree)*/
@@ -704,14 +726,15 @@ void term()       :
                                          jjtc000 = false;
                                        }
 /*@egen*/  {
-    jjtn000.props.put("var", vn.image);
+    jjtn000.nested.put("index", jjtn000.popChild());
+    jjtn000.nested.put("varr", vn.image);
   } | vn=varName()/*@bgen(jjtree)*/
                    {
                      jjtree.closeNodeScope(jjtn000, true);
                      jjtc000 = false;
                    }
 /*@egen*/ {
-    jjtn000.props.put("var", vn.image);
+    jjtn000.nested.put("varr", vn.image);
   }/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
@@ -753,7 +776,7 @@ void subroutineCall()                 :
                                    jjtc000 = false;
                                  }
 /*@egen*/ {
-    jjtn000.props.put("target", sn.image);
+    jjtn000.nested.put("target", sn.image);
     jjtn000.nested.put("params", jjtn000.popChild().popAll());
   } |
   sn=scopedCall()
@@ -763,7 +786,7 @@ void subroutineCall()                 :
                                  jjtc000 = false;
                                }
 /*@egen*/ {
-    jjtn000.props.put("target", sn.image);
+    jjtn000.nested.put("target", sn.image);
     jjtn000.nested.put("params", jjtn000.popChild().popAll());
   }/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
@@ -845,60 +868,88 @@ void op()     :
 {/*@bgen(jjtree) OP */
   try {
 /*@egen*/
-  <PLUS>/*@bgen(jjtree)*/
-         {
-           jjtree.closeNodeScope(jjtn000, true);
-           jjtc000 = false;
-         }
-/*@egen*/ {jjtn000.value=token.image;} |
-  <MINUS>/*@bgen(jjtree)*/
-          {
-            jjtree.closeNodeScope(jjtn000, true);
-            jjtc000 = false;
-          }
-/*@egen*/ {jjtn000.value=token.image;} |
-  <STAR>/*@bgen(jjtree)*/
-         {
-           jjtree.closeNodeScope(jjtn000, true);
-           jjtc000 = false;
-         }
-/*@egen*/ {jjtn000.value=token.image;} |
-  <SLASH>/*@bgen(jjtree)*/
-          {
-            jjtree.closeNodeScope(jjtn000, true);
-            jjtc000 = false;
-          }
-/*@egen*/ {jjtn000.value=token.image;} |
-  <AND>/*@bgen(jjtree)*/
-        {
-          jjtree.closeNodeScope(jjtn000, true);
-          jjtc000 = false;
-        }
-/*@egen*/ {jjtn000.value=token.image;} |
+  //precedence top to bottom
   <BAR>/*@bgen(jjtree)*/
         {
           jjtree.closeNodeScope(jjtn000, true);
           jjtc000 = false;
         }
-/*@egen*/ {jjtn000.value=token.image;} |
-  <LT>/*@bgen(jjtree)*/
-       {
-         jjtree.closeNodeScope(jjtn000, true);
-         jjtc000 = false;
-       }
-/*@egen*/ {jjtn000.value=token.image;} |
-  <GT>/*@bgen(jjtree)*/
-       {
-         jjtree.closeNodeScope(jjtn000, true);
-         jjtc000 = false;
-       }
-/*@egen*/ {jjtn000.value=token.image;} |
+/*@egen*/ {
+    jjtn000.nested.put("bind", "left");
+    jjtn000.nested.put("rank", 13);
+    jjtn000.value=token.image;} |
+  <AND>/*@bgen(jjtree)*/
+        {
+          jjtree.closeNodeScope(jjtn000, true);
+          jjtc000 = false;
+        }
+/*@egen*/ {
+    jjtn000.nested.put("bind", "left");
+    jjtn000.nested.put("rank", 12);
+    jjtn000.value=token.image;} |
   <EQ>/*@bgen(jjtree)*/
        {
          jjtree.closeNodeScope(jjtn000, true);
          jjtc000 = false;
        }
-/*@egen*/ {jjtn000.value=token.image;}/*@bgen(jjtree)*/
+/*@egen*/ {
+    jjtn000.nested.put("bind", "left");
+    jjtn000.nested.put("rank", 8);
+    jjtn000.value=token.image;} |
+  <LT>/*@bgen(jjtree)*/
+       {
+         jjtree.closeNodeScope(jjtn000, true);
+         jjtc000 = false;
+       }
+/*@egen*/ {
+    jjtn000.nested.put("bind", "left");
+    jjtn000.nested.put("rank", 7);
+    jjtn000.value=token.image;} |
+  <GT>/*@bgen(jjtree)*/
+       {
+         jjtree.closeNodeScope(jjtn000, true);
+         jjtc000 = false;
+       }
+/*@egen*/ {
+    jjtn000.nested.put("bind", "left");
+    jjtn000.nested.put("rank", 7);
+    jjtn000.value=token.image;} |
+  <STAR>/*@bgen(jjtree)*/
+         {
+           jjtree.closeNodeScope(jjtn000, true);
+           jjtc000 = false;
+         }
+/*@egen*/ {
+    jjtn000.nested.put("bind", "left");
+    jjtn000.nested.put("rank", 4);
+    jjtn000.value=token.image;} |
+  <SLASH>/*@bgen(jjtree)*/
+          {
+            jjtree.closeNodeScope(jjtn000, true);
+            jjtc000 = false;
+          }
+/*@egen*/ {
+    jjtn000.nested.put("bind", "left");
+    jjtn000.nested.put("rank", 4);
+    jjtn000.value=token.image;} |
+  <PLUS>/*@bgen(jjtree)*/
+         {
+           jjtree.closeNodeScope(jjtn000, true);
+           jjtc000 = false;
+         }
+/*@egen*/ {
+    jjtn000.nested.put("bind", "right");
+    jjtn000.nested.put("rank", 2);
+    jjtn000.value=token.image;} |
+  <MINUS>/*@bgen(jjtree)*/
+          {
+            jjtree.closeNodeScope(jjtn000, true);
+            jjtc000 = false;
+          }
+/*@egen*/ {
+    jjtn000.nested.put("bind", "right");
+    jjtn000.nested.put("rank", 2);
+    jjtn000.value=token.image;}/*@bgen(jjtree)*/
   } finally {
     if (jjtc000) {
       jjtree.closeNodeScope(jjtn000, true);
@@ -909,33 +960,11 @@ void op()     :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void unaryOp()          :
-{/*@bgen(jjtree) UnaryOP */
-  UnaryOP jjtn000 = new UnaryOP(JJTUNARYOP);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-/*@egen*/}
-{/*@bgen(jjtree) UnaryOP */
-  try {
-/*@egen*/
-  <MINUS>/*@bgen(jjtree)*/
-          {
-            jjtree.closeNodeScope(jjtn000, true);
-            jjtc000 = false;
-          }
-/*@egen*/ {jjtn000.value=token.image;} |
-  <TILDA>/*@bgen(jjtree)*/
-          {
-            jjtree.closeNodeScope(jjtn000, true);
-            jjtc000 = false;
-          }
-/*@egen*/ {jjtn000.value=token.image;}/*@bgen(jjtree)*/
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-    }
-  }
-/*@egen*/
+Token unaryOp() :
+{}
+{
+  <MINUS> {return token;} |
+  <TILDA> {return token;}
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
