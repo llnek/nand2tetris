@@ -7,25 +7,57 @@ options {
                    
              
   LOOKAHEAD=2;
-  STATIC=true;
+  STATIC=false;
 }
 
 PARSER_BEGIN(ASTGentor)
 package czlab.tecs.p11;
 
 import java.util.ArrayList;
+import java.util.Stack;
 import java.util.List;
 
 public class ASTGentor/*@bgen(jjtree)*/implements ASTGentorTreeConstants/*@egen*/ {/*@bgen(jjtree)*/
-  protected static JJTASTGentorState jjtree = new JJTASTGentorState();
+  protected JJTASTGentorState jjtree = new JJTASTGentorState();
 
 /*@egen*/
 
-  public static SimpleNode parseOneUnit()
+  public static int RIGHT= 1;
+  public static int LEFT= -1;
+
+  public SimpleNode parseOneUnit()
   throws Exception {
     return parseClazz();
   }
 
+  public static Object speek(Stack<Object> s) {
+    return s.empty() ? null : s.peek();
+  }
+
+  public static void evalOP(
+    ASTNode jjt, List<Object> out, Stack<Object> stk) {
+    int bind= (int) jjt.nested.get("bind");
+    int rank= (int) jjt.nested.get("rank");
+    ASTNode top= (ASTNode)speek(stk);
+    while (top != null) {
+      int r = (int)top.nested.get("rank");
+      if (rank < r || 
+          ((r == rank) && (bind == LEFT))) {
+        out.add(stk.pop());
+        top=(ASTNode)speek(stk);
+      } else {
+        stk.push(jjt);
+      }
+    }
+  }
+
+  public static void cfgOP(
+    ASTNode jjt, Token t, int bind, int rank) {
+
+    jjt.nested.put("bind", bind);
+    jjt.nested.put("rank", rank);
+    jjt.value=t.image;
+  }
 }
 
 PARSER_END(ASTGentor)
@@ -632,14 +664,22 @@ void returnStatement()                  :
 //
 void expr()             :
 {/*@bgen(jjtree) Expression */
-  Expression jjtn000 = new Expression(JJTEXPRESSION);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-/*@egen*/}
+ Expression jjtn000 = new Expression(JJTEXPRESSION);
+ boolean jjtc000 = true;
+ jjtree.openNodeScope(jjtn000);
+/*@egen*/List<Object> out=new ArrayList<Object>();
+ Stack<Object> stk=new Stack<Object>(); }
 {/*@bgen(jjtree) Expression */
   try {
 /*@egen*/
-  term() (op() term())*/*@bgen(jjtree)*/
+  term(out, stk) (op(out, stk) term(out,stk))*/*@bgen(jjtree)*/
+                                               {
+                                                 jjtree.closeNodeScope(jjtn000, true);
+                                                 jjtc000 = false;
+                                               }
+/*@egen*/ {
+
+  }/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
       jjtree.clearNodeScope(jjtn000);
@@ -664,7 +704,7 @@ void expr()             :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void term()       :
+void term(List<Object> out, Stack<Object> stk)       :
 {/*@bgen(jjtree) Term */
  Term jjtn000 = new Term(JJTTERM);
  boolean jjtc000 = true;
@@ -683,11 +723,11 @@ void term()       :
 /*@egen*/ {
     jjtn000.nested.put("group", jjtn000.popChild());
   } |
-  t=unaryOp() term()/*@bgen(jjtree)*/
-                     {
-                       jjtree.closeNodeScope(jjtn000, true);
-                       jjtc000 = false;
-                     }
+  t=unaryOp() term(out, stk)/*@bgen(jjtree)*/
+                             {
+                               jjtree.closeNodeScope(jjtn000, true);
+                               jjtc000 = false;
+                             }
 /*@egen*/ {
     jjtn000.nested.put("unary", t.image);
     jjtn000.nested.put("term", jjtn000.popChild());
@@ -866,7 +906,7 @@ Token scopedCall() :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void op()     :
+void op(List<Object> out, Stack<Object> stk)     :
 {/*@bgen(jjtree) OP */
   OP jjtn000 = new OP(JJTOP);
   boolean jjtc000 = true;
@@ -882,81 +922,80 @@ void op()     :
           jjtc000 = false;
         }
 /*@egen*/ {
-    jjtn000.nested.put("bind", "left");
-    jjtn000.nested.put("rank", 13);
-    jjtn000.value=token.image;} |
+    ASTGentor.cfgOP(jjtn000, token, -1, 13); 
+    ASTGentor.evalOP(jjtn000, out,stk);
+    } |
   <AND>/*@bgen(jjtree)*/
         {
           jjtree.closeNodeScope(jjtn000, true);
           jjtc000 = false;
         }
 /*@egen*/ {
-    jjtn000.nested.put("bind", "left");
-    jjtn000.nested.put("rank", 12);
-    jjtn000.value=token.image;} |
+    ASTGentor.cfgOP(jjtn000, token, -1, 12);
+    ASTGentor.evalOP(jjtn000, out,stk);
+    } |
   <EQ>/*@bgen(jjtree)*/
        {
          jjtree.closeNodeScope(jjtn000, true);
          jjtc000 = false;
        }
 /*@egen*/ {
-    jjtn000.nested.put("bind", "left");
-    jjtn000.nested.put("rank", 8);
-    jjtn000.value=token.image;} |
+    ASTGentor.cfgOP(jjtn000, token, -1, 8); 
+    ASTGentor.evalOP(jjtn000, out,stk);
+    } |
   <LT>/*@bgen(jjtree)*/
        {
          jjtree.closeNodeScope(jjtn000, true);
          jjtc000 = false;
        }
 /*@egen*/ {
-    jjtn000.nested.put("bind", "left");
-    jjtn000.nested.put("rank", 7);
-    jjtn000.value=token.image;} |
+    ASTGentor.cfgOP(jjtn000, token, -1, 7);
+    ASTGentor.evalOP(jjtn000, out,stk);
+    } |
   <GT>/*@bgen(jjtree)*/
        {
          jjtree.closeNodeScope(jjtn000, true);
          jjtc000 = false;
        }
 /*@egen*/ {
-    jjtn000.nested.put("bind", "left");
-    jjtn000.nested.put("rank", 7);
-    jjtn000.value=token.image;} |
+    ASTGentor.cfgOP(jjtn000, token, -1, 7);
+    ASTGentor.evalOP(jjtn000, out,stk);
+    } |
   <STAR>/*@bgen(jjtree)*/
          {
            jjtree.closeNodeScope(jjtn000, true);
            jjtc000 = false;
          }
 /*@egen*/ {
-    jjtn000.nested.put("bind", "left");
-    jjtn000.nested.put("rank", 4);
-    jjtn000.value=token.image;} |
+    ASTGentor.cfgOP(jjtn000, token, -1, 4);
+    ASTGentor.evalOP(jjtn000, out,stk);
+    } |
   <SLASH>/*@bgen(jjtree)*/
           {
             jjtree.closeNodeScope(jjtn000, true);
             jjtc000 = false;
           }
 /*@egen*/ {
-    jjtn000.nested.put("bind", "left");
-    jjtn000.nested.put("rank", 4);
-    jjtn000.value=token.image;} |
+    ASTGentor.cfgOP(jjtn000, token, -1, 4); 
+    ASTGentor.evalOP(jjtn000, out,stk);
+    } |
   <PLUS>/*@bgen(jjtree)*/
          {
            jjtree.closeNodeScope(jjtn000, true);
            jjtc000 = false;
          }
 /*@egen*/ {
-    jjtn000.nested.put("bind", "right");
-    jjtn000.nested.put("rank", 2);
-    jjtn000.value=token.image;} |
+    ASTGentor.cfgOP(jjtn000, token, 1, 2); 
+    ASTGentor.evalOP(jjtn000, out,stk);
+    } |
   <MINUS>/*@bgen(jjtree)*/
           {
             jjtree.closeNodeScope(jjtn000, true);
             jjtc000 = false;
           }
 /*@egen*/ {
-    jjtn000.nested.put("bind", "right");
-    jjtn000.nested.put("rank", 2);
-    jjtn000.value=token.image;}/*@bgen(jjtree)*/
+    ASTGentor.cfgOP(jjtn000, token, 1, 2);
+    ASTGentor.evalOP(jjtn000, out,stk); }/*@bgen(jjtree)*/
   } finally {
     if (jjtc000) {
       jjtree.closeNodeScope(jjtn000, true);

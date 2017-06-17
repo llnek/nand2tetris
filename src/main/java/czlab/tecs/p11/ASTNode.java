@@ -26,6 +26,11 @@ public class ASTNode extends SimpleNode {
     super(p,i);
   }
 
+  public ASTNode peek() {
+    if (children==null) {return null;}
+    return (ASTNode)children[0];
+  }
+
   public ASTNode popChild() {
     if (children==null) {return null;}
     ASTNode h= (ASTNode) children[0];

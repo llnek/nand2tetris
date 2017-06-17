@@ -6,22 +6,54 @@ options {
   NODE_PREFIX = "";
   MULTI=true;
   LOOKAHEAD=2;
-  STATIC=true;
+  STATIC=false;
 }
 
 PARSER_BEGIN(ASTGentor)
 package czlab.tecs.p11;
 
 import java.util.ArrayList;
+import java.util.Stack;
 import java.util.List;
 
 public class ASTGentor {
 
-  public static SimpleNode parseOneUnit()
+  public static int RIGHT= 1;
+  public static int LEFT= -1;
+
+  public SimpleNode parseOneUnit()
   throws Exception {
     return parseClazz();
   }
 
+  public static Object speek(Stack<Object> s) {
+    return s.empty() ? null : s.peek();
+  }
+
+  public static void evalOP(
+    ASTNode jjt, List<Object> out, Stack<Object> stk) {
+    int bind= (int) jjt.nested.get("bind");
+    int rank= (int) jjt.nested.get("rank");
+    ASTNode top= (ASTNode)speek(stk);
+    while (top != null) {
+      int r = (int)top.nested.get("rank");
+      if (rank < r || 
+          ((r == rank) && (bind == LEFT))) {
+        out.add(stk.pop());
+        top=(ASTNode)speek(stk);
+      } else {
+        stk.push(jjt);
+      }
+    }
+  }
+
+  public static void cfgOP(
+    ASTNode jjt, Token t, int bind, int rank) {
+
+    jjt.nested.put("bind", bind);
+    jjt.nested.put("rank", rank);
+    jjt.value=t.image;
+  }
 }
 
 PARSER_END(ASTGentor)
@@ -314,36 +346,43 @@ void returnStatement() #ReturnStatement :
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
 void expr() #Expression :
-{}
+{List<Object> out=new ArrayList<Object>();
+ Stack<Object> stk=new Stack<Object>(); }
 {
-  term() (op() term())*
+  term(out, stk) (op(out, stk) term(out,stk))* {
+
+  }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void term() #Term :
+void term(List<Object> out, Stack<Object> stk) #Term :
 {Object e=null;
  String s;
  Token t, vn;}
 {
   <LPAREN> expr() <RPAREN> {
     jjtThis.nested.put("group", jjtThis.popChild());
+    out.add(jjtThis);
   } |
-  t=unaryOp() term() {
+  t=unaryOp() term(out, stk) {
     jjtThis.nested.put("unary", t.image);
     jjtThis.nested.put("term", jjtThis.popChild());
   } |
   t= integerConstant() {
     jjtThis.nested.put("literal", "int");
     jjtThis.value=t.image;
+    out.add(jjtThis);
   } |
   s=stringConstant() {
     jjtThis.nested.put("literal", "String");
     jjtThis.value=s;
+    out.add(jjtThis);
   }  |
   t=keywordConstant() {
     jjtThis.nested.put("literal", "keyword");
     jjtThis.value=t.image;
+    out.add(jjtThis);
   } |
   subroutineCall() {
     jjtThis.nested.put("call", jjtThis.popChild());
@@ -351,8 +390,10 @@ void term() #Term :
   vn=varName() <LBRAC> expr() <RBRAC>  {
     jjtThis.nested.put("index", jjtThis.popChild());
     jjtThis.nested.put("varr", vn.image);
+    out.add(jjtThis);
   } | vn=varName() {
     jjtThis.nested.put("varr", vn.image);
+    out.add(jjtThis);
   }
 }
 
@@ -395,46 +436,45 @@ Token scopedCall() :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void op() #OP :
+void op(List<Object> out, Stack<Object> stk) #OP :
 {}
 {
   //precedence top to bottom
   <BAR> {
-    jjtThis.nested.put("bind", "left");
-    jjtThis.nested.put("rank", 13);
-    jjtThis.value=token.image;} |
+    ASTGentor.cfgOP(jjtThis, token, -1, 13); 
+    ASTGentor.evalOP(jjtThis, out,stk);
+    } |
   <AND> {
-    jjtThis.nested.put("bind", "left");
-    jjtThis.nested.put("rank", 12);
-    jjtThis.value=token.image;} |
+    ASTGentor.cfgOP(jjtThis, token, -1, 12);
+    ASTGentor.evalOP(jjtThis, out,stk);
+    } |
   <EQ> {
-    jjtThis.nested.put("bind", "left");
-    jjtThis.nested.put("rank", 8);
-    jjtThis.value=token.image;} |
+    ASTGentor.cfgOP(jjtThis, token, -1, 8); 
+    ASTGentor.evalOP(jjtThis, out,stk);
+    } |
   <LT> {
-    jjtThis.nested.put("bind", "left");
-    jjtThis.nested.put("rank", 7);
-    jjtThis.value=token.image;} |
+    ASTGentor.cfgOP(jjtThis, token, -1, 7);
+    ASTGentor.evalOP(jjtThis, out,stk);
+    } |
   <GT> {
-    jjtThis.nested.put("bind", "left");
-    jjtThis.nested.put("rank", 7);
-    jjtThis.value=token.image;} |
+    ASTGentor.cfgOP(jjtThis, token, -1, 7);
+    ASTGentor.evalOP(jjtThis, out,stk);
+    } |
   <STAR> {
-    jjtThis.nested.put("bind", "left");
-    jjtThis.nested.put("rank", 4);
-    jjtThis.value=token.image;} |
+    ASTGentor.cfgOP(jjtThis, token, -1, 4);
+    ASTGentor.evalOP(jjtThis, out,stk);
+    } |
   <SLASH> {
-    jjtThis.nested.put("bind", "left");
-    jjtThis.nested.put("rank", 4);
-    jjtThis.value=token.image;} |
+    ASTGentor.cfgOP(jjtThis, token, -1, 4); 
+    ASTGentor.evalOP(jjtThis, out,stk);
+    } |
   <PLUS> {
-    jjtThis.nested.put("bind", "right");
-    jjtThis.nested.put("rank", 2);
-    jjtThis.value=token.image;} |
+    ASTGentor.cfgOP(jjtThis, token, 1, 2); 
+    ASTGentor.evalOP(jjtThis, out,stk);
+    } |
   <MINUS> {
-    jjtThis.nested.put("bind", "right");
-    jjtThis.nested.put("rank", 2);
-    jjtThis.value=token.image;}
+    ASTGentor.cfgOP(jjtThis, token, 1, 2);
+    ASTGentor.evalOP(jjtThis, out,stk); }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -302,7 +302,7 @@
   (with-open [inp (.openStream ^URL furl)]
     (let [p (ASTGentor. inp)]
       (c/prn!! "Parsing file...")
-      (ASTGentor/parseOneUnit))))
+      (.parseOneUnit p))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
