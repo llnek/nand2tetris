@@ -32,8 +32,8 @@
 ;;
 (def ^:private ^AtomicInteger static-cntr (AtomicInteger.))
 (def ^:private ^AtomicInteger class-cntr (AtomicInteger.))
-(def ^:private static-vars (GenericMutable. {}))
-(def ^:private class-vars (GenericMutable. {}))
+(def ^:private static-symbols (GenericMutable. {}))
+(def ^:private class-symbols (GenericMutable. {}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -96,7 +96,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(declare eval-expr eval-term)
+(declare eval-expr eval-term eval-array-access eval-var)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- speek "" [^Stack s]
@@ -109,131 +109,80 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- fakeUnary "" [unary]
-  (doto {:tag :OP :value unary :rank 99 :bind "right"}))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- eval-op ""
-  [{:keys [value rank bind] :as node} ^List out ^Stack stk]
-
-  (let [top (speek stk)]
-    (if (and (some? top)
-             (not= "(" (:value top))
-             (or (< rank (:rank top))
-                 (and (= rank (:rank top))
-                      (= "left" bind))))
-      (do
-        (.add out (.pop stk))
-        (eval-op node out stk))
-      (.push stk node))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;unwind the stack until we find the opening "(" during
-;;which operators are popped off to the output queue
-(defn- eval-group "" [group ^List out ^Stack stk]
-  (eval-expr group out stk)
-  (loop [top (speek stk)]
-    (let [{:keys [tag value]} top]
-      (cond
-        (nil? top) (c/trap! Exception "bad group")
-        (and (= :OP tag)
-             (= "(" value))
-        (.pop stk)
-        :else
-        (do (.add out (.pop stk))
-            (recur (speek stk) ))))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- eval-unary "" [unary term ^List out ^Stack stk]
-  (eval-term term out stk)
-  (loop [top (speek stk)]
-    (let [{:keys [tag value]} top]
-      (cond
-        (nil? top) (c/trap! Exception "bad unary")
-        (and (= :OP tag)
-             (= "(" value))
-        (do (.pop stk)
-            (.add out (fakeUnary unary)))
-        :else
-        (do (.add out (.pop stk))
-            (recur (speek stk) ))))))
+(defn- eval-unary "" [ctx term]
+  (eval-term term))
+  ;;(eval-unary (:unary ctx)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- eval-subr-call ""
-  [{:keys [target params] :as node} ^List out ^Stack stk]
+  [ctx {:keys [target params] :as node}]
   (let [[z m](.split ^String target "\\.")]
-    (c/prn!! "z = %s" z)
-    (c/prn!! "m = %s" m)
     (doseq [e params]
-      (eval-expr e out stk))))
+      (eval-expr ctx e))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- fakeGroup-B "" []
-  (doto {:tag :OP :value "("}))
-(defn- fakeGroup-E "" []
-  (doto {:tag :OP :value ")"}))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- eval-term ""
   [{:keys [literal group call
-           unary varr index] :as node} ^List out ^Stack stk]
-  (c/prn!! "term=%s" node)
-  (cond
-    (some? unary)
-    (do (.push stk (fakeGroup-B))
-        (eval-unary unary (:term node) out stk))
-    (some? literal)
-    (.add out node)
-    (some? varr)
-    (do (.add out node)
-        (if (some? index)
-          (eval-expr index out stk)))
-    (some? group)
-    (do (.push stk (fakeGroup-B))
-        (eval-group group out stk))
-    (some? call)
-    (eval-subr-call call out stk)
-    :else nil))
+           unary varr index] :as node}]
+  (let [ctx {}]
+    (cond
+      (some? unary)
+      nil
+      (some? literal)
+      nil
+      (some? varr)
+      (if (some? index)
+        (eval-array-access ctx index)
+        (eval-var ctx varr))
+      (some? group)
+      (eval-expr ctx group)
+      (some? call)
+      (eval-subr-call ctx call)
+      :else nil)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- eval-expr "" [expr out stk]
-  (doseq [c (:children expr)
+(defn- eval-expr "" [ctx expr]
+  (doseq [c (:output expr)
           :let [tag (:tag c)]]
     (condp = tag
-      :Term (eval-term c out stk)
-      :OP (eval-op c out stk)
+      :Term nil
+      :OP nil
       (c/trap! Exception "bad expr"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- eval-do-stmt "" [{:keys [call] :as stmt}]
-  (let [out (ArrayList.)
-        stk (Stack.)]
-    (eval-subr-call call out stk)
-    (doseq [x out]
-      (c/prn!! "do= %s" x))))
+(defn- eval-do "" [{:keys [call] :as stmt}]
+  (eval-subr-call {} call))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- eval-while "" [stmt] )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- eval-if "" [stmt] )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- eval-return "" [stmt] )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- eval-array-access "" [ctx expr] )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- eval-var "" [ctx varr] )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- eval-let-stmt "" [{:keys [varr lhs rhs] :as stmt}]
-  (c/prn!! "varr = %s" varr)
+(defn- eval-let "" [{:keys [varr lhs rhs] :as stmt}]
+  (eval-expr {} rhs)
   (if (some? lhs)
-    (let [out (ArrayList.)
-          stk (Stack.)]
-      (eval-expr lhs out stk)
-      (doseq [x out]
-        (c/prn!! "lhs= %s" x))))
-  (if (some? rhs)
-    (let [out (ArrayList.)
-          stk (Stack.)]
-      (eval-expr rhs out stk)
-      (doseq [x out]
-        (c/prn!! "rhs= %s" x)))))
+    (eval-array-access {} lhs) (eval-var {} varr)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -251,13 +200,16 @@
     (doseq [s statements
             :let [t (:tag s)]]
       (cond
-        (= :WhileStatement t) nil
+        (= :WhileStatement t)
+        (eval-while s)
         (= :LetStatement t)
-        (eval-let-stmt s)
+        (eval-let s)
         (= :DoStatement t)
-        (eval-do-stmt s)
-        (= :IfStatement t) nil
-        (= :ReturnStatement t) nil ))))
+        (eval-do s)
+        (= :IfStatement t)
+        (eval-if s)
+        (= :ReturnStatement t)
+        (eval-return s)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -268,8 +220,8 @@
         dft {:type type}
         [ctx ^AtomicInteger ctr]
         (condp = qualifier
-          "static" [static-vars static-cntr]
-          "field"  [class-vars class-cntr]
+          "static" [static-symbols static-cntr]
+          "field"  [class-symbols class-cntr]
           (c/trap! Exception "bad qualifier"))]
     (if (string? vars)
       (->> {:index (.getAndIncrement ctr)}
@@ -292,8 +244,6 @@
         (doClassVar c)
         (= :SubroutineDec tag)
         (doFuncVar c)))
-    (c/prn!! (f/writeEdnStr @static-vars))
-    (c/prn!! (f/writeEdnStr @class-vars))
     s))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

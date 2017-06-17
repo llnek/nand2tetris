@@ -37,14 +37,15 @@ public class ASTGentor {
     ASTNode top= (ASTNode)speek(stk);
     while (top != null) {
       int r = (int)top.nested.get("rank");
-      if (rank < r || 
+      if (rank < r ||
           ((r == rank) && (bind == LEFT))) {
         out.add(stk.pop());
         top=(ASTNode)speek(stk);
       } else {
-        stk.push(jjt);
+        break;
       }
     }
+    stk.push(jjt);
   }
 
   public static void cfgOP(
@@ -278,8 +279,8 @@ void letStatement() #LetStatement :
 {Token vn;}
 {
   <LET> vn=varName()
-  (<LBRAC> expr() <RBRAC>)?
-  <EQ> expr() <SEMICOLON> {
+  (<LBRAC> expr(vn.image+"[]") <RBRAC>)?
+  <EQ> expr("let to " + vn.image) <SEMICOLON> {
     jjtThis.nested.put("varr", vn.image);
     int cnt= jjtThis.jjtGetNumChildren();
     if (cnt == 2) {
@@ -297,7 +298,7 @@ void letStatement() #LetStatement :
 void ifStatement() #IfStatement :
 {ASTNode n;}
 {
-  <IF> <LPAREN> expr() <RPAREN>
+  <IF> <LPAREN> expr("if test") <RPAREN>
   <LCURLY> statements() <RCURLY> #IfBlock(1)
   (<ELSE> <LCURLY> statements() <RCURLY> #ElseBlock(1))? {
     jjtThis.nested.put("test", jjtThis.popChild());
@@ -315,7 +316,7 @@ void ifStatement() #IfStatement :
 void whileStatement() #WhileStatement :
 {}
 {
-  <WHILE> <LPAREN> expr() <RPAREN>
+  <WHILE> <LPAREN> expr("while-test") <RPAREN>
     <LCURLY> statements() <RCURLY> #WhileBlock(1) {
     jjtThis.nested.put("test", jjtThis.popChild());
     jjtThis.nested.put("body", jjtThis.popChild().popChild().popAll());
@@ -338,19 +339,23 @@ void returnStatement() #ReturnStatement :
 {}
 {
   <RETURN> <SEMICOLON> |
-  <RETURN> expr() <SEMICOLON> {
+  <RETURN> expr("return value") <SEMICOLON> {
     jjtThis.nested.put("value", jjtThis.popChild());
   }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void expr() #Expression :
+void expr(String desc) #Expression :
 {List<Object> out=new ArrayList<Object>();
  Stack<Object> stk=new Stack<Object>(); }
 {
   term(out, stk) (op(out, stk) term(out,stk))* {
-
+    for (Object obj=speek(stk); obj != null; ) {
+      out.add(stk.pop());
+      obj=speek(stk);
+    }
+    jjtThis.nested.put("output", out);
   }
 }
 
@@ -361,13 +366,14 @@ void term(List<Object> out, Stack<Object> stk) #Term :
  String s;
  Token t, vn;}
 {
-  <LPAREN> expr() <RPAREN> {
+  <LPAREN> expr("term-group") <RPAREN> {
     jjtThis.nested.put("group", jjtThis.popChild());
     out.add(jjtThis);
   } |
   t=unaryOp() term(out, stk) {
     jjtThis.nested.put("unary", t.image);
     jjtThis.nested.put("term", jjtThis.popChild());
+    out.add(jjtThis);
   } |
   t= integerConstant() {
     jjtThis.nested.put("literal", "int");
@@ -386,8 +392,9 @@ void term(List<Object> out, Stack<Object> stk) #Term :
   } |
   subroutineCall() {
     jjtThis.nested.put("call", jjtThis.popChild());
+    out.add(jjtThis);
   } |
-  vn=varName() <LBRAC> expr() <RBRAC>  {
+  vn=varName() <LBRAC> expr(vn.image+"[]") <RBRAC>  {
     jjtThis.nested.put("index", jjtThis.popChild());
     jjtThis.nested.put("varr", vn.image);
     out.add(jjtThis);
@@ -403,12 +410,12 @@ void subroutineCall() #SubroutineCall :
 {Token sn;}
 {
   sn=subroutineName()
-    <LPAREN> exprList() <RPAREN> {
+    <LPAREN> exprList("caller: " + sn.image) <RPAREN> {
     jjtThis.nested.put("target", sn.image);
     jjtThis.nested.put("params", jjtThis.popChild().popAll());
   } |
   sn=scopedCall()
-  <LPAREN> exprList() <RPAREN> {
+  <LPAREN> exprList("caller: " + sn.image) <RPAREN> {
     jjtThis.nested.put("target", sn.image);
     jjtThis.nested.put("params", jjtThis.popChild().popAll());
   }
@@ -416,10 +423,10 @@ void subroutineCall() #SubroutineCall :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void exprList() #ExpressionList :
+void exprList(String desc) #ExpressionList :
 {}
 {
-  (expr() (<COMMA> expr() )*)?
+  (expr(desc) (<COMMA> expr(desc) )*)?
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -441,7 +448,7 @@ void op(List<Object> out, Stack<Object> stk) #OP :
 {
   //precedence top to bottom
   <BAR> {
-    ASTGentor.cfgOP(jjtThis, token, -1, 13); 
+    ASTGentor.cfgOP(jjtThis, token, -1, 13);
     ASTGentor.evalOP(jjtThis, out,stk);
     } |
   <AND> {
@@ -449,7 +456,7 @@ void op(List<Object> out, Stack<Object> stk) #OP :
     ASTGentor.evalOP(jjtThis, out,stk);
     } |
   <EQ> {
-    ASTGentor.cfgOP(jjtThis, token, -1, 8); 
+    ASTGentor.cfgOP(jjtThis, token, -1, 8);
     ASTGentor.evalOP(jjtThis, out,stk);
     } |
   <LT> {
@@ -465,11 +472,11 @@ void op(List<Object> out, Stack<Object> stk) #OP :
     ASTGentor.evalOP(jjtThis, out,stk);
     } |
   <SLASH> {
-    ASTGentor.cfgOP(jjtThis, token, -1, 4); 
+    ASTGentor.cfgOP(jjtThis, token, -1, 4);
     ASTGentor.evalOP(jjtThis, out,stk);
     } |
   <PLUS> {
-    ASTGentor.cfgOP(jjtThis, token, 1, 2); 
+    ASTGentor.cfgOP(jjtThis, token, 1, 2);
     ASTGentor.evalOP(jjtThis, out,stk);
     } |
   <MINUS> {

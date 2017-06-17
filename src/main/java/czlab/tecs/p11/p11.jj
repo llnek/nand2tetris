@@ -41,14 +41,15 @@ public class ASTGentor/*@bgen(jjtree)*/implements ASTGentorTreeConstants/*@egen*
     ASTNode top= (ASTNode)speek(stk);
     while (top != null) {
       int r = (int)top.nested.get("rank");
-      if (rank < r || 
+      if (rank < r ||
           ((r == rank) && (bind == LEFT))) {
         out.add(stk.pop());
         top=(ASTNode)speek(stk);
       } else {
-        stk.push(jjt);
+        break;
       }
     }
+    stk.push(jjt);
   }
 
   public static void cfgOP(
@@ -407,12 +408,12 @@ void letStatement()               :
   try {
 /*@egen*/
   <LET> vn=varName()
-  (<LBRAC> expr() <RBRAC>)?
-  <EQ> expr() <SEMICOLON>/*@bgen(jjtree)*/
-                          {
-                            jjtree.closeNodeScope(jjtn000, true);
-                            jjtc000 = false;
-                          }
+  (<LBRAC> expr(vn.image+"[]") <RBRAC>)?
+  <EQ> expr("let to " + vn.image) <SEMICOLON>/*@bgen(jjtree)*/
+                                              {
+                                                jjtree.closeNodeScope(jjtn000, true);
+                                                jjtc000 = false;
+                                              }
 /*@egen*/ {
     jjtn000.nested.put("varr", vn.image);
     int cnt= jjtn000.jjtGetNumChildren();
@@ -457,7 +458,7 @@ void ifStatement()              :
 {/*@bgen(jjtree) IfStatement */
   try {
 /*@egen*/
-  <IF> <LPAREN> expr() <RPAREN>
+  <IF> <LPAREN> expr("if test") <RPAREN>
   <LCURLY> statements()/*@bgen(jjtree) #IfBlock( 1) */
                         {
                           IfBlock jjtn001 = new IfBlock(JJTIFBLOCK);
@@ -532,7 +533,7 @@ void whileStatement()                 :
 {/*@bgen(jjtree) WhileStatement */
   try {
 /*@egen*/
-  <WHILE> <LPAREN> expr() <RPAREN>
+  <WHILE> <LPAREN> expr("while-test") <RPAREN>
     <LCURLY> statements()/*@bgen(jjtree) #WhileBlock( 1) */
                           {
                             WhileBlock jjtn001 = new WhileBlock(JJTWHILEBLOCK);
@@ -630,11 +631,11 @@ void returnStatement()                  :
   try {
 /*@egen*/
   <RETURN> <SEMICOLON> |
-  <RETURN> expr() <SEMICOLON>/*@bgen(jjtree)*/
-                              {
-                                jjtree.closeNodeScope(jjtn000, true);
-                                jjtc000 = false;
-                              }
+  <RETURN> expr("return value") <SEMICOLON>/*@bgen(jjtree)*/
+                                            {
+                                              jjtree.closeNodeScope(jjtn000, true);
+                                              jjtc000 = false;
+                                            }
 /*@egen*/ {
     jjtn000.nested.put("value", jjtn000.popChild());
   }/*@bgen(jjtree)*/
@@ -662,7 +663,7 @@ void returnStatement()                  :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void expr()             :
+void expr(String desc)             :
 {/*@bgen(jjtree) Expression */
  Expression jjtn000 = new Expression(JJTEXPRESSION);
  boolean jjtc000 = true;
@@ -678,7 +679,11 @@ void expr()             :
                                                  jjtc000 = false;
                                                }
 /*@egen*/ {
-
+    for (Object obj=speek(stk); obj != null; ) {
+      out.add(stk.pop());
+      obj=speek(stk);
+    }
+    jjtn000.nested.put("output", out);
   }/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
@@ -715,13 +720,14 @@ void term(List<Object> out, Stack<Object> stk)       :
 {/*@bgen(jjtree) Term */
   try {
 /*@egen*/
-  <LPAREN> expr() <RPAREN>/*@bgen(jjtree)*/
-                           {
-                             jjtree.closeNodeScope(jjtn000, true);
-                             jjtc000 = false;
-                           }
+  <LPAREN> expr("term-group") <RPAREN>/*@bgen(jjtree)*/
+                                       {
+                                         jjtree.closeNodeScope(jjtn000, true);
+                                         jjtc000 = false;
+                                       }
 /*@egen*/ {
     jjtn000.nested.put("group", jjtn000.popChild());
+    out.add(jjtn000);
   } |
   t=unaryOp() term(out, stk)/*@bgen(jjtree)*/
                              {
@@ -731,6 +737,7 @@ void term(List<Object> out, Stack<Object> stk)       :
 /*@egen*/ {
     jjtn000.nested.put("unary", t.image);
     jjtn000.nested.put("term", jjtn000.popChild());
+    out.add(jjtn000);
   } |
   t= integerConstant()/*@bgen(jjtree)*/
                        {
@@ -740,6 +747,7 @@ void term(List<Object> out, Stack<Object> stk)       :
 /*@egen*/ {
     jjtn000.nested.put("literal", "int");
     jjtn000.value=t.image;
+    out.add(jjtn000);
   } |
   s=stringConstant()/*@bgen(jjtree)*/
                      {
@@ -749,6 +757,7 @@ void term(List<Object> out, Stack<Object> stk)       :
 /*@egen*/ {
     jjtn000.nested.put("literal", "String");
     jjtn000.value=s;
+    out.add(jjtn000);
   }  |
   t=keywordConstant()/*@bgen(jjtree)*/
                       {
@@ -758,6 +767,7 @@ void term(List<Object> out, Stack<Object> stk)       :
 /*@egen*/ {
     jjtn000.nested.put("literal", "keyword");
     jjtn000.value=t.image;
+    out.add(jjtn000);
   } |
   subroutineCall()/*@bgen(jjtree)*/
                    {
@@ -766,15 +776,17 @@ void term(List<Object> out, Stack<Object> stk)       :
                    }
 /*@egen*/ {
     jjtn000.nested.put("call", jjtn000.popChild());
+    out.add(jjtn000);
   } |
-  vn=varName() <LBRAC> expr() <RBRAC>/*@bgen(jjtree)*/
-                                       {
-                                         jjtree.closeNodeScope(jjtn000, true);
-                                         jjtc000 = false;
-                                       }
+  vn=varName() <LBRAC> expr(vn.image+"[]") <RBRAC>/*@bgen(jjtree)*/
+                                                    {
+                                                      jjtree.closeNodeScope(jjtn000, true);
+                                                      jjtc000 = false;
+                                                    }
 /*@egen*/  {
     jjtn000.nested.put("index", jjtn000.popChild());
     jjtn000.nested.put("varr", vn.image);
+    out.add(jjtn000);
   } | vn=varName()/*@bgen(jjtree)*/
                    {
                      jjtree.closeNodeScope(jjtn000, true);
@@ -782,6 +794,7 @@ void term(List<Object> out, Stack<Object> stk)       :
                    }
 /*@egen*/ {
     jjtn000.nested.put("varr", vn.image);
+    out.add(jjtn000);
   }/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
@@ -817,21 +830,21 @@ void subroutineCall()                 :
   try {
 /*@egen*/
   sn=subroutineName()
-    <LPAREN> exprList() <RPAREN>/*@bgen(jjtree)*/
-                                 {
-                                   jjtree.closeNodeScope(jjtn000, true);
-                                   jjtc000 = false;
-                                 }
+    <LPAREN> exprList("caller: " + sn.image) <RPAREN>/*@bgen(jjtree)*/
+                                                      {
+                                                        jjtree.closeNodeScope(jjtn000, true);
+                                                        jjtc000 = false;
+                                                      }
 /*@egen*/ {
     jjtn000.nested.put("target", sn.image);
     jjtn000.nested.put("params", jjtn000.popChild().popAll());
   } |
   sn=scopedCall()
-  <LPAREN> exprList() <RPAREN>/*@bgen(jjtree)*/
-                               {
-                                 jjtree.closeNodeScope(jjtn000, true);
-                                 jjtc000 = false;
-                               }
+  <LPAREN> exprList("caller: " + sn.image) <RPAREN>/*@bgen(jjtree)*/
+                                                    {
+                                                      jjtree.closeNodeScope(jjtn000, true);
+                                                      jjtc000 = false;
+                                                    }
 /*@egen*/ {
     jjtn000.nested.put("target", sn.image);
     jjtn000.nested.put("params", jjtn000.popChild().popAll());
@@ -860,7 +873,7 @@ void subroutineCall()                 :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-void exprList()                 :
+void exprList(String desc)                 :
 {/*@bgen(jjtree) ExpressionList */
   ExpressionList jjtn000 = new ExpressionList(JJTEXPRESSIONLIST);
   boolean jjtc000 = true;
@@ -869,7 +882,7 @@ void exprList()                 :
 {/*@bgen(jjtree) ExpressionList */
   try {
 /*@egen*/
-  (expr() (<COMMA> expr() )*)?/*@bgen(jjtree)*/
+  (expr(desc) (<COMMA> expr(desc) )*)?/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
       jjtree.clearNodeScope(jjtn000);
@@ -922,7 +935,7 @@ void op(List<Object> out, Stack<Object> stk)     :
           jjtc000 = false;
         }
 /*@egen*/ {
-    ASTGentor.cfgOP(jjtn000, token, -1, 13); 
+    ASTGentor.cfgOP(jjtn000, token, -1, 13);
     ASTGentor.evalOP(jjtn000, out,stk);
     } |
   <AND>/*@bgen(jjtree)*/
@@ -940,7 +953,7 @@ void op(List<Object> out, Stack<Object> stk)     :
          jjtc000 = false;
        }
 /*@egen*/ {
-    ASTGentor.cfgOP(jjtn000, token, -1, 8); 
+    ASTGentor.cfgOP(jjtn000, token, -1, 8);
     ASTGentor.evalOP(jjtn000, out,stk);
     } |
   <LT>/*@bgen(jjtree)*/
@@ -976,7 +989,7 @@ void op(List<Object> out, Stack<Object> stk)     :
             jjtc000 = false;
           }
 /*@egen*/ {
-    ASTGentor.cfgOP(jjtn000, token, -1, 4); 
+    ASTGentor.cfgOP(jjtn000, token, -1, 4);
     ASTGentor.evalOP(jjtn000, out,stk);
     } |
   <PLUS>/*@bgen(jjtree)*/
@@ -985,7 +998,7 @@ void op(List<Object> out, Stack<Object> stk)     :
            jjtc000 = false;
          }
 /*@egen*/ {
-    ASTGentor.cfgOP(jjtn000, token, 1, 2); 
+    ASTGentor.cfgOP(jjtn000, token, 1, 2);
     ASTGentor.evalOP(jjtn000, out,stk);
     } |
   <MINUS>/*@bgen(jjtree)*/
