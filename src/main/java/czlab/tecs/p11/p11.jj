@@ -673,12 +673,14 @@ void expr(String desc)             :
 {/*@bgen(jjtree) Expression */
   try {
 /*@egen*/
+  //apply algo resulting in postfix
   term(out, stk) (op(out, stk) term(out,stk))*/*@bgen(jjtree)*/
                                                {
                                                  jjtree.closeNodeScope(jjtn000, true);
                                                  jjtc000 = false;
                                                }
 /*@egen*/ {
+    //add back all remaining operators
     for (Object obj=speek(stk); obj != null; ) {
       out.add(stk.pop());
       obj=speek(stk);
@@ -765,7 +767,7 @@ void term(List<Object> out, Stack<Object> stk)       :
                         jjtc000 = false;
                       }
 /*@egen*/ {
-    jjtn000.nested.put("literal", "keyword");
+    jjtn000.nested.put("literal", "%keyword");
     jjtn000.value=t.image;
     out.add(jjtn000);
   } |
