@@ -350,7 +350,9 @@ void expr(String desc) #Expression :
 {List<Object> out=new ArrayList<Object>();
  Stack<Object> stk=new Stack<Object>(); }
 {
+  //apply algo resulting in postfix
   term(out, stk) (op(out, stk) term(out,stk))* {
+    //add back all remaining operators
     for (Object obj=speek(stk); obj != null; ) {
       out.add(stk.pop());
       obj=speek(stk);

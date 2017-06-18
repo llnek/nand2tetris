@@ -196,7 +196,14 @@
         lx (GenericMutable. {})
         args (partition 2 args)
         vars (partition 2 vars)]
-    (c/prn!! "doFuncVar %s" name)
+    (doseq [[t n] args]
+      (c/setf! px
+               n
+               {:type t :index (.getAndIncrement pc)}))
+    (doseq [[t n] vars]
+      (c/setf! lx
+               n
+               {:type t :index (.getAndIncrement pc)}))
     (doseq [s statements
             :let [t (:tag s)]]
       (cond
