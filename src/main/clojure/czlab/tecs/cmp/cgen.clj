@@ -53,6 +53,12 @@
 ;;
 (declare genExpr genStmts)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- isPrimType? "" [t]
+  (or (= "boolean" t)
+      (= "int" t)
+      (= "char" t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -78,9 +84,9 @@
 ;;
 (defn- genPush "" [^Writer w what & more]
   (->> (s/strim (cs/join " " more))
-         (str "push " what )
-         (.write w))
-    (nline w))
+       (str "push " what " ")
+       (.write w))
+  (nline w))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -92,7 +98,7 @@
 ;;
 (defn- genPop "" [^Writer w what & more]
   (->> (s/strim (cs/join " " more))
-       (str "pop " what )
+       (str "pop " what " ")
        (.write w))
   (nline w))
 
@@ -110,7 +116,8 @@
              must?)
       (c/trap! Exception
                (str "bad varr: " varr))
-      info)))
+      (c/doto->> info
+        (println "info==== " )))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -188,20 +195,31 @@
 (defn- genInvoke "" [^Writer w call]
   (let [{:keys [target params]}
         call
-        [z m] (.split target "\\.")
+        dt (atom nil)
+        [z m] (.split ^String
+                      target "\\.")
         cnt (count params)]
     (cond
       (= "this" z)
-      (genPush w "pointer" 0)
+      (genPush w "this" 0)
       (s/hgl? z)
       (let [info (findSymbol z false)
-            {:keys [mtype index]}
+            {:keys [mtype
+                    index dtype]}
             info]
         (when (some? info)
+          (reset! dt dtype)
           (genMemLoc w mtype index))))
     (doseq [p params]
       (genExpr w p))
-    (genCall w target cnt)))
+    (->>
+      (if (or (= "this" z)
+              (and (some? @dt)
+                   (not (isPrimType? dt))))
+        (inc cnt)
+        cnt)
+      (genCall w
+               (str (if (some? @dt) @dt z) "." m)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -257,7 +275,7 @@
         (genPop w "that" 0))
       (do
         (genPush w "temp" 0)
-        (genMemLoc w mtype index)))))
+        (genPop w mtype index)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -297,7 +315,8 @@
 ;;
 (defn- genDo "" [^Writer w
                 {:keys [call] :as stmt}]
-  (genInvoke w call))
+  (genInvoke w call)
+  (genPop w "temp" 0))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -329,7 +348,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn genFnBody "" [^Writer w stmts]
-  (genStmts stmts))
+  (genStmts w stmts))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

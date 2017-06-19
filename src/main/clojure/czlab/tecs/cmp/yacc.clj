@@ -111,19 +111,22 @@
     (if-not func?
       (swap! params
              assoc
-             "this" {:type cg/*class-name*
+             "this" {:dtype cg/*class-name*
+                     :mtype "field"
                      :index (.getAndIncrement cg/arg-cntr)}))
     (doseq [[t n] args]
       (swap! params
              assoc
              n
-             {:type t
+             {:dtype t
+              :mtype "argument"
               :index (.getAndIncrement cg/arg-cntr)}))
     (doseq [[t n] vars]
       (swap! locals
              assoc
              n
-             {:type t
+             {:dtype t
+              :mtype "local"
               :index (.getAndIncrement cg/var-cntr)}))
     (binding
       [cg/*class-level?* (not func?)
@@ -134,18 +137,21 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- doClassVar "" [{:keys [attrs] :as node}]
+(defn- doClassVar "" [statics
+                      fields
+                      {:keys [attrs] :as node}]
   (let [{:keys [type
                 vars
                 qualifier]} attrs
-        dft {:type type}
         [ctx ^AtomicInteger ctr]
         (condp = qualifier
-          "static" [cg/*static-syms* cg/static-cntr]
-          "field"  [cg/*class-syms* cg/field-cntr]
+          "static" [statics cg/static-cntr]
+          "field"  [fields cg/field-cntr]
           (c/trap!
             Exception
-            (str "bad qualifier: " qualifier)))]
+            (str "bad qualifier: " qualifier)))
+        dft {:mtype qualifier
+             :dtype type}]
     (if (string? vars)
       (->> {:index (.getAndIncrement ctr)}
            (merge dft)
@@ -164,7 +170,7 @@
         [vs fs]
         (->> (:children root)
              (split-with
-               #(= :classVarDec (:tag %))))]
+               #(= :ClassVarDec (:tag %))))]
     (doseq [c vs]
       (doClassVar statics fields c))
     (binding
@@ -173,7 +179,6 @@
        cg/*class-name* (get-in root
                                [:attrs :name])]
       (doseq [f fs]
-        (c/prn!! "fffd == %s" (:tag f))
         (assert (= :SubroutineDec (:tag f)))
         (doFuncVar w f)))
     root))
