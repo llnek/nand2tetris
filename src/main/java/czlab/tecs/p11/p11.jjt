@@ -303,7 +303,7 @@ void ifStatement() #IfStatement :
   (<ELSE> <LCURLY> statements() <RCURLY> #ElseBlock(1))? {
     jjtThis.nested.put("test", jjtThis.popChild());
     n= (ASTNode)jjtThis.popChild(); //if
-    jjtThis.nested.put("if", n.popChild().popAll());
+    jjtThis.nested.put("then", n.popChild().popAll());
     n= (ASTNode)jjtThis.popChild(); //else?
     if (n != null) {
       jjtThis.nested.put("else", n.popChild().popAll());

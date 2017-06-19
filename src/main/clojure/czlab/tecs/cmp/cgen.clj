@@ -31,13 +31,19 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (def ^:dynamic *class-level?* false)
+(def ^:dynamic *static-syms* nil)
+(def ^:dynamic *class-name* "")
 (def ^:dynamic *class-syms* nil)
-(def ^:dynamic *funct-syms* nil)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defmacro ^:private genHeader "" [w fname info]
-  `(.write ~w (str ~fname " " (count (:args ~info)))))
+(def ^:dynamic *local-syms* nil)
+(def ^:dynamic *arg-syms* nil)
+
+(def ^AtomicInteger while-cntr (AtomicInteger.))
+(def ^AtomicInteger if-cntr (AtomicInteger.))
+(def ^AtomicInteger static-cntr (AtomicInteger.))
+(def ^AtomicInteger field-cntr (AtomicInteger.))
+(def ^AtomicInteger arg-cntr (AtomicInteger.))
+(def ^AtomicInteger var-cntr (AtomicInteger.))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -45,145 +51,18 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(declare genCall genPush genPop genAction genExpr)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn genString "" [^Writer w ^String s]
-  (let [len (.length s)]
-    (genPush "constant" len)
-    (genCall "String.new" 1)
-    ;;appendChar returns this
-    (doseq [c s]
-      (genPush "constant" (int c))
-      (genCall "String.appendChar" 2))))
+(declare genExpr genStmts)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn genKeyword "" [^Writer w kw]
-  (case kw
-    ("null" "false")
-    (genPush "constant" 0)
-    "true"
-    (do (genPush "constant" 0)
-        (genAction "~"))
-    "this"
-    (genPush "pointer" 0)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn genLiteral "" [^Writer w term]
-  (let [{:keys [literal value]} term]
-    (condp = literal
-      "String"
-      (genString w value)
-      "int"
-      (genPush w "constant" value)
-      "keyword"
-      (genKeyword w value))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn genVarr "" [^Writer w varr index]
-  (let [info (if *class-level?*
-               (or (get *funct-syms* varr)
-                   (get *class-syms* varr))
-               (get *funct-syms* varr))
-        _ (if (nil? info)
-            (c/trap! Exception
-                     (str "bad varr: " varr)))
-        {:keys [mtype index]} info
-        mtype (if (= "field" mtype) "this" mtype)]
-    (if (nil? index)
-      (genPush w mtype index)
-      (do
-        (genExpr w index)
-        (genPush w mtype index)
-        (genAction w "+")
-        (genPop w "pointer" 1)
-        (genPush w "that" 0)))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn genInvoke "" [^Writer w call]
-  (let [{:keys [target params]}
-        call
-        cnt (count params)]
-    (doseq [p params]
-      (genExpr w p))
-    (genCall target cnt)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn genTerm "" [^Writer w term]
-  (let [{:keys [literal varr index
-                call
-                unary term group]} term]
-    (cond
-      (some? literal)
-      (genLiteral term)
-      (some? call)
-      (genInvoke w call)
-      (some? group)
-      (genExpr w group)
-      (s/hgl? unary)
-      (do
-        (assert (some? term))
-        (genTerm w term)
-        (genAction w unary))
-      (some? varr)
-      (genVarr w varr index))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn genExpr "" [^Writer w expr]
-  (doseq [tm (:output expr)
-          :let [op? (= :OP (:tag tm))]]
-    (genTerm w tm)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn genLet "" [^Writer w varr lhs rhs]
-  (let [info (if *class-level?*
-               (or (get *funct-syms* varr)
-                   (get *class-syms* varr))
-               (get *funct-syms* varr))
-        _ (if (nil? info)
-            (c/trap! Exception (str "bad varr: " varr)))
-        {:keys [mtype index]} info
-        mtype (if (= "field" mtype) "this" mtype)]
-    ;;eval and set the right offset to the object-array
-    (when (some? lhs)
-      (genExpr w lhs)
-      (genPush w mtype index)
-      (genAction w "+"))
-    ;;eval the statement
-    (genExpr w rhs)
-    ;;save the rhs result
-    (genPop "temp" 0)
-    ;;do the assignment
-    (if (some? lhs)
-      (do
-        (genPop "pointer" 1)
-        (genPush "temp" 0)
-        (genPop "that" 0))
-      (do
-        (genPush "temp" 0)
-        (genPop mtype index)))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn genReturn "" [^Writer w expr]
-  (if (some? expr)
-    (genExpr w expr))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn genAction "" [^Writer w op & [unary?]]
+(defn- genAction "" [^Writer w op & [unary?]]
   (when-some
     [s (condp = op
-         "+" "add"
          "-" (if unary? "neg" "sub")
-         "*" "mult"
+         "return" "return"
+         "+" "add"
+         "*" ""
          "/" ""
          "~" "not"
          ">" "gt"
@@ -197,7 +76,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn genPush "" [^Writer w what & more]
+(defn- genPush "" [^Writer w what & more]
   (->> (s/strim (cs/join " " more))
          (str "push " what )
          (.write w))
@@ -205,16 +84,13 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn genCall "" [^Writer w func numArgs]
-  (let [numArgs
-        (+ (if (s/embeds? func ".") 1 0)
-           numArgs)]
-    (.write w (str "call " func " " numArgs))
-    (nline w)))
+(defn- genCall "" [^Writer w func numArgs]
+  (.write w (str "call " func " " numArgs))
+  (nline w))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn genPop "" [^Writer w what & more]
+(defn- genPop "" [^Writer w what & more]
   (->> (s/strim (cs/join " " more))
        (str "pop " what )
        (.write w))
@@ -222,18 +98,251 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn genFunction "" [^Writer w, func, info]
-  (genHeader w func info))
+(defn- findSymbol "" [varr must?]
+  (let [info (if *class-level?*
+               (or (get *local-syms* varr)
+                   (get *arg-syms* varr)
+                   (get *class-syms* varr)
+                   (get *static-syms* varr))
+               (or (get *local-syms* varr)
+                   (get *arg-syms* varr)))]
+    (if (and (nil? info)
+             must?)
+      (c/trap! Exception
+               (str "bad varr: " varr))
+      info)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn genMethod "" [^Writer w, clazz, mtd, info]
-  (genHeader w (str clazz "." mtd) info))
+(defn genIfGoto "" [^Writer w lbl]
+  (.write w (str "if-goto " lbl)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn genCtor "" [^Writer w, clazz, mtd, info]
-  (genHeader w (str clazz "." mtd) info))
+(defn genGoto "" [^Writer w lbl]
+  (.write w (str "goto " lbl)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn genLabel "" [^Writer w lbl]
+  (.write w (str "label " lbl)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- genMemLoc "" [^Writer w loc index]
+  (genPush w
+           (if (= "field" loc) "pointer" loc) index))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- genString "" [^Writer w ^String s]
+  (let [len (.length s)]
+    (genPush w "constant" len)
+    (genCall w "String.new" 1)
+    ;;appendChar returns this
+    (doseq [c s]
+      (genPush w "constant" (int c))
+      (genCall w "String.appendChar" 2))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- genKeyword "" [^Writer w kw]
+  (case kw
+    ("null" "false")
+    (genPush w "constant" 0)
+    "true"
+    (do (genPush w "constant" 0)
+        (genAction w "~"))
+    "this"
+    (genPush w "pointer" 0)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- genLiteral "" [^Writer w
+                      {:keys [literal value]
+                       :as term}]
+  (condp = literal
+    "String"
+    (genString w value)
+    "int"
+    (genPush w "constant" value)
+    "keyword"
+    (genKeyword w value)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- genVarr "" [^Writer w varr index]
+  (let [info (findSymbol varr true)
+        {:keys [mtype index]} info]
+    (if (nil? index)
+      (genMemLoc w mtype index)
+      (do
+        (genExpr w index)
+        (genMemLoc w mtype index)
+        (genAction w "+")
+        (genPop w "pointer" 1)
+        (genPush w "that" 0)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- genInvoke "" [^Writer w call]
+  (let [{:keys [target params]}
+        call
+        [z m] (.split target "\\.")
+        cnt (count params)]
+    (cond
+      (= "this" z)
+      (genPush w "pointer" 0)
+      (s/hgl? z)
+      (let [info (findSymbol z false)
+            {:keys [mtype index]}
+            info]
+        (when (some? info)
+          (genMemLoc w mtype index))))
+    (doseq [p params]
+      (genExpr w p))
+    (genCall w target cnt)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- genTerm "" [^Writer w
+                   {:keys [literal varr index
+                           call
+                           unary term group]
+                    :as term}]
+  (cond
+    (some? literal)
+    (genLiteral w term)
+    (some? call)
+    (genInvoke w call)
+    (some? group)
+    (genExpr w group)
+    (s/hgl? unary)
+    (do
+      (assert (some? term))
+      (genTerm w term)
+      (genAction w unary))
+    (some? varr)
+    (genVarr w varr index)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- genExpr "" [^Writer w expr]
+  (doseq [tm (:output expr)
+          :let [op? (= :OP (:tag tm))]]
+    (if op?
+      (genAction w (:value tm))
+      (genTerm w tm))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- genLet "" [^Writer w
+                  {:keys [varr lhs rhs] :as stmt}]
+  (let [info (findSymbol varr true)
+        {:keys [mtype index]} info]
+    ;;eval and set the right offset to the object-array
+    (when (some? lhs)
+      (genExpr w lhs)
+      (genMemLoc w mtype index)
+      (genAction w "+"))
+    ;;eval the statement
+    (genExpr w rhs)
+    ;;save the rhs result
+    (genPop w "temp" 0)
+    ;;do the assignment
+    (if (some? lhs)
+      (do
+        (genPop w "pointer" 1)
+        (genPush w "temp" 0)
+        (genPop w "that" 0))
+      (do
+        (genPush w "temp" 0)
+        (genMemLoc w mtype index)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- genIf "" [^Writer w
+                 {:keys [test then else] :as stmt}]
+  (let [cnt (.getAndIncrement if-cntr)
+        ttag (str "IF_TRUE_" cnt)
+        etag (str "IF_ELSE_" cnt)
+        dtag (str "IF_DONE_" cnt)]
+    (genExpr w test)
+    (genIfGoto w ttag)
+    (genGoto w etag)
+    (genLabel w ttag)
+    (genStmts w then)
+    (genGoto w dtag)
+    (genLabel w etag)
+    (if (some? else)
+      (genStmts w else))
+    (genLabel w dtag)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- genWhile "" [^Writer w
+                   {:keys [test body] :as stmt}]
+  (let [cnt (.getAndIncrement while-cntr)
+        stag (str "WHILE_LOOP_" cnt)
+        etag (str "WHILE_END_" cnt)]
+    (genLabel w stag)
+    (genExpr w test)
+    (genAction w "~")
+    (genIfGoto w etag)
+    (genStmts w body)
+    (genGoto w stag)
+    (genLabel w  etag)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- genDo "" [^Writer w
+                {:keys [call] :as stmt}]
+  (genInvoke w call))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- genReturn "" [^Writer w
+                    {:keys [value] :as stmt}]
+  (if (some? value)
+    (genExpr w value)
+    (genPush w "constant" 0))
+  (genAction w "return"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- genStmts "" [^Writer w stmts]
+  (doseq [s stmts
+          :let [t (:tag s)]]
+    (condp = t
+      :WhileStatement
+      (genWhile w s)
+      :LetStatement
+      (genLet w s)
+      :IfStatement
+      (genIf w s)
+      :DoStatement
+      (genDo w s)
+      :ReturnStatement
+      (genReturn w s)
+      (c/trap! Exception (str "bad stmt: " t)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn genFnBody "" [^Writer w stmts]
+  (genStmts stmts))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn genFnHeader ""
+  [^Writer w {:keys [arg-count
+                     isMethod?
+                     type
+                     name
+                     var-count] :as gist}]
+  (.write w
+          (str "function "
+               *class-name* "." name " " var-count))
+  (nline w))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;EOF

@@ -483,7 +483,7 @@ jjtree.closeNodeScope(jjtn000, true);
                                                            jjtc000 = false;
 jjtn000.nested.put("test", jjtn000.popChild());
     n= (ASTNode)jjtn000.popChild(); //if
-    jjtn000.nested.put("if", n.popChild().popAll());
+    jjtn000.nested.put("then", n.popChild().popAll());
     n= (ASTNode)jjtn000.popChild(); //else?
     if (n != null) {
       jjtn000.nested.put("else", n.popChild().popAll());
@@ -724,7 +724,7 @@ jjtn000.nested.put("literal", "String");
         t = keywordConstant();
 jjtree.closeNodeScope(jjtn000, true);
                         jjtc000 = false;
-jjtn000.nested.put("literal", "%keyword");
+jjtn000.nested.put("literal", "keyword");
     jjtn000.value=t.image;
     out.add(jjtn000);
       } else if (jj_2_38(2)) {

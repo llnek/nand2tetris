@@ -11,7 +11,8 @@
 
   czlab.tecs.cmp.yacc
 
-  (:require [czlab.basal.format :as f]
+  (:require [czlab.tecs.cmp.cgen :as cg]
+            [czlab.basal.format :as f]
             [czlab.basal.log :as log]
             [czlab.basal.core :as c]
             [czlab.basal.io :as i]
@@ -21,19 +22,12 @@
 
   (:use [clojure.walk])
 
-  (:import [java.io StringWriter File LineNumberReader]
+  (:import [java.io Writer StringWriter File LineNumberReader]
            [java.util.concurrent.atomic AtomicInteger]
            [czlab.tecs.p11 Node ASTNode ASTGentor]
            [czlab.basal.core GenericMutable]
            [java.net URL]
            [java.util Stack ArrayList List Map]))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(def ^:private ^AtomicInteger static-cntr (AtomicInteger.))
-(def ^:private ^AtomicInteger class-cntr (AtomicInteger.))
-(def ^:private static-symbols (GenericMutable. {}))
-(def ^:private class-symbols (GenericMutable. {}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -94,129 +88,49 @@
                (recur len (inc pos))))))
     (deref ctx)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(declare eval-expr eval-term eval-array-access eval-var)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- speek "" [^Stack s]
-  (if-not (.empty s) (.peek s)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- spop "" [^Stack s]
-  (if-not (.empty s) (.pop s)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- eval-unary "" [ctx term]
-  (eval-term term))
-  ;;(eval-unary (:unary ctx)))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- eval-subr-call ""
-  [ctx {:keys [target params] :as node}]
-  (let [[z m](.split ^String target "\\.")]
-    (doseq [e params]
-      (eval-expr ctx e))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- eval-term ""
-  [{:keys [literal group call
-           unary varr index] :as node}]
-  (let [ctx {}]
-    (cond
-      (some? unary)
-      nil
-      (some? literal)
-      nil
-      (some? varr)
-      (if (some? index)
-        (eval-array-access ctx index)
-        (eval-var ctx varr))
-      (some? group)
-      (eval-expr ctx group)
-      (some? call)
-      (eval-subr-call ctx call)
-      :else nil)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- eval-expr "" [ctx expr]
-  (doseq [c (:output expr)
-          :let [tag (:tag c)]]
-    (condp = tag
-      :Term nil
-      :OP nil
-      (c/trap! Exception "bad expr"))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- eval-do "" [{:keys [call] :as stmt}]
-  (eval-subr-call {} call))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- eval-while "" [stmt] )
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- eval-if "" [stmt] )
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- eval-return "" [stmt] )
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- eval-array-access "" [ctx expr] )
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- eval-var "" [ctx varr] )
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- eval-let "" [{:keys [varr lhs rhs] :as stmt}]
-  (eval-expr {} rhs)
-  (if (some? lhs)
-    (eval-array-access {} lhs) (eval-var {} varr)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-(defn- doFuncVar "" [{:keys [attrs statements] :as node}]
+(defn- doFuncVar ""
+  [^Writer w {:keys [attrs statements] :as node}]
   (let [{:keys [args name type
                 qualifier vars]}
         attrs
-        pc (AtomicInteger.)
-        lc (AtomicInteger.)
-        px (GenericMutable. {})
-        lx (GenericMutable. {})
+        func? (= "function"
+                 qualifier)
+        params (atom {})
+        locals (atom {})
         args (partition 2 args)
-        vars (partition 2 vars)]
+        vars (partition 2 vars)
+        gist {:arg-count (count args)
+              :isMethod? (not func?)
+              :type type
+              :name name
+              :var-count (count vars)}]
+    (.set cg/arg-cntr 0)
+    (.set cg/var-cntr 0)
+    (if-not func?
+      (swap! params
+             assoc
+             "this" {:type cg/*class-name*
+                     :index (.getAndIncrement cg/arg-cntr)}))
     (doseq [[t n] args]
-      (c/setf! px
-               n
-               {:type t :index (.getAndIncrement pc)}))
+      (swap! params
+             assoc
+             n
+             {:type t
+              :index (.getAndIncrement cg/arg-cntr)}))
     (doseq [[t n] vars]
-      (c/setf! lx
-               n
-               {:type t :index (.getAndIncrement pc)}))
-    (doseq [s statements
-            :let [t (:tag s)]]
-      (cond
-        (= :WhileStatement t)
-        (eval-while s)
-        (= :LetStatement t)
-        (eval-let s)
-        (= :DoStatement t)
-        (eval-do s)
-        (= :IfStatement t)
-        (eval-if s)
-        (= :ReturnStatement t)
-        (eval-return s)))))
+      (swap! locals
+             assoc
+             n
+             {:type t
+              :index (.getAndIncrement cg/var-cntr)}))
+    (binding
+      [cg/*class-level?* (not func?)
+       cg/*local-syms* @locals
+       cg/*arg-syms* @params]
+      (cg/genFnHeader w gist)
+      (cg/genFnBody w statements))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -227,31 +141,42 @@
         dft {:type type}
         [ctx ^AtomicInteger ctr]
         (condp = qualifier
-          "static" [static-symbols static-cntr]
-          "field"  [class-symbols class-cntr]
-          (c/trap! Exception "bad qualifier"))]
+          "static" [cg/*static-syms* cg/static-cntr]
+          "field"  [cg/*class-syms* cg/field-cntr]
+          (c/trap!
+            Exception
+            (str "bad qualifier: " qualifier)))]
     (if (string? vars)
       (->> {:index (.getAndIncrement ctr)}
            (merge dft)
-           (c/setf! ctx vars))
+           (swap! ctx assoc vars))
       (doseq [s (seq vars)]
         (->> {:index (.getAndIncrement ctr)}
              (merge dft)
-             (c/setf! ctx s))))))
+             (swap! ctx assoc s))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- compilej "" [^ASTNode x]
-  (let [root (toAST x)
-        s (f/writeEdnStr root)]
-    (doseq [c (:children root)
-            :let [tag (:tag c)]]
-      (cond
-        (= :ClassVarDec tag)
-        (doClassVar c)
-        (= :SubroutineDec tag)
-        (doFuncVar c)))
-    s))
+(defn- compilej "" [^Writer w ^ASTNode x]
+  (let [statics (atom {})
+        fields (atom {})
+        root (toAST x)
+        [vs fs]
+        (->> (:children root)
+             (split-with
+               #(= :classVarDec (:tag %))))]
+    (doseq [c vs]
+      (doClassVar statics fields c))
+    (binding
+      [cg/*static-syms* @statics
+       cg/*class-syms* @fields
+       cg/*class-name* (get-in root
+                               [:attrs :name])]
+      (doseq [f fs]
+        (c/prn!! "fffd == %s" (:tag f))
+        (assert (= :SubroutineDec (:tag f)))
+        (doFuncVar w f)))
+    root))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -266,13 +191,17 @@
 (defn- compFile ""
   [fp outDir]
   (c/prn!! "Processing file: %s" fp)
-  (c/do-with
-    [out (->> (io/as-url fp) tokenj compilej)]
+  (let [w (StringWriter.)
+        ast (->> (io/as-url fp)
+                 tokenj
+                 (compilej w))]
     (let [nm (.getName ^File fp)
-          t (io/file outDir
-                     (str nm ".clj"))]
-      (c/prn!! "Writing file: %s" t)
-      (spit t out))))
+          v (io/file outDir (str nm ".vm"))
+          j (io/file outDir (str nm ".clj"))]
+      (c/prn!! "Writing file: %s" v)
+      (spit v (.toString w))
+      (c/prn!! "Writing file: %s" j)
+      (spit j (f/writeEdnStr ast)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
