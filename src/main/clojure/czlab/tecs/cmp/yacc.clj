@@ -95,6 +95,8 @@
   (let [{:keys [args name type
                 qualifier vars]}
         attrs
+        ctor? (= "constructor"
+                 qualifier)
         func? (= "function"
                  qualifier)
         params (atom {})
@@ -103,6 +105,7 @@
         vars (partition 2 vars)
         gist {:arg-count (count args)
               :isMethod? (not func?)
+              :isCtor? ctor?
               :type type
               :name name
               :var-count (count vars)}]
@@ -130,6 +133,8 @@
               :index (.getAndIncrement cg/var-cntr)}))
     (binding
       [cg/*class-level?* (not func?)
+       cg/*class-ctor?* ctor?
+       cg/*func-info* gist
        cg/*local-syms* @locals
        cg/*arg-syms* @params]
       (cg/genFnHeader w gist)
@@ -163,10 +168,9 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- compilej "" [^Writer w ^ASTNode x]
+(defn- compilej "" [^Writer w root]
   (let [statics (atom {})
         fields (atom {})
-        root (toAST x)
         [vs fs]
         (->> (:children root)
              (split-with
@@ -196,17 +200,16 @@
 (defn- compFile ""
   [fp outDir]
   (c/prn!! "Processing file: %s" fp)
-  (let [w (StringWriter.)
-        ast (->> (io/as-url fp)
-                 tokenj
-                 (compilej w))]
-    (let [nm (.getName ^File fp)
-          v (io/file outDir (str nm ".vm"))
-          j (io/file outDir (str nm ".clj"))]
-      (c/prn!! "Writing file: %s" v)
-      (spit v (.toString w))
-      (c/prn!! "Writing file: %s" j)
-      (spit j (f/writeEdnStr ast)))))
+  (let [ast (->> (io/as-url fp) tokenj toAST)
+        w (StringWriter.)
+        nm (.getName ^File fp)
+        v (io/file outDir (str nm ".vm"))
+        j (io/file outDir (str nm ".clj"))]
+    (c/prn!! "Writing file: %s" j)
+    (spit j (f/writeEdnStr ast))
+    (compilej w ast)
+    (c/prn!! "Writing file: %s" v)
+    (spit v (.toString w))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -229,7 +232,7 @@
             (scanDir f d)
             (compFile f d)))
         (catch Throwable e
-          (.printStackTrace e)))
+          (println (str "Error: " (.getMessage e)))))
       (c/prn!! "Usage: cmp <jack-file> <out-dir>"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

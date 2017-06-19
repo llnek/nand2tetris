@@ -31,8 +31,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (def ^:dynamic *class-level?* false)
+(def ^:dynamic *class-ctor?* false)
 (def ^:dynamic *static-syms* nil)
 (def ^:dynamic *class-name* "")
+(def ^:dynamic *func-info* nil)
 (def ^:dynamic *class-syms* nil)
 
 (def ^:dynamic *local-syms* nil)
@@ -55,6 +57,11 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+(defn- err-undef-var "" ^String [varr]
+  (format "In subroutine %s: %s is not defined", (:name *func-info*) varr))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 (defn- isPrimType? "" [t]
   (or (= "boolean" t)
       (= "int" t)
@@ -68,8 +75,8 @@
          "-" (if unary? "neg" "sub")
          "return" "return"
          "+" "add"
-         "*" ""
-         "/" ""
+         "*" "call Math.multiply 2"
+         "/" "call Math.divide 2"
          "~" "not"
          ">" "gt"
          "<" "lt"
@@ -111,13 +118,10 @@
                    (get *class-syms* varr)
                    (get *static-syms* varr))
                (or (get *local-syms* varr)
-                   (get *arg-syms* varr)))]
-    (if (and (nil? info)
-             must?)
-      (c/trap! Exception
-               (str "bad varr: " varr))
-      (c/doto->> info
-        (println "info==== " )))))
+                   (get *arg-syms* varr)
+                   (get *static-syms* varr)))]
+    (if (and (nil? info) must?)
+      (c/trap! Exception (err-undef-var varr)) info)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -136,9 +140,15 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- genMemLoc "" [^Writer w loc index]
+(defn- getMemLoc "" [^Writer w loc index]
   (genPush w
-           (if (= "field" loc) "pointer" loc) index))
+           (if (= "field" loc) "this" loc) index))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- setMemLoc "" [^Writer w loc index]
+  (genPop w
+          (if (= "field" loc) "this" loc) index))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -166,26 +176,27 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- genLiteral "" [^Writer w
-                      {:keys [literal value]
-                       :as term}]
+                      {:keys [literal value] :as term}]
   (condp = literal
     "String"
     (genString w value)
     "int"
     (genPush w "constant" value)
     "keyword"
-    (genKeyword w value)))
+    (genKeyword w value)
+    (c/trap! Exception
+             (str "bad literal: " literal))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defn- genVarr "" [^Writer w varr index]
+(defn- genVarr "" [^Writer w varr idx]
   (let [info (findSymbol varr true)
         {:keys [mtype index]} info]
-    (if (nil? index)
-      (genMemLoc w mtype index)
+    (if (nil? idx)
+      (getMemLoc w mtype index)
       (do
-        (genExpr w index)
-        (genMemLoc w mtype index)
+        (genExpr w idx)
+        (getMemLoc w mtype index)
         (genAction w "+")
         (genPop w "pointer" 1)
         (genPush w "that" 0)))))
@@ -209,7 +220,7 @@
             info]
         (when (some? info)
           (reset! dt dtype)
-          (genMemLoc w mtype index))))
+          (getMemLoc w mtype index))))
     (doseq [p params]
       (genExpr w p))
     (->>
@@ -227,10 +238,10 @@
                    {:keys [literal varr index
                            call
                            unary term group]
-                    :as term}]
+                    :as tm}]
   (cond
     (some? literal)
-    (genLiteral w term)
+    (genLiteral w tm)
     (some? call)
     (genInvoke w call)
     (some? group)
@@ -261,7 +272,7 @@
     ;;eval and set the right offset to the object-array
     (when (some? lhs)
       (genExpr w lhs)
-      (genMemLoc w mtype index)
+      (getMemLoc w mtype index)
       (genAction w "+"))
     ;;eval the statement
     (genExpr w rhs)
@@ -275,7 +286,7 @@
         (genPop w "that" 0))
       (do
         (genPush w "temp" 0)
-        (genPop w mtype index)))))
+        (setMemLoc w mtype index)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -345,9 +356,26 @@
       (genReturn w s)
       (c/trap! Exception (str "bad stmt: " t)))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- genCtor "" [^Writer w]
+  (let [cnt (count *class-syms*)]
+    (genPush w "constant" cnt)
+    (genCall w "Memory.alloc" 1)
+    (genPop w "pointer" 0)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn- setThisPtr "" [^Writer w]
+  (getMemLoc w "argument" 0)
+  (genPop w "pointer" 0))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn genFnBody "" [^Writer w stmts]
+  (cond
+    *class-ctor?* (genCtor w)
+    *class-level?* (setThisPtr w))
   (genStmts w stmts))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
