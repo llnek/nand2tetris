@@ -1,13 +1,18 @@
 function Main.foo 0
 push argument 0
 pop pointer 0
-push constant 3
+push static 0
 push constant 1
-push constant 2
+push constant 3
 add
-call Math.multiply 2
-push constant 4
-sub
-pop static 0
+gt
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 8
+return
+goto IF_END0
+label IF_FALSE0
+label IF_END0
 push constant 0
 return
