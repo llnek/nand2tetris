@@ -37,7 +37,7 @@ public class ASTGentor {
     ASTNode top= (ASTNode)speek(stk);
     while (top != null) {
       int r = (int)top.nested.get("rank");
-      if (rank < r ||
+      if (rank > r ||
           ((r == rank) && (bind == LEFT))) {
         out.add(stk.pop());
         top=(ASTNode)speek(stk);
@@ -50,7 +50,8 @@ public class ASTGentor {
 
   public static void cfgOP(
     ASTNode jjt, Token t, int bind, int rank) {
-
+    //precedence top to bottom, 
+    //rank value high => low precedence
     jjt.nested.put("bind", bind);
     jjt.nested.put("rank", rank);
     jjt.value=t.image;
@@ -372,10 +373,11 @@ void term(List<Object> out, Stack<Object> stk) #Term :
     jjtThis.nested.put("group", jjtThis.popChild());
     out.add(jjtThis);
   } |
-  t=unaryOp() term(out, stk) {
-    jjtThis.nested.put("unary", t.image);
-    jjtThis.nested.put("term", jjtThis.popChild());
-    out.add(jjtThis);
+  unaryOp(out,stk) term(out, stk) {
+    //jjtThis.nested.put("unary", t.image);
+    //jjtThis.nested.put("term", jjtThis.popChild());
+    jjtThis.removeChildren();
+    //out.add(jjtThis);
   } |
   t= integerConstant() {
     jjtThis.nested.put("literal", "int");
@@ -478,21 +480,29 @@ void op(List<Object> out, Stack<Object> stk) #OP :
     ASTGentor.evalOP(jjtThis, out,stk);
     } |
   <PLUS> {
-    ASTGentor.cfgOP(jjtThis, token, 1, 2);
+    ASTGentor.cfgOP(jjtThis, token, -1, 5);
     ASTGentor.evalOP(jjtThis, out,stk);
     } |
   <MINUS> {
-    ASTGentor.cfgOP(jjtThis, token, 1, 2);
+    ASTGentor.cfgOP(jjtThis, token, -1, 5);
     ASTGentor.evalOP(jjtThis, out,stk); }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-Token unaryOp() :
+void unaryOp(List<Object> out, Stack<Object> stk) #OP :
 {}
 {
-  <MINUS> {return token;} |
-  <TILDA> {return token;}
+  <MINUS> { 
+    ASTGentor.cfgOP(jjtThis, token, 1, 2);
+    ASTGentor.evalOP(jjtThis, out,stk);
+    jjtThis.nested.put("unary", true);
+  } |
+  <TILDA> { 
+    ASTGentor.cfgOP(jjtThis, token, 1, 2);
+    ASTGentor.evalOP(jjtThis, out,stk);
+    jjtThis.nested.put("unary", true);
+  }
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

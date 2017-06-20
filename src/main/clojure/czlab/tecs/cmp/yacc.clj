@@ -57,7 +57,9 @@
         stag (keyword k)
         props (.-props node)
         nested (.-nested node)
+        exp? (= :Expression stag)
         hasC? (pos? (.jjtGetNumChildren node))
+        hasC? (if exp? false hasC?)
         ctx (GenericMutable. {:tag stag})]
     (when (some? v)
       (->> (convObj v)
@@ -74,9 +76,11 @@
     (when (pos? (.size nested))
       (c/preduce<map>
         (fn [sum [k v]]
-           (->>
-             (convObj v)
-             (c/setf! ctx (keyword k))) sum) nested))
+          (let [k (if (and exp?
+                           (= "output" k)) "children" k)]
+            (->>
+              (convObj v)
+              (c/setf! ctx (keyword k)))) sum) nested))
     (when hasC?
       (loop [len (.jjtGetNumChildren node)
              pos 0

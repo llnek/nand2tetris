@@ -5,9 +5,10 @@ field Array boo;
 
     method int foo() {
 
-      if (number > (1+3)) {
-        return 8;
-      } else {
+      while (number > (1+3)) {
+        let number= - (7 *
+        Math.divide(XYZ.poo(1+3), WWW.ggg(8*8*8
+        )));
       }
 
         return 0;

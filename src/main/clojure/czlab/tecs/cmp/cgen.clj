@@ -126,17 +126,20 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn genIfGoto "" [^Writer w lbl]
-  (.write w (str "if-goto " lbl)))
+  (.write w (str "if-goto " lbl))
+  (nline w))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn genGoto "" [^Writer w lbl]
-  (.write w (str "goto " lbl)))
+  (.write w (str "goto " lbl))
+  (nline w))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn genLabel "" [^Writer w lbl]
-  (.write w (str "label " lbl)))
+  (.write w (str "label " lbl))
+  (nline w))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -236,8 +239,7 @@
 ;;
 (defn- genTerm "" [^Writer w
                    {:keys [literal varr index
-                           call
-                           unary term group]
+                           call group]
                     :as tm}]
   (cond
     (some? literal)
@@ -246,21 +248,16 @@
     (genInvoke w call)
     (some? group)
     (genExpr w group)
-    (s/hgl? unary)
-    (do
-      (assert (some? term))
-      (genTerm w term)
-      (genAction w unary))
     (some? varr)
     (genVarr w varr index)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- genExpr "" [^Writer w expr]
-  (doseq [tm (:output expr)
+  (doseq [tm (:children expr)
           :let [op? (= :OP (:tag tm))]]
     (if op?
-      (genAction w (:value tm))
+      (genAction w (:value tm) (:unary tm))
       (genTerm w tm))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

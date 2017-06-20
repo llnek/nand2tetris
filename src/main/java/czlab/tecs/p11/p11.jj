@@ -41,7 +41,7 @@ public class ASTGentor/*@bgen(jjtree)*/implements ASTGentorTreeConstants/*@egen*
     ASTNode top= (ASTNode)speek(stk);
     while (top != null) {
       int r = (int)top.nested.get("rank");
-      if (rank < r ||
+      if (rank > r ||
           ((r == rank) && (bind == LEFT))) {
         out.add(stk.pop());
         top=(ASTNode)speek(stk);
@@ -54,7 +54,8 @@ public class ASTGentor/*@bgen(jjtree)*/implements ASTGentorTreeConstants/*@egen*
 
   public static void cfgOP(
     ASTNode jjt, Token t, int bind, int rank) {
-
+    //precedence top to bottom, 
+    //rank value high => low precedence
     jjt.nested.put("bind", bind);
     jjt.nested.put("rank", rank);
     jjt.value=t.image;
@@ -731,15 +732,16 @@ void term(List<Object> out, Stack<Object> stk)       :
     jjtn000.nested.put("group", jjtn000.popChild());
     out.add(jjtn000);
   } |
-  t=unaryOp() term(out, stk)/*@bgen(jjtree)*/
-                             {
-                               jjtree.closeNodeScope(jjtn000, true);
-                               jjtc000 = false;
-                             }
+  unaryOp(out,stk) term(out, stk)/*@bgen(jjtree)*/
+                                  {
+                                    jjtree.closeNodeScope(jjtn000, true);
+                                    jjtc000 = false;
+                                  }
 /*@egen*/ {
-    jjtn000.nested.put("unary", t.image);
-    jjtn000.nested.put("term", jjtn000.popChild());
-    out.add(jjtn000);
+    //jjtThis.nested.put("unary", t.image);
+    //jjtThis.nested.put("term", jjtThis.popChild());
+    jjtn000.removeChildren();
+    //out.add(jjtThis);
   } |
   t= integerConstant()/*@bgen(jjtree)*/
                        {
@@ -1000,7 +1002,7 @@ void op(List<Object> out, Stack<Object> stk)     :
            jjtc000 = false;
          }
 /*@egen*/ {
-    ASTGentor.cfgOP(jjtn000, token, 1, 2);
+    ASTGentor.cfgOP(jjtn000, token, -1, 5);
     ASTGentor.evalOP(jjtn000, out,stk);
     } |
   <MINUS>/*@bgen(jjtree)*/
@@ -1009,7 +1011,7 @@ void op(List<Object> out, Stack<Object> stk)     :
             jjtc000 = false;
           }
 /*@egen*/ {
-    ASTGentor.cfgOP(jjtn000, token, 1, 2);
+    ASTGentor.cfgOP(jjtn000, token, -1, 5);
     ASTGentor.evalOP(jjtn000, out,stk); }/*@bgen(jjtree)*/
   } finally {
     if (jjtc000) {
@@ -1021,11 +1023,41 @@ void op(List<Object> out, Stack<Object> stk)     :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-Token unaryOp() :
-{}
-{
-  <MINUS> {return token;} |
-  <TILDA> {return token;}
+void unaryOp(List<Object> out, Stack<Object> stk)     :
+{/*@bgen(jjtree) OP */
+  OP jjtn000 = new OP(JJTOP);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+/*@egen*/}
+{/*@bgen(jjtree) OP */
+  try {
+/*@egen*/
+  <MINUS>/*@bgen(jjtree)*/
+          {
+            jjtree.closeNodeScope(jjtn000, true);
+            jjtc000 = false;
+          }
+/*@egen*/ { 
+    ASTGentor.cfgOP(jjtn000, token, 1, 2);
+    ASTGentor.evalOP(jjtn000, out,stk);
+    jjtn000.nested.put("unary", true);
+  } |
+  <TILDA>/*@bgen(jjtree)*/
+          {
+            jjtree.closeNodeScope(jjtn000, true);
+            jjtc000 = false;
+          }
+/*@egen*/ { 
+    ASTGentor.cfgOP(jjtn000, token, 1, 2);
+    ASTGentor.evalOP(jjtn000, out,stk);
+    jjtn000.nested.put("unary", true);
+  }/*@bgen(jjtree)*/
+  } finally {
+    if (jjtc000) {
+      jjtree.closeNodeScope(jjtn000, true);
+    }
+  }
+/*@egen*/
 }
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
