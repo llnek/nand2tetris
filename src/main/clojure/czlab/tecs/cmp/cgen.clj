@@ -55,6 +55,16 @@
 ;;
 (declare genExpr genStmts)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+(defn initForNewClass "" []
+  (.set while-cntr 0)
+  (.set if-cntr 0)
+  (.set static-cntr 0)
+  (.set field-cntr 0)
+  (.set arg-cntr 0)
+  (.set var-cntr 0))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 (defn- err-undef-var "" ^String [varr]
@@ -212,10 +222,12 @@
         dt (atom nil)
         [z m] (.split ^String
                       target "\\.")
+        [z m]
+        (if (nil? m) [nil z] [z m])
         cnt (count params)]
     (cond
       (= "this" z)
-      (genPush w "this" 0)
+      (genPush w "pointer" 0)
       (s/hgl? z)
       (let [info (findSymbol z false)
             {:keys [mtype
@@ -223,17 +235,22 @@
             info]
         (when (some? info)
           (reset! dt dtype)
-          (getMemLoc w mtype index))))
+          (getMemLoc w mtype index)))
+      :else
+      (genPush w "pointer" 0))
     (doseq [p params]
       (genExpr w p))
-    (->>
-      (if (or (= "this" z)
-              (and (some? @dt)
-                   (not (isPrimType? dt))))
-        (inc cnt)
-        cnt)
+    (let
+      [c (if (or (= "this" z)
+                 (s/nichts? z)
+                 (and (some? @dt)
+                      (not (isPrimType? dt))))
+           (inc cnt) cnt)
+       zz (if (or (= "this" z)
+                  (s/nichts? z)) *class-name* z)]
       (genCall w
-               (str (if (some? @dt) @dt z) "." m)))))
+               (str (if (some? @dt)
+                      @dt zz) "." m) c))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

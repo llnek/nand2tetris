@@ -192,8 +192,8 @@ Token type() :
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
 void subroutineDec() #SubroutineDec :
-{String r="", q="";
- Object vs=null;
+{List<String> vs=new ArrayList<String>();
+ String r="", q="";
  Object pml=null;
  ASTNode ss;
  Token sn,t;}
@@ -207,14 +207,14 @@ void subroutineDec() #SubroutineDec :
   <LPAREN>
   pml=parameterList()
   <RPAREN>
-  <LCURLY> (vs=varDec())* statements() <RCURLY> {
+  <LCURLY> (varDec(vs))* statements() <RCURLY> {
     jjtThis.props.put("qualifier", q);
     jjtThis.props.put("type", r);
     jjtThis.props.put("name", sn);
     if (pml != null) {
       jjtThis.props.put("args", pml);
     }
-    if (vs != null) {
+    if (vs.size() > 0) {
       jjtThis.props.put("vars", vs);
     }
     ss=(ASTNode)jjtThis.popChild();
@@ -240,9 +240,8 @@ Object parameterList() :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-Object varDec() :
-{List<String> ps=new ArrayList<String>();
-Token vn, t;}
+Object varDec(List<String> ps) :
+{Token vn, t;}
 {
   <VAR> t=type() vn=varName() {
     ps.add(t.image); ps.add(vn.image);

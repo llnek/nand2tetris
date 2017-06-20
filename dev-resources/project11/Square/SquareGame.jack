@@ -1,5 +1,5 @@
-// This file is part of the materials accompanying the book 
-// "The Elements of Computing Systems" by Nisan and Schocken, 
+// This file is part of the materials accompanying the book
+// "The Elements of Computing Systems" by Nisan and Schocken,
 // MIT Press. Book site: www.idc.ac.il/tecs
 // File name: projects/11/Square/SquareGame.jack
 
@@ -78,9 +78,9 @@ class SquareGame {
                 do moveSquare();
             }
         }
-            
+
         return;
-	}
+  }
 
     /** Moves the square by 2 in the current direction. */
     method void moveSquare() {

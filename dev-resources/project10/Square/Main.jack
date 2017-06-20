@@ -1,18 +1,21 @@
+// This file is part of the materials accompanying the book 
+// "The Elements of Computing Systems" by Nisan and Schocken, 
+// MIT Press. Book site: www.idc.ac.il/tecs
+// File name: projects/10/Square/Main.jack
 
+/**
+ * The Main class initializes a new Square Dance game and starts it.
+ */
 class Main {
-static int number;
-field Array boo;
 
-    method int foo() {
+    /** Initializes a new game and starts it. */    
+    function void main() {
+        var SquareGame game;
 
-      while (number > (1+3)) {
-        let number= - (7 *
-        Math.divide(XYZ.poo(1+3), WWW.ggg(8*8*8
-        )));
-      }
+        let game = SquareGame.new();
+        do game.run();
+	do game.dispose();
 
-        return 0;
+        return;
     }
 }
-
-

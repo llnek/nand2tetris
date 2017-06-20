@@ -262,8 +262,8 @@ void subroutineDec()                :
  SubroutineDec jjtn000 = new SubroutineDec(JJTSUBROUTINEDEC);
  boolean jjtc000 = true;
  jjtree.openNodeScope(jjtn000);
-/*@egen*/String r="", q="";
- Object vs=null;
+/*@egen*/List<String> vs=new ArrayList<String>();
+ String r="", q="";
  Object pml=null;
  ASTNode ss;
  Token sn,t;}
@@ -279,11 +279,11 @@ void subroutineDec()                :
   <LPAREN>
   pml=parameterList()
   <RPAREN>
-  <LCURLY> (vs=varDec())* statements() <RCURLY>/*@bgen(jjtree)*/
-                                                {
-                                                  jjtree.closeNodeScope(jjtn000, true);
-                                                  jjtc000 = false;
-                                                }
+  <LCURLY> (varDec(vs))* statements() <RCURLY>/*@bgen(jjtree)*/
+                                               {
+                                                 jjtree.closeNodeScope(jjtn000, true);
+                                                 jjtc000 = false;
+                                               }
 /*@egen*/ {
     jjtn000.props.put("qualifier", q);
     jjtn000.props.put("type", r);
@@ -291,7 +291,7 @@ void subroutineDec()                :
     if (pml != null) {
       jjtn000.props.put("args", pml);
     }
-    if (vs != null) {
+    if (vs.size() > 0) {
       jjtn000.props.put("vars", vs);
     }
     ss=(ASTNode)jjtn000.popChild();
@@ -337,9 +337,8 @@ Object parameterList() :
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-Object varDec() :
-{List<String> ps=new ArrayList<String>();
-Token vn, t;}
+Object varDec(List<String> ps) :
+{Token vn, t;}
 {
   <VAR> t=type() vn=varName() {
     ps.add(t.image); ps.add(vn.image);

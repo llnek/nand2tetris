@@ -1,11 +1,11 @@
-// This file is part of the materials accompanying the book 
-// "The Elements of Computing Systems" by Nisan and Schocken, 
+// This file is part of the materials accompanying the book
+// "The Elements of Computing Systems" by Nisan and Schocken,
 // MIT Press. Book site: www.idc.ac.il/tecs
 // File name: projects/11/Square/Square.jack
 
 /**
- * The Square class implements a graphic square. A graphic square 
- * has a location on the screen and a size. It also has methods 
+ * The Square class implements a graphic square. A graphic square
+ * has a location on the screen and a size. It also has methods
  * for drawing, erasing, moving on the screen, and changing its size.
  */
 class Square {
@@ -65,7 +65,7 @@ class Square {
             do draw();
         }
         return;
-	}
+  }
 
     /** Moves up by 2. */
     method void moveUp() {

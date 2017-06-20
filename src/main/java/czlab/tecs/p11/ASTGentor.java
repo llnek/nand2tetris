@@ -195,8 +195,8 @@ if (jjtc000) {
   final public void subroutineDec() throws ParseException {/*@bgen(jjtree) SubroutineDec */
  SubroutineDec jjtn000 = new SubroutineDec(JJTSUBROUTINEDEC);
  boolean jjtc000 = true;
- jjtree.openNodeScope(jjtn000);String r="", q="";
- Object vs=null;
+ jjtree.openNodeScope(jjtn000);List<String> vs=new ArrayList<String>();
+ String r="", q="";
  Object pml=null;
  ASTNode ss;
  Token sn,t;
@@ -244,19 +244,19 @@ r=t.image;
         } else {
           break label_4;
         }
-        vs = varDec();
+        varDec(vs);
       }
       statements();
       jj_consume_token(RCURLY);
 jjtree.closeNodeScope(jjtn000, true);
-                                                  jjtc000 = false;
+                                                 jjtc000 = false;
 jjtn000.props.put("qualifier", q);
     jjtn000.props.put("type", r);
     jjtn000.props.put("name", sn);
     if (pml != null) {
       jjtn000.props.put("args", pml);
     }
-    if (vs != null) {
+    if (vs.size() > 0) {
       jjtn000.props.put("vars", vs);
     }
     ss=(ASTNode)jjtn000.popChild();
@@ -311,8 +311,7 @@ ps.add(t.image); ps.add(vn.image);
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //
-  final public Object varDec() throws ParseException {List<String> ps=new ArrayList<String>();
-Token vn, t;
+  final public Object varDec(List<String> ps) throws ParseException {Token vn, t;
     jj_consume_token(VAR);
     t = type();
     vn = varName();
@@ -2066,12 +2065,6 @@ s=token.image;
     return false;
   }
 
-  private boolean jj_3_38()
- {
-    if (jj_3R_28()) return true;
-    return false;
-  }
-
   private boolean jj_3_15()
  {
     if (jj_scan_token(VOID)) return true;
@@ -2086,6 +2079,12 @@ s=token.image;
     jj_scanpos = xsp;
     if (jj_3_16()) return true;
     }
+    return false;
+  }
+
+  private boolean jj_3_38()
+ {
+    if (jj_3R_28()) return true;
     return false;
   }
 

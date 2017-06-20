@@ -115,7 +115,7 @@
               :var-count (count vars)}]
     (.set cg/arg-cntr 0)
     (.set cg/var-cntr 0)
-    (if-not func?
+    (if-not (or func? ctor?)
       (swap! params
              assoc
              "this" {:dtype cg/*class-name*
@@ -179,6 +179,7 @@
         (->> (:children root)
              (split-with
                #(= :ClassVarDec (:tag %))))]
+    (cg/initForNewClass)
     (doseq [c vs]
       (doClassVar statics fields c))
     (binding
@@ -201,12 +202,17 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+(defn- cleanse "" [^String s]
+  (.replaceAll s "pop temp 0\npush temp 0\n"  ""))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 (defn- compFile ""
   [fp outDir]
   (c/prn!! "Processing file: %s" fp)
   (let [ast (->> (io/as-url fp) tokenj toAST)
         w (StringWriter.)
-        nm (.getName ^File fp)
+        nm (i/basename fp)
         v (io/file outDir (str nm ".vm"))
         j (io/file outDir (str nm ".clj"))]
     (c/prn!! "Writing file: %s" j)
