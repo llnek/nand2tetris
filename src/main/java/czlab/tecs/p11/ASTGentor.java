@@ -50,7 +50,6 @@ public class ASTGentor/*@bgen(jjtree)*/implements ASTGentorTreeConstants, ASTGen
 /************************************************
  * THE Jack GRAMMAR SPECIFICATION STARTS HERE *
  ************************************************/
-//kenl
   final public ClassDec parseClazz() throws ParseException {/*@bgen(jjtree) ClassDec */
  ClassDec jjtn000 = new ClassDec(JJTCLASSDEC);
  boolean jjtc000 = true;

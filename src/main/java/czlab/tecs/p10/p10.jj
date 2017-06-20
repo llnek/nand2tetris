@@ -151,7 +151,6 @@ TOKEN :
 /************************************************
  * THE Jack GRAMMAR SPECIFICATION STARTS HERE *
  ************************************************/
-//kenl
 String compileClazz():
 { StringBuilder bf=new StringBuilder();
   String dv, ds;

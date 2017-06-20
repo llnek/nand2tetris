@@ -111,7 +111,6 @@ TOKEN :
 /************************************************
  * THE Jack GRAMMAR SPECIFICATION STARTS HERE *
  ************************************************/
-//kenl
 ClassDec parseClazz()           :
 {/*@bgen(jjtree) ClassDec */
   ClassDec jjtn000 = new ClassDec(JJTCLASSDEC);

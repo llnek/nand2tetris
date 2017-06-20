@@ -144,7 +144,6 @@ TOKEN :
 /************************************************
  * THE Jack GRAMMAR SPECIFICATION STARTS HERE *
  ************************************************/
-//kenl
 ClassDec parseClazz() #ClassDec :
 {Token z;}
 {

@@ -60,7 +60,6 @@ public class JackParser implements JackParserConstants {
 /************************************************
  * THE Jack GRAMMAR SPECIFICATION STARTS HERE *
  ************************************************/
-//kenl
   final public String compileClazz() throws ParseException {StringBuilder bf=new StringBuilder();
   String dv, ds;
   Token cz, cn, lc, rc;

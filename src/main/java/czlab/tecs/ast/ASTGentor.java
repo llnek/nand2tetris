@@ -11,7 +11,6 @@ public class ASTGentor/*@bgen(jjtree)*/implements ASTGentorTreeConstants, ASTGen
 /************************************************
  * THE Jack GRAMMAR SPECIFICATION STARTS HERE *
  ************************************************/
-//kenl
   final public ClassDec parseClazz() throws ParseException {/*@bgen(jjtree) ClassDec */
   ClassDec jjtn000 = new ClassDec(JJTCLASSDEC);
   boolean jjtc000 = true;
@@ -2103,6 +2102,13 @@ if (jjtc000) {
     finally { jj_save(58, xla); }
   }
 
+  private boolean jj_3R_14()
+ {
+    if (jj_scan_token(VAR)) return true;
+    if (jj_3R_13()) return true;
+    return false;
+  }
+
   private boolean jj_3_20()
  {
     if (jj_3R_14()) return true;
@@ -2731,13 +2737,6 @@ if (jjtc000) {
  {
     if (jj_scan_token(COMMA)) return true;
     if (jj_3R_12()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_14()
- {
-    if (jj_scan_token(VAR)) return true;
-    if (jj_3R_13()) return true;
     return false;
   }
 
