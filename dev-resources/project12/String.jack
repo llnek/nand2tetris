@@ -7,56 +7,158 @@
  * The String type.
  */
 class String {
+  field int len, bufsz;
+  field Array buf;
 
-    /** Constructs a new empty String with a maximum length of
-     *  maxLength. */
-    constructor String new(int maxLength) {
+  /** Constructs a new empty String with a maximum length of
+   *  maxLength. */
+  constructor String new(int maxLength) {
+    let bufsz=maxLength;
+    if (maxLength > 0) {
+      let buf=Array.new(maxLength);
+    } else {
+      let buf=0;
+    }
+    let len=0;
+    return this;
+  }
+
+  /** De-allocates the string and frees its space. */
+  method void dispose() {
+    if (buf > 0) {
+      do Memory.deAlloc(this);
+    }
+    return;
+  }
+
+  /** Returns the current length of this String. */
+  method int length() {
+    return len;
+  }
+
+  /** Returns the character at location j. */
+  method char charAt(int j) {
+    if (j < 0 | j > len | j = len) {
+      do Sys.error(15);
+    }
+    return buf[j];
+  }
+
+  /** Sets the j'th character of this string to be c. */
+  method void setCharAt(int j, char c) {
+    if (j < 0 | j > len | j = len) {
+      do Sys.error(15);
+    }
+    let buf[j]=c;
+    return;
+  }
+
+  /** Appends the character c to the end of this String.
+   *  Returns this string as the return value. */
+  method String appendChar(char c) {
+    if ((len + 1) > bufsz) {
+      do Sys.error(17);
+    }
+    let buf[len]=c;
+    let len=len+1;
+    return this;
+  }
+
+  /** Erases the last character from this String. */
+  method void eraseLastChar() {
+    if (len > 0) {
+      let len=len-1;
+    }
+    return;
+  }
+
+  /** Returns the integer value of this String until the first non
+   *  numeric character. */
+  method int intValue() {
+    var int neg, sum, tlen, m, v,i;
+    var String tmp;
+    let tmp=String.new(len);
+    let i=0;
+    let neg= 0;
+    if (len > 0 &
+        (45 = charAt(0))) {
+      let neg=1;
+      let i=1;
     }
 
-    /** De-allocates the string and frees its space. */
-    method void dispose() {
+    while (i < len) {
+      let v=buf[i];
+      //between 48 & 57 (inclusive)
+      if ((v > 47) & (v < 58)) {
+        do tmp.appendChar(v);
+        let i=i+1;
+      } else {
+        let i= len;
+      }
     }
+    let tlen=tmp.length();
+    let sum=0;
+    let m=1;
+    while (tlen > 0) {
+      let v= tmp.charAt(tlen-1) - 48;
+      let sum= sum + (v * m);
+      let m=m*10;
+      let tlen=tlen-1;
+    }
+    do tmp.dispose();
 
-    /** Returns the current length of this String. */
-    method int length() {
+    if (neg > 0) {
+      return - sum;
+    } else {
+      return sum;
     }
+  }
 
-    /** Returns the character at location j. */
-    method char charAt(int j) {
+  /** Sets this String to hold a representation of the given
+   *  number. */
+  method void setInt(int number) {
+    var int sign,tlen, div,rem;
+    var String tmp;
+    let tmp=String.new(10);
+    let sign=0;
+    if (number < 0) {
+      let number= Math.abs(number);
+      let sign=1;
     }
+    while (number > 9) {
+      let div=number / 10;
+      let rem=number - (div * 10);
+      do tmp.appendChar(48+rem);
+      let number=div;
+    }
+    do tmp.appendChar(48+number);
+    let tlen=tmp.length();
+    let len=0;
+    if (sign > 0) {
+      do appendChar(45);
+    }
+    while (tlen > 0) {
+      do appendChar(tmp.charAt(tlen-1));
+      let tlen=tlen-1;
+    }
+    do tmp.dispose();
+    return;
+  }
 
-    /** Sets the j'th character of this string to be c. */
-    method void setCharAt(int j, char c) {
-    }
+  /** Returns the new line character. */
+  function char newLine() {
+    return 128;
+  }
 
-    /** Appends the character c to the end of this String.
-     *  Returns this string as the return value. */
-    method String appendChar(char c) {
-    }
+  /** Returns the backspace character. */
+  function char backSpace() {
+    return 129;
+  }
 
-    /** Erases the last character from this String. */
-    method void eraseLastChar() {
-    }
+  /** Returns the double quote (") character. */
+  function char doubleQuote() {
+    return 34;
+  }
 
-    /** Returns the integer value of this String until the first non
-     *  numeric character. */
-    method int intValue() {
-    }
-
-    /** Sets this String to hold a representation of the given
-     *  number. */
-    method void setInt(int number) {
-    }
-
-    /** Returns the new line character. */
-    function char newLine() {
-    }
-
-    /** Returns the backspace character. */
-    function char backSpace() {
-    }
-
-    /** Returns the double quote (") character. */
-    function char doubleQuote() {
-    }
 }
+

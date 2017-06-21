@@ -1,5 +1,5 @@
-// This file is part of the materials accompanying the book 
-// "The Elements of Computing Systems" by Nisan and Schocken, 
+// This file is part of the materials accompanying the book
+// "The Elements of Computing Systems" by Nisan and Schocken,
 // MIT Press. Book site: www.idc.ac.il/tecs
 // File name: projects/12/Math.jack
 
@@ -8,31 +8,139 @@
  */
 class Math {
 
-    /** Initializes the library. */
-    function void init() {
+  /** Initializes the library. */
+  function void init() {
+    return;
+  }
+
+  /** Returns the absolute value of x. */
+  function int abs(int x) {
+    if (x < 0) {
+      return - x;
+    } else {
+      return x;
+    }
+  }
+
+  /** Returns the product of x and y. */
+  function int multiply(int x, int y) {
+    var int sign,cnt,sum;
+    if ((x = 0) | (y = 0)) {
+      return 0;
     }
 
-    /** Returns the absolute value of x. */
-    function int abs(int x) {
+    let sign=0;
+    let sum=0;
+    let cnt=0;
+    if (x < 0) {
+      let sign = sign + 1;
+      let x= Math.abs(x);
+    }
+    if (y < 0) {
+      let sign = sign + 1;
+      let y= Math.abs(y);
     }
 
-    /** Returns the product of x and y. */
-    function int multiply(int x, int y) {
+    while (cnt < y) {
+      let sum = sum + x;
+      let cnt = cnt +1;
     }
 
-    /** Returns the integer part of x/y. */
-    function int divide(int x, int y) {
+    if (sign = 1) {
+      return - sum;
+    } else {
+      return sum;
+    }
+  }
+
+  /** Returns the integer part of x/y. */
+  function int divide(int x, int y) {
+    var int sign,cnt;
+    var boolean stop;
+
+    if (y = 0) {
+      do Sys.error(3);
     }
 
-    /** Returns the integer part of the square root of x. */
-    function int sqrt(int x) {
+    if (x = 0) {
+      return 0;
     }
 
-    /** Returns the greater number. */
-    function int max(int a, int b) {
+    let stop=false;
+    let cnt=0;
+    let sign=0;
+
+    if (x < 0) {
+      let sign = sign + 1;
+      let x= Math.abs(x);
+    }
+    if (y < 0) {
+      let sign = sign + 1;
+      let y= Math.abs(y);
     }
 
-    /** Returns the smaller number. */
-    function int min(int a, int b) {
+    while (~stop) {
+      let x= x - y;
+      if (x < 0) {
+        let stop=true;
+      } else {
+        let cnt = cnt + 1;
+        if (x = 0) {
+          let stop=true;
+        }
+      }
     }
+
+    if (sign = 1) {
+      if (cnt = 0) { return 0; } else {
+        return - cnt;
+      }
+    } else {
+      return cnt;
+    }
+  }
+
+  /** Returns the integer part of the square root of x. */
+  function int sqrt(int x) {
+    //y^2 = x, find minimum y
+    var boolean stop;
+    var int y2, y;
+
+    if ((x = 1) | (x = 0)) { return x; }
+    if (x < 0) { do Sys.error(4); }
+
+    let stop=false;
+    let y=1;
+    while (~ stop) {
+      let y2= Math.multiply(y,y);
+      if ((y2 < 0) | (y2 > x)) {
+        // y2 value < 0 => int maxed out, stop!
+        let stop= true;
+        let y= y-1;
+      } else {
+        let y=y+1;
+      }
+    }
+
+    return y;
+  }
+
+  /** Returns the greater number. */
+  function int max(int a, int b) {
+    if (a > b) {
+      return a;
+    } else {
+      return b;
+    }
+  }
+
+  /** Returns the smaller number. */
+  function int min(int a, int b) {
+    if (a < b) {
+      return a;
+    } else {
+      return b;
+    }
+  }
 }
+

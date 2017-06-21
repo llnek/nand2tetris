@@ -1,5 +1,5 @@
-// This file is part of the materials accompanying the book 
-// "The Elements of Computing Systems" by Nisan and Schocken, 
+// This file is part of the materials accompanying the book
+// "The Elements of Computing Systems" by Nisan and Schocken,
 // MIT Press. Book site: www.idc.ac.il/tecs
 // File name: projects/12/Array.jack
 
@@ -8,11 +8,19 @@
  */
 class Array {
 
-    /** Constructs a new Array of the given size. */
-    function Array new(int size) {
-    }
+  /** Constructs a new Array of the given size. */
+  function Array new(int size) {
+    var Array a;
+    let a= Memory.alloc(size);
+    return a;
+  }
 
-    /** De-allocates the array and frees its space. */
-    method void dispose() {
-    }
+  /** De-allocates the array and frees its space. */
+  method void dispose() {
+    var Array a;
+    let a =this;
+    do Memory.deAlloc(a);
+    return;
+  }
 }
+

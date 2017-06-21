@@ -7,32 +7,68 @@
  * Memory operations library.
  */
 class Memory {
-  static int free,head,tail,size;
+  static int mem_head, mem_tail;
+  static int mem_free, mem_size;
+  static Array mem_buff;
 
   /** Initializes memory parameters. */
   function void init() {
-    let head= 2048;
-    let tail= 16483;
-    let free= head;
-    let size= tail - head + 1;
+    let mem_tail = 16383;
+    let mem_free= 2048;
+    let mem_head= 2048;
+    let mem_buff = 2048;
+    let mem_size= mem_tail - mem_head + 1;
+    return;
   }
 
   /** Returns the value of the main memory at this address. */
   function int peek(int address) {
+    var Array x;
+    if ((address > mem_tail) |
+        (address < mem_head)) {
+      do Sys.error(6);
+    }
+    let x=address;
+    return x[0];
   }
 
-    /** Sets the value of the main memory at this address
-     *  to the given value. */
-    function void poke(int address, int value) {
+  /** Sets the value of the main memory at this address
+   *  to the given value. */
+  function void poke(int address, int value) {
+    var Array x;
+    if ((address > mem_tail) |
+        (address < mem_head)) {
+      do Sys.error(6);
     }
+    let x=address;
+    let x[0]=value;
+    return;
+  }
 
   /** finds and allocates from the heap a memory block of the
    *  specified size and returns a reference to its base address. */
   function int alloc(int size) {
+    var int e;
+    if (size < 1) {
+      do Sys.error(2);
+    }
+    if (size > mem_size) {
+      do Sys.error(6);
+    }
+    let e=mem_free;
+    let mem_size= mem_size - size;
+    if (mem_size > 0) {
+      let mem_free= mem_free + size;
+    } else {
+      let mem_size=0;
+      let mem_free=mem_tail+1;
+    }
+    return e;
   }
 
   /** De-allocates the given object and frees its space. */
   function void deAlloc(int object) {
+    return;
   }
 
 }
