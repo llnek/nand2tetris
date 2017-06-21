@@ -24,7 +24,7 @@ class Math {
 
   /** Returns the product of x and y. */
   function int multiply(int x, int y) {
-    var int sign,cnt,sum;
+    var int tmp,sign,cnt,sum;
     if ((x = 0) | (y = 0)) {
       return 0;
     }
@@ -39,6 +39,13 @@ class Math {
     if (y < 0) {
       let sign = sign + 1;
       let y= Math.abs(y);
+    }
+
+    if (y > x) {
+      //swap to optimize
+      let tmp=y;
+      let y=x;
+      let x=tmp;
     }
 
     while (cnt < y) {
