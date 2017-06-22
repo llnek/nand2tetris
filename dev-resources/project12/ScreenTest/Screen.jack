@@ -1,0 +1,204 @@
+// This file is part of the materials accompanying the book
+// "The Elements of Computing Systems" by Nisan and Schocken,
+// MIT Press. Book site: www.idc.ac.il/tecs
+// File name: projects/12/Screen.jack
+
+/**
+ * Graphic screen library.
+ */
+class Screen {
+//ram starts at 16384
+//rows: 256
+//cols: 512 [32 * 16words]
+//RAM[16384 + r * 32 + c/16]
+//count from LSB->MSB
+
+  static Array screen, bmask, wmask;
+  static int color;
+
+  /** Initializes the Screen. */
+  function void init() {
+    let screen= 16384;
+    let color=1;
+    let bmask=Array.new(16);
+    let wmask=Array.new(16);
+
+    let bmask[0]= 1;
+    let bmask[1]= 2;
+    let bmask[2]= 4;
+    let bmask[3]= 8;
+    let bmask[4]= 16;
+    let bmask[5]= 32;
+    let bmask[6]= 64;
+    let bmask[7]= 128;
+    let bmask[8]= 256;
+    let bmask[9]= 512;
+    let bmask[10]= 1024;
+    let bmask[11]= 2048;
+    let bmask[12]= 4096;
+    let bmask[13]= 8192;
+    let bmask[14]= 16384;
+    let bmask[15]= 0;//-32768;
+
+
+    let wmask[0]= -2;
+    let wmask[1]= -3;
+    let wmask[2]= -5;
+    let wmask[3]= -9;
+    let wmask[4]= -17;
+    let wmask[5]= -33;
+    let wmask[6]= -65;
+    let wmask[7]= -129;
+    let wmask[8]= -257;
+    let wmask[9]= -513;
+    let wmask[10]= -1025;
+    let wmask[11]= -2049;
+    let wmask[12]= -4097;
+    let wmask[13]= -8193;
+    let wmask[14]= -16385;
+    let wmask[15]= 32767;
+
+    return;
+  }
+
+  /** Erases the whole screen. */
+  function void clearScreen() {
+    var int rr, r, c;
+    let r=256;
+    while (r > 0) {
+      let rr= (r-1) * 32;
+      let c=0;
+      while (c < 32) {
+        let screen[rr + c]= 0;
+        let c=c+1;
+      }
+      let r=r-1;
+    }
+    return;
+  }
+
+  /** Sets the color to be used in further draw commands
+   *  where white = false, black = true. */
+  function void setColor(boolean b) {
+    if (~ b) {
+      let color=0;
+    } else {
+      let color=1;
+    }
+    return;
+  }
+
+  /** Draws the (x, y) pixel. */
+  function void drawPixel(int x, int y) {
+    var int cv, div, rem, pos, v;
+    let div= x / 16;
+    let rem= x - (16 * div);
+    let pos= y * 32 + x / 16;
+    let cv= screen[pos];
+    if (color > 0) {
+      let screen[pos] = cv | bmask[rem];
+    } else {
+      let screen[pos] = cv & wmask[rem];
+    }
+    return;
+  }
+
+  /** Draws a line from pixel (x1, y1) to (x2, y2). */
+  function void drawLine(int x1, int y1, int x2, int y2) {
+    var int dy, dx, x, y, a, b;
+    var int m, s, e;
+
+    if (x1 = x2) {
+      let s = Math.min(y1, y2);
+      let e = Math.max(y1, y2) + 1;
+      while (s < e) {
+        do Screen.drawPixel(x1, s);
+        let s=s+1;
+      }
+      return;
+    }
+
+    if (y1 = y2) {
+      // horizontal
+      let s = Math.min(x1, x2);
+      let e = Math.max(x1, x2) + 1;
+      while (s < e) {
+        do Screen.drawPixel(s, y1);
+        let s=s+1;
+      }
+      return;
+    }
+
+    // keep logic so that x2 > x1
+    if (x1 > x2) {
+      do Screen.drawLine(x2, y2, x1,y1);
+      return;
+    }
+
+    let dy= y2 - y1;
+    let dx= x2 - x1;
+    let x= x1;
+    let y= y1;
+    let a=0;
+    let b=0;
+    if (dy > 0) {
+      let m= 1;
+    } else {
+      let m= -1;
+    }
+    let dy = Math.abs(dy);
+
+    while (((a < dx) | (a = dx)) &
+           ((b < dy) | (b = dy))) {
+      if (m > 0) {
+        do Screen.drawPixel(x + a, y + b);
+      } else {
+        do Screen.drawPixel(x + a, y - b);
+      }
+      if ((a * dy)  < (b * dx)) {
+        let a=a+1;
+      } else {
+        let b=b+1;
+      }
+    }
+
+    return;
+  }
+
+  /** Draws a filled rectangle where the top left corner
+   *  is (x1, y1) and the bottom right corner is (x2, y2). */
+  function void drawRectangle(int x1, int y1, int x2, int y2) {
+    var int x,y;
+    let y= y1;
+    while (y < y2) {
+      let x= x1;
+      while (x < x2) {
+        do Screen.drawPixel(x,y);
+        let x= x + 1;
+      }
+      let y= y + 1;
+    }
+    return;
+  }
+
+  /** Draws a filled circle of radius r around (cx, cy). */
+  function void drawCircle(int cx, int cy, int r) {
+    var int sq, y2, r2, dy;
+    let r2= r * r;
+    let dy= r;
+    while (dy > 0) {
+      let sq= Math.sqrt(r2 - (dy * dy));
+      let y2= cy + dy;
+      do Screen.drawLine(cx - sq, y2, cx + sq, y2);
+
+      let y2= cy - dy;
+      do Screen.drawLine(cx - sq, y2, cx + sq, y2);
+
+      let dy=dy - 1;
+    }
+    do Screen.drawLine(cx - r, cy, cx + r, cy);
+    return;
+  }
+
+}
+
