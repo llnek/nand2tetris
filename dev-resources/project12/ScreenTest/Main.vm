@@ -1,5 +1,7 @@
 function Main.main 0
 push constant 0
+return
+push constant 0
 push constant 220
 push constant 511
 push constant 220
@@ -11,8 +13,6 @@ push constant 410
 push constant 220
 call Screen.drawRectangle 4
 pop temp 0
-push constant 0
-return
 push constant 0
 call Screen.setColor 1
 pop temp 0

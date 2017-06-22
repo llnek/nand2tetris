@@ -13,16 +13,17 @@ class Screen {
 //RAM[16384 + r * 32 + c/16]
 //count from LSB->MSB
 
+  static int poo;
   static Array screen, bmask, wmask;
   static int color;
 
   /** Initializes the Screen. */
   function void init() {
+  let poo= -32767 - 1;
     let screen= 16384;
     let color=1;
     let bmask=Array.new(16);
     let wmask=Array.new(16);
-
     let bmask[0]= 1;
     let bmask[1]= 2;
     let bmask[2]= 4;

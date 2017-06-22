@@ -1,16 +1,21 @@
 function Screen.init 0
-push constant 16384
-pop static 0
+push constant 32767
+neg
 push constant 1
-pop static 3
-push constant 16
-call Array.new 1
+sub
+pop static 0
+push constant 16384
 pop static 1
+push constant 1
+pop static 4
 push constant 16
 call Array.new 1
 pop static 2
+push constant 16
+call Array.new 1
+pop static 3
 push constant 0
-push static 1
+push static 2
 add
 push constant 1
 pop temp 0
@@ -18,7 +23,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 1
-push static 1
+push static 2
 add
 push constant 2
 pop temp 0
@@ -26,7 +31,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 2
-push static 1
+push static 2
 add
 push constant 4
 pop temp 0
@@ -34,7 +39,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 3
-push static 1
+push static 2
 add
 push constant 8
 pop temp 0
@@ -42,7 +47,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 4
-push static 1
+push static 2
 add
 push constant 16
 pop temp 0
@@ -50,7 +55,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 5
-push static 1
+push static 2
 add
 push constant 32
 pop temp 0
@@ -58,7 +63,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 6
-push static 1
+push static 2
 add
 push constant 64
 pop temp 0
@@ -66,7 +71,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 7
-push static 1
+push static 2
 add
 push constant 128
 pop temp 0
@@ -74,7 +79,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 8
-push static 1
+push static 2
 add
 push constant 256
 pop temp 0
@@ -82,7 +87,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 9
-push static 1
+push static 2
 add
 push constant 512
 pop temp 0
@@ -90,7 +95,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 10
-push static 1
+push static 2
 add
 push constant 1024
 pop temp 0
@@ -98,7 +103,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 11
-push static 1
+push static 2
 add
 push constant 2048
 pop temp 0
@@ -106,7 +111,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 12
-push static 1
+push static 2
 add
 push constant 4096
 pop temp 0
@@ -114,7 +119,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 13
-push static 1
+push static 2
 add
 push constant 8192
 pop temp 0
@@ -122,7 +127,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 14
-push static 1
+push static 2
 add
 push constant 16384
 pop temp 0
@@ -130,7 +135,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 15
-push static 1
+push static 2
 add
 push constant 0
 pop temp 0
@@ -138,7 +143,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 0
-push static 2
+push static 3
 add
 push constant 2
 neg
@@ -147,7 +152,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 1
-push static 2
+push static 3
 add
 push constant 3
 neg
@@ -156,7 +161,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 2
-push static 2
+push static 3
 add
 push constant 5
 neg
@@ -165,7 +170,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 3
-push static 2
+push static 3
 add
 push constant 9
 neg
@@ -174,7 +179,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 4
-push static 2
+push static 3
 add
 push constant 17
 neg
@@ -183,7 +188,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 5
-push static 2
+push static 3
 add
 push constant 33
 neg
@@ -192,7 +197,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 6
-push static 2
+push static 3
 add
 push constant 65
 neg
@@ -201,7 +206,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 7
-push static 2
+push static 3
 add
 push constant 129
 neg
@@ -210,7 +215,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 8
-push static 2
+push static 3
 add
 push constant 257
 neg
@@ -219,7 +224,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 9
-push static 2
+push static 3
 add
 push constant 513
 neg
@@ -228,7 +233,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 10
-push static 2
+push static 3
 add
 push constant 1025
 neg
@@ -237,7 +242,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 11
-push static 2
+push static 3
 add
 push constant 2049
 neg
@@ -246,7 +251,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 12
-push static 2
+push static 3
 add
 push constant 4097
 neg
@@ -255,7 +260,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 13
-push static 2
+push static 3
 add
 push constant 8193
 neg
@@ -264,7 +269,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 14
-push static 2
+push static 3
 add
 push constant 16385
 neg
@@ -273,7 +278,7 @@ pop pointer 1
 push temp 0
 pop that 0
 push constant 15
-push static 2
+push static 3
 add
 push constant 32767
 pop temp 0
@@ -308,7 +313,7 @@ if-goto WHILE_END1
 push local 0
 push local 2
 add
-push static 0
+push static 1
 add
 push constant 0
 pop temp 0
@@ -336,11 +341,11 @@ if-goto IF_TRUE0
 goto IF_FALSE0
 label IF_TRUE0
 push constant 0
-pop static 3
+pop static 4
 goto IF_END0
 label IF_FALSE0
 push constant 1
-pop static 3
+pop static 4
 label IF_END0
 push constant 0
 return
@@ -364,23 +369,23 @@ push constant 16
 call Math.divide 2
 pop local 3
 push local 3
-push static 0
+push static 1
 add
 pop pointer 1
 push that 0
 pop local 0
-push static 3
+push static 4
 push constant 0
 gt
 if-goto IF_TRUE0
 goto IF_FALSE0
 label IF_TRUE0
 push local 3
-push static 0
+push static 1
 add
 push local 0
 push local 2
-push static 1
+push static 2
 add
 pop pointer 1
 push that 0
@@ -392,11 +397,11 @@ pop that 0
 goto IF_END0
 label IF_FALSE0
 push local 3
-push static 0
+push static 1
 add
 push local 0
 push local 2
-push static 2
+push static 3
 add
 pop pointer 1
 push that 0
