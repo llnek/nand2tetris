@@ -8,53 +8,97 @@
  */
 class Keyboard {
 //RAM[24576]
-    /** Initializes the keyboard. */
-    function void init() {
-    }
+  /** Initializes the keyboard. */
+  function void init() {
+    return;
+  }
 
-    /**
-     * Returns the ASCII code (as char) of the currently pressed key,
-     * or 0 if no key is currently pressed.
-     * Recognizes all ASCII characters, and the following extension
-     * of action keys:
-     * New line = 128 = String.newline()
-     * Backspace = 129 = String.backspace()
-     * Left Arrow = 130
-     * Up Arrow = 131
-     * Right Arrow = 132
-     * Down Arrow = 133
-     * Home = 134
-     * End = 135
-     * Page Up = 136
-     * Page Down = 137
-     * Insert = 138
-     * Delete = 139
-     * ESC = 140
-     * F1 - F12 = 141 - 152
-     */
-    function char keyPressed() {
-    }
+  /**
+   * Returns the ASCII code (as char) of the currently pressed key,
+   * or 0 if no key is currently pressed.
+   * Recognizes all ASCII characters, and the following extension
+   * of action keys:
+   * New line = 128 = String.newline()
+   * Backspace = 129 = String.backspace()
+   * Left Arrow = 130
+   * Up Arrow = 131
+   * Right Arrow = 132
+   * Down Arrow = 133
+   * Home = 134
+   * End = 135
+   * Page Up = 136
+   * Page Down = 137
+   * Insert = 138
+   * Delete = 139
+   * ESC = 140
+   * F1 - F12 = 141 - 152
+   */
+  function char keyPressed() {
+    var Array x;
+    let x=24576;
+    return x[0];
+  }
 
-    /**
-     * Reads the next character from the keyboard.
-     * waits until a key is pressed and then released, then echoes
-     * the key to the screen, and returns the value of the pressed key.
-     */
-    function char readChar() {
+  /**
+   * Reads the next character from the keyboard.
+   * waits until a key is pressed and then released, then echoes
+   * the key to the screen, and returns the value of the pressed key.
+   */
+  function char readChar() {
+    var boolean stop;
+    var char rc, c;
+    let stop=false;
+    let rc=0;
+    while (~ stop) {
+      let c= Keyboard.keyPressed();
+      if (c = 0) {
+        if (rc > 0) {
+          let stop=true;
+        }
+      } else {
+        let rc=c;
+      }
     }
+    do Output.printChar(rc);
+    return rc;
+  }
 
-    /**
-     * prints the message on the screen and then reads the next line
-     * (until a newline character) from the keyboard and returns its value.
-     */
-    function String readLine(String message) {
+  /**
+   * prints the message on the screen and then reads the next line
+   * (until a newline character) from the keyboard and returns its value.
+   */
+  function String readLine(String message) {
+    var boolean stop;
+    var String s;
+    var char c;
+    let s= String.new(256);
+    let stop=false;
+    do Output.printString(message);
+    while (~ stop) {
+      let c= Keyboard.readChar();
+      if (c = String.newLine()) {
+        let stop=true;
+      } else {
+        if (c=String.backSpace()) {
+          do s.eraseLastChar();
+        } else {
+          do s.appendChar(c);
+        }
+      }
     }
+    return s;
+  }
 
-    /**
-     * prints the message on the screen and then reads the next line
-     * (until a newline character) from the keyboard and returns its
-     * integer value (until the first non numeric character).
-     */
-    function int readInt(String message) {
-    }
+  /**
+   * prints the message on the screen and then reads the next line
+   * (until a newline character) from the keyboard and returns its
+   * integer value (until the first non numeric character).
+   */
+  function int readInt(String message) {
+    var String s;
+    let s= Keyboard.readLine(message);
+    return s.intValue();
+  }
+
 }
+

@@ -8,8 +8,8 @@
  */
 class Screen {
 //ram starts at 16384
-//rows: 11
-//cols: 32
+//rows: 22
+//cols: 64
 //RAM[16384 + r * 32 + c/16]
 //count from LSB->MSB
 
