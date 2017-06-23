@@ -70,7 +70,7 @@ class Memory {
       return ptr+2;
     } else {
       do Sys.error(6);
-      return 0;
+      return -1;
     }
   }
 
