@@ -8,9 +8,62 @@
  */
 class Math {
 
+  static Array bmask, wmask;
+
   /** Initializes the library. */
   function void init() {
+
+    let bmask=Array.new(16);
+    let wmask=Array.new(16);
+    let bmask[0]= 1;
+    let bmask[1]= 2;
+    let bmask[2]= 4;
+    let bmask[3]= 8;
+    let bmask[4]= 16;
+    let bmask[5]= 32;
+    let bmask[6]= 64;
+    let bmask[7]= 128;
+    let bmask[8]= 256;
+    let bmask[9]= 512;
+    let bmask[10]= 1024;
+    let bmask[11]= 2048;
+    let bmask[12]= 4096;
+    let bmask[13]= 8192;
+    let bmask[14]= 16384;
+    let bmask[15]= -32767 - 1;
+
+    let wmask[0]= -2;
+    let wmask[1]= -3;
+    let wmask[2]= -5;
+    let wmask[3]= -9;
+    let wmask[4]= -17;
+    let wmask[5]= -33;
+    let wmask[6]= -65;
+    let wmask[7]= -129;
+    let wmask[8]= -257;
+    let wmask[9]= -513;
+    let wmask[10]= -1025;
+    let wmask[11]= -2049;
+    let wmask[12]= -4097;
+    let wmask[13]= -8193;
+    let wmask[14]= -16385;
+    let wmask[15]= 32767;
+
     return;
+  }
+
+  function int bitoff(int bit) {
+    if ((bit < 0) | (bit > 15)) {
+      do Sys.error(15);
+    }
+    return wmask[bit];
+  }
+
+  function int biton(int bit) {
+    if ((bit < 0) | (bit > 15)) {
+      do Sys.error(15);
+    }
+    return bmask[bit];
   }
 
   /** Returns the absolute value of x. */
@@ -22,8 +75,47 @@ class Math {
     }
   }
 
-  /** Returns the product of x and y. */
   function int multiply(int x, int y) {
+    var int sign, sum, sx, i, b;
+    if ((x = 0) | (y = 0)) {
+      return 0;
+    }
+    let sign=0;
+    if (x < 0) {
+      let sign = sign + 1;
+      let x= Math.abs(x);
+    }
+    if (y < 0) {
+      let sign = sign + 1;
+      let y= Math.abs(y);
+    }
+    if (y > x) {
+      //swap to optimize
+      let b=y;
+      let y=x;
+      let x=b;
+    }
+    let sum=0;
+    let sx=x;
+    let i=0;
+    while (i < 16) {
+      let b= Math.biton(i);
+      if (b = (b & y)) {
+        let sum=sum+sx;
+      }
+      let sx=sx+sx;
+      let i=i+1;
+    }
+
+    if (sign = 1) {
+      return - sum;
+    } else {
+      return sum;
+    }
+  }
+
+  /** Returns the product of x and y. */
+  function int multiplySlow(int x, int y) {
     var int tmp,sign,cnt,sum;
     if ((x = 0) | (y = 0)) {
       return 0;

@@ -13,49 +13,13 @@ class Screen {
 //RAM[16384 + r * 32 + c/16]
 //count from LSB->MSB
 
-  static Array screen, bmask, wmask;
+  static Array screen;
   static int color;
 
   /** Initializes the Screen. */
   function void init() {
     let screen= 16384;
     let color=1;
-    let bmask=Array.new(16);
-    let wmask=Array.new(16);
-    let bmask[0]= 1;
-    let bmask[1]= 2;
-    let bmask[2]= 4;
-    let bmask[3]= 8;
-    let bmask[4]= 16;
-    let bmask[5]= 32;
-    let bmask[6]= 64;
-    let bmask[7]= 128;
-    let bmask[8]= 256;
-    let bmask[9]= 512;
-    let bmask[10]= 1024;
-    let bmask[11]= 2048;
-    let bmask[12]= 4096;
-    let bmask[13]= 8192;
-    let bmask[14]= 16384;
-    let bmask[15]= -32767 - 1;
-
-    let wmask[0]= -2;
-    let wmask[1]= -3;
-    let wmask[2]= -5;
-    let wmask[3]= -9;
-    let wmask[4]= -17;
-    let wmask[5]= -33;
-    let wmask[6]= -65;
-    let wmask[7]= -129;
-    let wmask[8]= -257;
-    let wmask[9]= -513;
-    let wmask[10]= -1025;
-    let wmask[11]= -2049;
-    let wmask[12]= -4097;
-    let wmask[13]= -8193;
-    let wmask[14]= -16385;
-    let wmask[15]= 32767;
-
     return;
   }
 
@@ -94,9 +58,9 @@ class Screen {
     let pos= (y * 32) + (x / 16);
     let cv= screen[pos];
     if (color > 0) {
-      let screen[pos] = cv | bmask[rem];
+      let screen[pos] = cv | Math.biton(rem);
     } else {
-      let screen[pos] = cv & wmask[rem];
+      let screen[pos] = cv & Math.bitoff(rem);
     }
     return;
   }
