@@ -13,6 +13,7 @@
 class Output {
 
   static int pauseMove, cur_row, cur_col;
+  static int _00FF, _FF00;
   // character map for printing on the left of a screen word
   static Array charMaps;
   static Array screen;
@@ -24,6 +25,10 @@ class Output {
     let cur_row=0;
     let cur_col=0;
     let pauseMove=0;
+
+    let _FF00= -256;
+    let _00FF= 255;
+
     return;
   }
 
@@ -186,7 +191,6 @@ class Output {
     let cur_row=i;
     let cur_col=j;
     let pauseMove=1;
-    //do Output.printChar(0);
     do Output.printChar(32);
     let pauseMove=0;
     return;
@@ -212,11 +216,12 @@ class Output {
     while (i < 11) {
       let pos = (pixel_row * 32) + (pixel_col / 16);
       let cv = screen[pos];
-      let mv= m[i];
+      let mv= m[i] & _00FF;
       if (rhs > 0) {
-        let mv= mv * 256;
+        let mv= mv * 256;   // left shift 8
+        let cv= cv  & _00FF;
       } else {
-        let cv= 256 * cv;
+        let cv= cv & _FF00;
       }
       let screen[pos] = cv | mv;
       let i=i+1;
