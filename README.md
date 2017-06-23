@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/llnek/tecs.svg?branch=master)](https://travis-ci.org/llnek/tecs)
 
+The complete set of solutions for the [nand2tetris](http://nand2tetris.org/) course work.
+
 
 ## Installation
 
