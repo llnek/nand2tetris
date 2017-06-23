@@ -118,11 +118,13 @@ field int throttle;
      */
     method int move() {
 //slow down the ball
-      if (throttle < 100) {
-        let throttle= throttle + 1;
-        return;
-      } else {
-        let throttle=0;
+      if (false) {
+        if (throttle < 100) {
+          let throttle= throttle + 1;
+          return 0;
+        } else {
+          let throttle=0;
+        }
       }
   do hide();
 
