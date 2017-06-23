@@ -7,17 +7,89 @@
  * Memory operations library.
  */
 class Memory {
+
+  static Array free_head, mem_buff;
   static int mem_head, mem_tail;
   static int mem_free, mem_size;
-  static Array mem_buff;
+
+  //----------------------------------
+  // [sz, next_ptr, mem_ptr]
+  //
+  function void deAlloc(int object) {
+    var int top, np;
+    var Array a;
+
+    let top= object - 2;
+    let a= top;
+
+    let np= free_head[1];
+    let free_head[1]= top;
+    let a[1]= np;
+
+    return;
+  }
+
+  function int alloc(int size) {
+    var Array mem, ptr, pp, z;
+    var int fz, sz, f, np;
+
+    if (size > mem_size) { do Sys.error(6); }
+    if (size < 1) { do Sys.error(2); }
+
+    let sz= size + 2;
+    let ptr= 0;
+    let pp= free_head;
+    let f= free_head[1];
+
+    while ((ptr = 0) & (f > 0)) {
+      let mem=f;
+      let fz= mem[0];
+      let np= mem[1];
+      if (fz < sz) {
+        let pp=f;
+        let f= np; // too small, go next and see
+      } else {
+        let ptr= f;
+        if ((fz - sz) > 2) {
+          // can split, new free chunk
+          let z = f + sz;
+          let z[1]= np;
+          let z[0]= fz - sz;
+          let pp[1]= z;
+        } else {
+          let pp[1] = np;
+        }
+        if (ptr > 0) {
+          let ptr[0]=sz;
+          let ptr[1]=0;
+        }
+      }
+    }
+
+    if (ptr > 0) {
+      return ptr+2;
+    } else {
+      do Sys.error(6);
+      return 0;
+    }
+  }
 
   /** Initializes memory parameters. */
   function void init() {
+
     let mem_tail = 16383;
     let mem_free= 2048;
     let mem_head= 2048;
     let mem_buff = 2048;
     let mem_size= mem_tail - mem_head + 1;
+
+    //alloc (smart?)
+    let free_head= mem_head;
+    let free_head[0]= 2;
+    let free_head[1]= mem_head + 2;
+    let mem_buff[2]= mem_size - 2;
+    let mem_buff[3]=0;
+
     return;
   }
 
@@ -47,7 +119,7 @@ class Memory {
 
   /** finds and allocates from the heap a memory block of the
    *  specified size and returns a reference to its base address. */
-  function int alloc(int size) {
+  function int allocSimple(int size) {
     var int e;
     if (size < 1) {
       do Sys.error(2);
@@ -67,7 +139,7 @@ class Memory {
   }
 
   /** De-allocates the given object and frees its space. */
-  function void deAlloc(int object) {
+  function void deAllocSimple(int object) {
     return;
   }
 
