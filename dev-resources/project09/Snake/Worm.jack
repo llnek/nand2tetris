@@ -1,10 +1,12 @@
-class Snake {
-     field Array x1,y1,x2,y2;
-     field int thick,lenght;
-     field int linea;
-     field boolean dead;
-     field int ymax;
-    constructor Snake new() {
+
+class Worm {
+  field Array x1,y1,x2,y2;
+  field int thick,lenght;
+  field int linea;
+  field boolean dead;
+  field int ymax;
+
+  constructor Worm ctor() {
         var int i;
         let lenght = 25 ;
         let x1 = Array.new(lenght);
@@ -30,109 +32,119 @@ class Snake {
         do drawSnake();
 
         return this;
-    }
-   method boolean isDead(){
+  }
+
+  method boolean isDead(){
     return dead;
-    }
-   method int getThick(){
+  }
+
+  method int getThick(){
     return thick;
-   }
-   method int getLenght(){
+  }
+
+  method int getLenght(){
     return lenght;
-   }
-    method void dispose() {
-        do Memory.deAlloc(this);
-        return;
-    }
+  }
 
-   method int getX1(){
-   return x1[lenght-1];}
+  method void dispose() {
+    do Memory.deAlloc(this);
+    return;
+  }
 
-   method int getX2(){
-   return x2[lenght-1];}
+  method int getX1(){
+    return x1[lenght-1];
+  }
 
-method int getY1(){
-   return y1[lenght-1];}
+  method int getX2(){
+    return x2[lenght-1];
+  }
 
-method int getY2(){
-   return y2[lenght-1];}
+  method int getY1(){
+    return y1[lenght-1];
+  }
 
-method void drawHead(){
+  method int getY2(){
+    return y2[lenght-1];
+  }
+
+  method void drawHead(){
  var int c;
  let c=lenght -1;
  do Screen.setColor(true);
  do Screen.drawRectangle(x1[c],y1[c],x2[c],y2[c]);
  //do Screen.drawRectangle(x1[c-1],y1[c-1],x2[c-1],y2[c-1]);
  return;
-}
+  }
 
-   method void drawField(){
+  method void drawField(){
     do Screen.setColor(true);
     do Screen.drawRectangle(0,ymax,linea,255);
     do Screen.drawRectangle(0,ymax,511,ymax+linea);
     do Screen.drawRectangle(511-linea,ymax,511,255);
     do Screen.drawRectangle(0,255-linea,511,255);
         return;
+  }
+
+  method void drawSnake() {
+    var int i;
+    let i=0;
+    while (i<(lenght)) {
+      do Screen.setColor(true);
+      do Screen.drawRectangle(x1[i], y1[i], x2[i], y2[i]);
+      let i=i+1;
+    }
+    return;
    }
 
-    method void drawSnake() {
-      var int i;
-        let i=0;
-        while (i<(lenght)) {
-        do Screen.setColor(true);
-        do Screen.drawRectangle(x1[i], y1[i], x2[i], y2[i]);
-        let i=i+1;}
-        return;
-    }
+  method void hide() {
+    var int i;
+    let i=0;
+    while (i<(lenght)){
+    do Screen.setColor(false);
+    do Screen.drawRectangle(x1[i], y1[i], x2[i], y2[i]);
+    let i=i+1;}
+    return;
+  }
 
-    method void erase() {
-        var int i;
-        let i=0;
-        while (i<(lenght)){
-        do Screen.setColor(false);
-        do Screen.drawRectangle(x1[i], y1[i], x2[i], y2[i]);
-        let i=i+1;}
-        return;
-    }
-
-    method void incLenght() {
-        var int i;
-        var Array x1n,x2n,y1n,y2n;
-        let x1n = Array.new(lenght);
-        let y1n = Array.new(lenght);
-        let x2n = Array.new(lenght);
-        let y2n = Array.new(lenght);
-        let i=0;
-        while (i<lenght){
+  method void grow() {
+    var int i;
+    var Array x1n,x2n,y1n,y2n;
+    let x1n = Array.new(lenght);
+    let y1n = Array.new(lenght);
+    let x2n = Array.new(lenght);
+    let y2n = Array.new(lenght);
+    let i=0;
+    while (i<lenght){
         let x1n[i]=x1[i];
         let y1n[i]=y1[i];
         let y2n[i]=y2[i];
         let x2n[i]=x2[i];
         let i=i+1;
-         }
-        let lenght = lenght + 1;
-        let x1 = Array.new(lenght);
-        let y1 = Array.new(lenght);
-        let x2 = Array.new(lenght);
-        let y2 = Array.new(lenght);
-        let i=0;
-        while (i<(lenght-1)){
+    }
+    let lenght = lenght + 1;
+    let x1 = Array.new(lenght);
+    let y1 = Array.new(lenght);
+    let x2 = Array.new(lenght);
+    let y2 = Array.new(lenght);
+    let i=0;
+    while (i<(lenght-1)){
         let x1[i]=x1n[i];
         let y1[i]=y1n[i];
         let y2[i]=y2n[i];
         let x2[i]=x2n[i];
         let i=i+1;
-         }
-        let i=lenght-1;
-        while ((i > 0)){
+    }
+    let i=lenght-1;
+    while ((i > 0)){
          let x1[i]=x1[i-1];
          let x2[i]=x2[i-1];
          let y1[i]=y1[i-1];
          let y2[i]=y2[i-1];
         let i=i-1;
-        }
-         return;
     }
+    return;
+  }
+
   method void arrayshift(){
     var int i;
     do Screen.setColor(false);
@@ -145,22 +157,25 @@ method void drawHead(){
         let y2[i]=y2[i+1];
         let i=i+1;
     }
-   return;
-   }
-  method void collision(){
-  var int i,c;
-  let c=lenght-1;
-  let i=0;
-  while (i<(c-1)){
-  /*if (((((y1[i]<y1[c])|(y1[i]=y1[c]))&(y1[c]<y2[i])) & (((y2[i]<y2[c])|(y2[i]=y2[c]))&(y2[c]<y1[i]))) & ((((x1[i]<x1[c])|(x1[i]=x1[c]))&(x1[c]<x2[i])) & (((x2*[i]<x2[c])|(x2[i]=x2[c]))&(x2[c]<x1[i]))))*/
- if ((y1[c]=y1[i]&(y2[c]=y2[i]))&((x1[c]=x1[i])&(x2[c]=x2[i]))) {
-  let dead = true;
-  let i=c-1; }
-  else{
-  let i=i+1;}
-   }
- return;
-   }
+    return;
+  }
+
+  method void collision() {
+    var int i,c;
+    let c=lenght-1;
+    let i=0;
+    while (i<(c-1)) {
+      /*if (((((y1[i]<y1[c])|(y1[i]=y1[c]))&(y1[c]<y2[i])) & (((y2[i]<y2[c])|(y2[i]=y2[c]))&(y2[c]<y1[i]))) & ((((x1[i]<x1[c])|(x1[i]=x1[c]))&(x1[c]<x2[i])) & (((x2*[i]<x2[c])|(x2[i]=x2[c]))&(x2[c]<x1[i]))))*/
+      if ((y1[c]=y1[i]&(y2[c]=y2[i]))&((x1[c]=x1[i])&(x2[c]=x2[i]))) {
+        let dead = true;
+        let i=c-1;
+      } else {
+        let i=i+1;
+      }
+    }
+    return;
+  }
+
   method void moveUp(){
    var int c;
    let c=lenght-1;
@@ -232,3 +247,4 @@ method void drawHead(){
    return;
   }
 }
+
