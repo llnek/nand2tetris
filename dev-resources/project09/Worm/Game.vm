@@ -1,17 +1,81 @@
+function Game.mkBox 1
+push constant 4
+call Array.new 1
+pop local 0
+push static 7
+push local 0
+add
+push argument 0
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push static 6
+push local 0
+add
+push argument 1
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push static 9
+push local 0
+add
+push argument 2
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push static 8
+push local 0
+add
+push argument 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push local 0
+return
+function Game.north 0
+push static 0
+return
+function Game.south 0
+push static 1
+return
+function Game.east 0
+push static 2
+return
+function Game.west 0
+push static 3
+return
+function Game.bottom 0
+push static 8
+return
+function Game.top 0
+push static 6
+return
+function Game.left 0
+push static 7
+return
+function Game.right 0
+push static 9
+return
 function Game.ctor 0
-push constant 3
+push constant 5
 call Memory.alloc 1
 pop pointer 0
+push constant 8
+pop static 5
 push constant 4
 pop static 4
 push constant 0
-pop static 5
-push constant 1
 pop static 6
-push constant 2
+push constant 1
 pop static 7
-push constant 3
+push constant 2
 pop static 8
+push constant 3
+pop static 9
 push constant 131
 pop static 0
 push constant 133
@@ -24,28 +88,44 @@ push constant 0
 pop this 0
 push constant 0
 pop this 2
-push constant 0
+push static 3
 pop this 1
 push pointer 0
 return
-function Game.renderWall 0
+function Game.initCanvas 4
 push argument 0
 pop pointer 0
+push constant 0
+pop local 0
+push constant 0
+pop local 1
+push constant 512
+pop local 3
+push constant 256
+pop local 2
+call Screen.clearScreen 0
+pop temp 0
 push constant 0
 not
 call Screen.setColor 1
 pop temp 0
 push constant 0
-push constant 256
+push local 2
 push static 4
 sub
-push constant 511
-push constant 255
+push local 3
+push constant 1
+sub
+push local 2
+push constant 1
+sub
 call Screen.drawRectangle 4
 pop temp 0
 push constant 0
 push constant 0
-push constant 511
+push local 3
+push constant 1
+sub
 push static 4
 push constant 1
 sub
@@ -56,33 +136,94 @@ push constant 0
 push static 4
 push constant 1
 sub
-push constant 255
+push local 2
+push constant 1
+sub
 call Screen.drawRectangle 4
 pop temp 0
-push constant 512
+push local 3
 push static 4
 sub
 push constant 0
-push constant 511
-push constant 255
+push local 3
+push constant 1
+sub
+push local 2
+push constant 1
+sub
 call Screen.drawRectangle 4
 pop temp 0
+push constant 4
+call Array.new 1
+pop this 3
+push static 6
+push this 3
+add
+push static 4
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push static 7
+push this 3
+add
+push static 4
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push static 9
+push this 3
+add
+push local 3
+push static 4
+sub
+push constant 1
+sub
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push static 8
+push this 3
+add
+push local 2
+push static 4
+sub
+push constant 1
+sub
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
 push constant 0
 return
 function Game.collide 0
 push argument 0
 pop pointer 0
-push static 6
+push static 7
 push argument 2
 add
 pop pointer 1
 push that 0
-push static 8
+push static 9
 push argument 1
 add
 pop pointer 1
 push that 0
 gt
+push static 9
+push argument 2
+add
+pop pointer 1
+push that 0
+push static 7
+push argument 1
+add
+pop pointer 1
+push that 0
+lt
+or
 push static 8
 push argument 2
 add
@@ -95,24 +236,12 @@ pop pointer 1
 push that 0
 lt
 or
-push static 7
+push static 6
 push argument 2
 add
 pop pointer 1
 push that 0
-push static 5
-push argument 1
-add
-pop pointer 1
-push that 0
-lt
-or
-push static 5
-push argument 2
-add
-pop pointer 1
-push that 0
-push static 7
+push static 8
 push argument 1
 add
 pop pointer 1
@@ -142,11 +271,14 @@ push constant 0
 pop this 0
 push constant 0
 pop this 2
-call Screen.clearScreen 0
-pop temp 0
 push pointer 0
-call Game.renderWall 1
+call Game.initCanvas 1
 pop temp 0
+push this 3
+push static 5
+push this 1
+call Worm.ctor 3
+pop this 4
 push pointer 0
 call Game.gameLoop 1
 pop temp 0
@@ -165,6 +297,13 @@ if-goto WHILE_END0
 push pointer 0
 call Game.input 1
 pop local 0
+push pointer 0
+push local 0
+call Game.update 2
+pop temp 0
+push pointer 0
+call Game.render 1
+pop temp 0
 push constant 16
 call Sys.wait 1
 pop temp 0
@@ -207,27 +346,6 @@ return
 function Game.render 0
 push argument 0
 pop pointer 0
-push constant 7
-call String.new 1
-push constant 83
-call String.appendChar 2
-push constant 99
-call String.appendChar 2
-push constant 111
-call String.appendChar 2
-push constant 114
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 58
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-call Output.printString 1
-pop temp 0
-push this 2
-call Output.printInt 1
-pop temp 0
 push this 0
 if-goto IF_TRUE0
 goto IF_FALSE0
@@ -237,6 +355,9 @@ call Game.endScene 1
 pop temp 0
 goto IF_END0
 label IF_FALSE0
+push this 4
+call Worm.render 1
+pop temp 0
 label IF_END0
 push constant 0
 return
@@ -299,11 +420,21 @@ label IF_TRUE3
 push static 2
 pop this 1
 label IF_FALSE3
+push this 4
+push this 1
+call Worm.move 2
+pop temp 0
 push constant 0
 return
 function Game.finz 0
 push argument 0
 pop pointer 0
+push this 3
+call Memory.deAlloc 1
+pop temp 0
+push this 4
+call Worm.finz 1
+pop temp 0
 push pointer 0
 call Memory.deAlloc 1
 pop temp 0

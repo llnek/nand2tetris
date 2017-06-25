@@ -1,0 +1,211 @@
+/**
+ */
+class Worm {
+  static int NORTH,SOUTH,EAST,WEST;
+  static int TOP,LEFT,BOTTOM,RIGHT;
+
+  field Array whead, wtail, wskip;
+  field boolean shifted;
+  field int bufsz;
+  field int girth;
+  field int len;
+  field int dir;
+
+  /**
+   */
+  constructor Worm ctor(Array canvas, int size, int where) {
+    let dir= where;
+    let bufsz= 36;
+    let girth= size;
+
+    let NORTH=Game.north();
+    let SOUTH=Game.south();
+    let EAST=Game.east();
+    let WEST=Game.west();
+    let TOP=0;
+    let LEFT=1;
+    let BOTTOM=2;
+    let RIGHT=3;
+
+    let whead=Game.mkBox(0,0,0,0);
+    let wskip=Game.mkBox(0,0,0,0);
+    let wtail=Array.new(bufsz);
+    let len=0;
+    while (len < bufsz) {
+      let wtail[len] = Game.mkBox(0,0,0,0);
+      let len= len+1;
+    }
+    do init((canvas[RIGHT] - canvas[LEFT]) / 2,
+            (canvas[BOTTOM] - canvas[TOP]) / 2);
+    return this;
+  }
+
+  /**
+   */
+  method void init(int x1, int y1) {
+    var int x, y, x2, y2, n;
+    var Array a;
+    let a = Game.mkBox(x1, y1,
+                       x1+girth-1, y1+girth-1);
+    let wtail[0]=a;
+    let len=6;
+    let n=1;
+    while (n < len) {
+      if (dir = NORTH) {
+        let x= a[LEFT];
+        let y= a[BOTTOM]+1;
+        let x2= x+girth-1;
+        let y2= y+girth-1;
+      }
+      if (dir = SOUTH) {
+        let x= a[LEFT];
+        let y2= a[TOP]-1;
+        let x2= x+girth-1;
+        let y= (y2-girth)+1;
+      }
+      if (dir = WEST) {
+        let x= a[RIGHT]+1;
+        let y= a[TOP];
+        let x2= x+girth-1;
+        let y2= y+girth-1;
+      }
+      if (dir = EAST) {
+        let x2= a[LEFT]-1;
+        let y= a[TOP];
+        let x= (x2-girth)+1;
+        let y2= y+girth-1;
+      }
+      let a = Game.mkBox(x, y, x2, y2);
+      let wtail[n]=a;
+      let n=n+1;
+    }
+    let shifted=false;
+    return;
+  }
+
+  /**
+   */
+  method int length(){
+    return len;
+  }
+
+  /**
+   */
+  method void finz() {
+    var int n;
+    let n=0;
+    while (n < bufsz) {
+      do Memory.deAlloc(wtail[n]);
+      let n=n+1;
+    }
+    do Memory.deAlloc(whead);
+    do Memory.deAlloc(wtail);
+    do Memory.deAlloc(wskip);
+    do Memory.deAlloc(this);
+    return;
+  }
+
+  method void renderHead(){
+    var Array a;
+    let a= wtail[0];
+    do Screen.drawRectangle(
+        a[LEFT], a[TOP], a[RIGHT], a[BOTTOM]);
+    return;
+  }
+
+  method void render() {
+    var Array a;
+    var int n;
+    if (shifted) {
+      do Screen.setColor(false);
+      let a= wskip;
+      do Screen.drawRectangle(a[LEFT],a[TOP],
+                              a[RIGHT],a[BOTTOM]);
+    }
+    do Screen.setColor(true);
+    do renderHead();
+    let n=1;
+    while (n < len) {
+      let a= wtail[n];
+      do Screen.drawRectangle(a[LEFT],a[TOP],
+                              a[RIGHT],a[BOTTOM]);
+      let n=n+1;
+    }
+    return;
+  }
+
+  method void hide() {
+    return;
+  }
+
+  method void grow() {
+    return;
+  }
+
+  method void move(int dir){
+    if (dir = NORTH) {
+      do up();
+    }
+    if (dir = SOUTH) {
+      do down();
+    }
+    if (dir = WEST) {
+      do left();
+    }
+    if (dir = EAST) {
+      do right();
+    }
+    return;
+  }
+
+  method void up() {
+    return;
+  }
+
+  method void down() {
+    return;
+  }
+
+  method void right() {
+    return;
+  }
+
+  method void left() {
+    var Array a;
+    let a= wtail[0];
+    let whead[TOP]=a[TOP];
+    let whead[LEFT]=a[LEFT];
+    let whead[BOTTOM]=a[BOTTOM];
+    let whead[RIGHT]=a[RIGHT];
+    do shift();
+    let a[BOTTOM]= whead[BOTTOM];
+    let a[TOP]= whead[TOP];
+    let a[LEFT]= whead[LEFT] - girth;
+    let a[RIGHT]= whead[RIGHT]- girth;
+    return;
+  }
+
+  method void shift() {
+    var Array a,c;
+    var int n;
+    let n=len - 1;
+    let a= wtail[n];
+    let wskip[TOP]=a[TOP];
+    let wskip[LEFT]=a[LEFT];
+    let wskip[BOTTOM]=a[BOTTOM];
+    let wskip[RIGHT]=a[RIGHT];
+    while (n > 0) {
+      let a= wtail[n-1];
+      let c= wtail[n];
+      let c[TOP]=a[TOP];
+      let c[LEFT]=a[LEFT];
+      let c[BOTTOM]=a[BOTTOM];
+      let c[RIGHT]=a[RIGHT];
+      let n=n-1;
+    }
+    let shifted=true;
+    return;
+  }
+
+}
+
