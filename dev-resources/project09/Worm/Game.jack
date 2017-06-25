@@ -1,0 +1,173 @@
+/**
+ */
+class Game {
+
+  static int NORTH, SOUTH, EAST, WEST;
+  static int CELL_SIZE;
+  static int TOP,LEFT,BOTTOM,RIGHT;
+  //=> array indexes
+  //0,1,2,3
+  field boolean gameOver;
+  field int dir;
+  field int score;
+
+  /**
+   */
+  constructor Game ctor() {
+
+    let CELL_SIZE=4;
+
+    let TOP=0;
+    let LEFT=1;
+    let BOTTOM=2;
+    let RIGHT=3;
+
+    let NORTH= 131;
+    let SOUTH=133;
+    let EAST=132;
+    let WEST=130;
+
+    let gameOver=false;
+    let score=0;
+    let dir=0;
+
+    return this;
+  }
+
+  /**
+   */
+  method void renderWall() {
+    // 256 x 512
+    do Screen.setColor(true);
+    do Screen.drawRectangle(0,256-CELL_SIZE, 511,255);
+    do Screen.drawRectangle(0,0, 511,CELL_SIZE-1);
+    do Screen.drawRectangle(0,0, CELL_SIZE-1,255);
+    do Screen.drawRectangle(512-CELL_SIZE, 0, 511, 255);
+    return;
+  }
+
+  /**
+   */
+  method boolean collide(Array a, Array b) {
+    return ~ ((b[LEFT] > a[RIGHT]) |
+              (b[RIGHT] < a[LEFT]) |
+              (b[BOTTOM] < a[TOP]) |
+              (b[TOP] > a[BOTTOM]));
+  }
+
+  /**
+   */
+  method int updateScore(int n) {
+    let score=score+n;
+    return score;
+  }
+
+  /**
+   */
+  method void endScene() {
+    //do Output.printString("Game Over!");
+    return;
+  }
+
+  /**
+   */
+  method void start() {
+    let gameOver=false;
+    let score = 0;
+    do Screen.clearScreen();
+    do renderWall();
+    do gameLoop();
+    return;
+  }
+
+  /**
+   */
+  method void gameLoop() {
+    var int key;
+    let key=0;
+
+    while (~ gameOver) {
+      let key = input();
+      //do update(key);
+      //do render();
+      do Sys.wait(16);
+    }
+
+    return;
+  }
+
+  /**
+   */
+  method int input() {
+    return Keyboard.keyPressed();
+  }
+
+  /**
+   */
+  method boolean moveOK() {
+    return true;
+  }
+
+  /**
+   */
+  method void update(int key) {
+
+    do move(key);
+
+    if (~ moveOK()) { let gameOver=true; } else {
+/*
+      if (collide(worm.bbox(),
+                  fruit.bbox())) {
+        do updateScore(1);
+        do fruit.hide();
+        do worm.grow();
+        do fruit.regen();
+      }
+*/
+    }
+
+    return;
+  }
+
+  /**
+   */
+  method void render() {
+    do Output.printString("Score: ");
+    do Output.printInt(score);
+    if (gameOver) {
+      do endScene();
+    } else {
+    }
+    return;
+  }
+
+  /**
+   */
+  method void move(int key) {
+    if ((key = NORTH) & ~ (dir = SOUTH)) {
+      let dir = NORTH;
+    }
+    if ((key = SOUTH) & ~ (dir = NORTH)) {
+      let dir = SOUTH;
+    }
+    if ((key = WEST) & ~ (dir = EAST)) {
+      let dir = WEST;
+    }
+    if ((key = EAST) & ~ (dir = WEST)) {
+      let dir = EAST;
+    }
+    //worm.move(dir);
+    return;
+  }
+
+  /**
+   */
+  method void finz() {
+    //do fruit.finz();
+    //do worm.finz();
+    do Memory.deAlloc(this);
+    return;
+  }
+
+}
+

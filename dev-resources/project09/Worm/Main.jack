@@ -1,0 +1,15 @@
+/**
+ */
+class Main {
+  static Game game;
+  /**
+   */
+  function void main() {
+    let game = Game.ctor();
+    do game.start();
+    do game.finz();
+    return;
+  }
+
+}
+

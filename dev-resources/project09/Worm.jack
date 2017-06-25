@@ -1,4 +1,6 @@
 
+/**
+ */
 class Worm {
   field Array x1,y1,x2,y2;
   field int thick,lenght;
