@@ -5,13 +5,14 @@ class Game {
   static int NORTH, SOUTH, EAST, WEST;
   static int WALL_SIZE, WORM_SIZE;
   static int TOP,LEFT,BOTTOM,RIGHT;
+
   //=> array indexes
   //0,1,2,3
   field boolean gameOver;
-  field int dir;
   field int score;
   field Array canvas;
   field Worm worm;
+  field Food food;
 
   /**
    */
@@ -23,6 +24,28 @@ class Game {
     let a[RIGHT]=x2;
     let a[BOTTOM]=y2;
     return a;
+  }
+
+  /**
+   */
+  function boolean inbox(Array big, Array box) {
+    var int bt, bl, bb, br;
+    var int t,l,b,r;
+
+    let t= big[TOP];
+    let l= big[LEFT];
+    let b= big[BOTTOM];
+    let r= big[RIGHT];
+
+    let bt= box[TOP];
+    let bl= box[LEFT];
+    let bb= box[BOTTOM];
+    let br= box[RIGHT];
+
+    return (((bl > l) | (bl = l)) &
+            ((br < r) | (br = r)) &
+            ((bt > t) | (bt = t)) &
+            ((bb < b) | (bb = b)));
   }
 
   /**
@@ -45,7 +68,7 @@ class Game {
   constructor Game ctor() {
 
     let WORM_SIZE=8;
-    let WALL_SIZE=4;
+    let WALL_SIZE=8;
 
     let TOP=0;
     let LEFT=1;
@@ -59,8 +82,6 @@ class Game {
 
     let gameOver=false;
     let score=0;
-    let dir= WEST;
-
     return this;
   }
 
@@ -72,18 +93,24 @@ class Game {
     let t=0;
     let l=0;
     let r=512;
-    let b=256;
+    let b=22 * 11; //230;//256;
     do Screen.clearScreen();
     do Screen.setColor(true);
-    do Screen.drawRectangle(0,b-WALL_SIZE, r-1,b-1);
+
+    //top line
     do Screen.drawRectangle(0,0, r-1, WALL_SIZE-1);
+    // bottom line
+    do Screen.drawRectangle(0,b-WALL_SIZE, r-1,b-1);
+    //left line
     do Screen.drawRectangle(0,0, WALL_SIZE-1,b-1);
+    //right line
     do Screen.drawRectangle(r-WALL_SIZE, 0, r-1, b-1);
+
     let canvas=Array.new(4);
-    let canvas[TOP]= WALL_SIZE;
-    let canvas[LEFT]= WALL_SIZE;
+    let canvas[TOP]= t + WALL_SIZE;
+    let canvas[LEFT]= l + WALL_SIZE;
     let canvas[RIGHT]= r - WALL_SIZE - 1;
-    let canvas[BOTTOM]= b-WALL_SIZE - 1;
+    let canvas[BOTTOM]= b -WALL_SIZE - 1;
     return;
   }
 
@@ -106,7 +133,8 @@ class Game {
   /**
    */
   method void endScene() {
-    //do Output.printString("Game Over!");
+    do Output.moveCursor(22, (64-10)/2);
+    do Output.printString("Game Over!");
     return;
   }
 
@@ -115,9 +143,38 @@ class Game {
   method void start() {
     let gameOver=false;
     let score = 0;
+    do LCGRandom.setSeed(17011);
     do initCanvas();
-    let worm= Worm.ctor(canvas, WORM_SIZE, dir);
+    let worm= Worm.ctor(canvas, WORM_SIZE, WEST);
+    let food= Food.ctor(WORM_SIZE);
     do gameLoop();
+    return;
+  }
+
+  method void randFood() {
+    var int r, x, y, div, rem;
+    let r= LCGRandom.rand();
+    if (r < 512) {
+      let div = 512 / r;
+      let rem = 512 - (r * div);
+    } else {
+      let div = r / 512;
+      let rem = r - (512 * div);
+    }
+    let x=rem;
+    if (r < 256) {
+      let div = 256 / r;
+      let rem = 256 - (r * div);
+    } else {
+      let div = r/ 256;
+      let rem = r - (256 * div);
+    }
+    let y=rem;
+    if (food.position(canvas, x, y)) {
+      do food.show();
+    } else {
+      do randFood();
+    }
     return;
   }
 
@@ -127,13 +184,15 @@ class Game {
     var int key;
     let key=0;
 
+    do randFood();
     while (~ gameOver) {
       let key = input();
       do update(key);
       do render();
-      do Sys.wait(16);
+      do Sys.wait(160);
     }
 
+    do endScene();
     return;
   }
 
@@ -146,14 +205,23 @@ class Game {
   /**
    */
   method boolean moveOK() {
-    return true;
+    if (worm.oobound(canvas)) {
+      return false;
+    } else {
+      return true;
+    }
   }
 
   /**
    */
   method void update(int key) {
 
-    do move(key);
+    do worm.move(key);
+
+    if (key= NORTH) {
+      do food.hide();
+      do randFood();
+    }
 
     if (~ moveOK()) { let gameOver=true; } else {
 /*
@@ -172,33 +240,23 @@ class Game {
 
   /**
    */
-  method void render() {
-    //do Output.printString("Score: ");
-    //do Output.printInt(score);
-    if (gameOver) {
-      do endScene();
-    } else {
-      do worm.render();
+  method void printScore() {
+    do Output.moveCursor(22,1);
+    do Output.printString("Score: ");
+    if (score < 100) {
+      if (score < 10) {
+        do Output.printString("00");
+      } else {
+        do Output.printString("0");
+      }
     }
+    do Output.printInt(score);
     return;
   }
 
-  /**
-   */
-  method void move(int key) {
-    if ((key = NORTH) & ~ (dir = SOUTH)) {
-      let dir = NORTH;
-    }
-    if ((key = SOUTH) & ~ (dir = NORTH)) {
-      let dir = SOUTH;
-    }
-    if ((key = WEST) & ~ (dir = EAST)) {
-      let dir = WEST;
-    }
-    if ((key = EAST) & ~ (dir = WEST)) {
-      let dir = EAST;
-    }
-    do worm.move(dir);
+  method void render() {
+    do printScore();
+    do worm.render();
     return;
   }
 

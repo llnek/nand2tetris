@@ -4,7 +4,7 @@ class Worm {
   static int NORTH,SOUTH,EAST,WEST;
   static int TOP,LEFT,BOTTOM,RIGHT;
 
-  field Array whead, wtail, wskip;
+  field Array whead, wbody, wtail;
   field boolean shifted;
   field int bufsz;
   field int girth;
@@ -28,11 +28,11 @@ class Worm {
     let RIGHT=3;
 
     let whead=Game.mkBox(0,0,0,0);
-    let wskip=Game.mkBox(0,0,0,0);
-    let wtail=Array.new(bufsz);
+    let wtail=Game.mkBox(0,0,0,0);
+    let wbody=Array.new(bufsz);
     let len=0;
     while (len < bufsz) {
-      let wtail[len] = Game.mkBox(0,0,0,0);
+      let wbody[len] = Game.mkBox(0,0,0,0);
       let len= len+1;
     }
     do init((canvas[RIGHT] - canvas[LEFT]) / 2,
@@ -47,7 +47,7 @@ class Worm {
     var Array a;
     let a = Game.mkBox(x1, y1,
                        x1+girth-1, y1+girth-1);
-    let wtail[0]=a;
+    let wbody[0]=a;
     let len=6;
     let n=1;
     while (n < len) {
@@ -76,7 +76,7 @@ class Worm {
         let y2= y+girth-1;
       }
       let a = Game.mkBox(x, y, x2, y2);
-      let wtail[n]=a;
+      let wbody[n]=a;
       let n=n+1;
     }
     let shifted=false;
@@ -95,19 +95,19 @@ class Worm {
     var int n;
     let n=0;
     while (n < bufsz) {
-      do Memory.deAlloc(wtail[n]);
+      do Memory.deAlloc(wbody[n]);
       let n=n+1;
     }
     do Memory.deAlloc(whead);
+    do Memory.deAlloc(wbody);
     do Memory.deAlloc(wtail);
-    do Memory.deAlloc(wskip);
     do Memory.deAlloc(this);
     return;
   }
 
   method void renderHead(){
     var Array a;
-    let a= wtail[0];
+    let a= wbody[0];
     do Screen.drawRectangle(
         a[LEFT], a[TOP], a[RIGHT], a[BOTTOM]);
     return;
@@ -118,7 +118,7 @@ class Worm {
     var int n;
     if (shifted) {
       do Screen.setColor(false);
-      let a= wskip;
+      let a= wtail;
       do Screen.drawRectangle(a[LEFT],a[TOP],
                               a[RIGHT],a[BOTTOM]);
     }
@@ -126,7 +126,7 @@ class Worm {
     do renderHead();
     let n=1;
     while (n < len) {
-      let a= wtail[n];
+      let a= wbody[n];
       do Screen.drawRectangle(a[LEFT],a[TOP],
                               a[RIGHT],a[BOTTOM]);
       let n=n+1;
@@ -142,46 +142,59 @@ class Worm {
     return;
   }
 
-  method void move(int dir){
-    if (dir = NORTH) {
-      do up();
-    }
-    if (dir = SOUTH) {
-      do down();
-    }
-    if (dir = WEST) {
-      do left();
-    }
-    if (dir = EAST) {
-      do right();
-    }
-    return;
-  }
 
-  method void up() {
-    return;
-  }
-
-  method void down() {
-    return;
-  }
-
-  method void right() {
-    return;
-  }
-
-  method void left() {
+  /**
+   */
+  method void move(int key) {
     var Array a;
-    let a= wtail[0];
-    let whead[TOP]=a[TOP];
-    let whead[LEFT]=a[LEFT];
-    let whead[BOTTOM]=a[BOTTOM];
-    let whead[RIGHT]=a[RIGHT];
+    let shifted=false;
+    if ((((dir = SOUTH) | (dir = NORTH)) &
+        ((key = WEST) | (key = EAST))) |
+        (((dir = WEST) | (dir = EAST)) &
+         ((key = NORTH) | (key = SOUTH)))) {
+      do switchDir(key);
+      let dir=key;
+    } else {
+      //no change
+      do switchDir(dir);
+    }
     do shift();
+    // put back the head
+    let a = wbody[0];
     let a[BOTTOM]= whead[BOTTOM];
     let a[TOP]= whead[TOP];
-    let a[LEFT]= whead[LEFT] - girth;
-    let a[RIGHT]= whead[RIGHT]- girth;
+    let a[LEFT]= whead[LEFT];
+    let a[RIGHT]= whead[RIGHT];
+    return;
+  }
+
+  method void switchDir(int key){
+    var Array a;
+    let a = wbody[0];
+    if (key = NORTH) {
+      let whead[TOP]= (a[TOP] - girth) + 1;
+      let whead[BOTTOM]= a[TOP]-1;
+      let whead[LEFT]= a[LEFT];
+      let whead[RIGHT]= a[RIGHT];
+    }
+    if (key = SOUTH) {
+      let whead[TOP]= a[BOTTOM] +1;
+      let whead[BOTTOM]= (a[BOTTOM] + girth) - 1;
+      let whead[LEFT]= a[LEFT];
+      let whead[RIGHT]= a[RIGHT];
+    }
+    if (key = EAST) {
+      let whead[TOP]= a[TOP];
+      let whead[BOTTOM]= a[BOTTOM];
+      let whead[LEFT]= a[RIGHT]+1;
+      let whead[RIGHT]= (a[RIGHT] + girth) - 1;
+    }
+    if (key = WEST) {
+      let whead[TOP]= a[TOP];
+      let whead[BOTTOM]= a[BOTTOM];
+      let whead[LEFT]= (a[LEFT] - girth) + 1;
+      let whead[RIGHT]= a[LEFT] - 1;
+    }
     return;
   }
 
@@ -189,14 +202,14 @@ class Worm {
     var Array a,c;
     var int n;
     let n=len - 1;
-    let a= wtail[n];
-    let wskip[TOP]=a[TOP];
-    let wskip[LEFT]=a[LEFT];
-    let wskip[BOTTOM]=a[BOTTOM];
-    let wskip[RIGHT]=a[RIGHT];
+    let a= wbody[n];
+    let wtail[TOP]=a[TOP];
+    let wtail[LEFT]=a[LEFT];
+    let wtail[BOTTOM]=a[BOTTOM];
+    let wtail[RIGHT]=a[RIGHT];
     while (n > 0) {
-      let a= wtail[n-1];
-      let c= wtail[n];
+      let a= wbody[n-1];
+      let c= wbody[n];
       let c[TOP]=a[TOP];
       let c[LEFT]=a[LEFT];
       let c[BOTTOM]=a[BOTTOM];
@@ -205,6 +218,19 @@ class Worm {
     }
     let shifted=true;
     return;
+  }
+
+  method boolean oobound(Array canvas) {
+    var int n;
+    let n=0;
+    while (n < len) {
+      if (Game.inbox(canvas, wbody[n])) {
+        let n=n+1;
+      } else {
+        return true;
+      }
+    }
+    return false;
   }
 
 }

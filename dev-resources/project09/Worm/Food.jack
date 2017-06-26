@@ -1,0 +1,73 @@
+/**
+ */
+class Food {
+
+  static int TOP,LEFT,BOTTOM,RIGHT;
+  field Array box,tmp;
+  field int size;
+
+  /**
+   */
+  constructor Food ctor(int sz) {
+    let TOP= Game.top();
+    let LEFT= Game.left();
+    let BOTTOM=Game.bottom();
+    let RIGHT=Game.right();
+    let box= Game.mkBox(0,0,0,0);
+    let tmp= Game.mkBox(0,0,0,0);
+    let size=sz;
+    return this;
+  }
+
+  /**
+   */
+  method void finz() {
+    do Memory.deAlloc(this);
+    do Memory.deAlloc(box);
+    do Memory.deAlloc(tmp);
+    return;
+  }
+
+  /**
+   */
+  method void _draw(boolean b) {
+    do Screen.setColor(b);
+    do Screen.drawRectangle(box[LEFT],box[TOP],
+                            box[RIGHT], box[BOTTOM]);
+    return;
+  }
+
+  /**
+   */
+  method void hide() {
+    do _draw(false);
+    return;
+  }
+
+  /**
+   */
+  method void show() {
+    do _draw(true);
+    return;
+  }
+
+  /**
+   */
+  method boolean position(Array canvas, int x, int y) {
+    let tmp[TOP]= y;
+    let tmp[LEFT]= x;
+    let tmp[BOTTOM]= y + size - 1;
+    let tmp[RIGHT] = x + size -1;
+    if (Game.inbox(canvas,tmp)) {
+      let box[TOP]= tmp[TOP];
+      let box[LEFT]= tmp[LEFT];
+      let box[BOTTOM]= tmp[BOTTOM];
+      let box[RIGHT] = tmp[RIGHT];
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+}
+

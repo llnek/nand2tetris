@@ -52,9 +52,6 @@ class LCGRandom {
         else {
            let seed=test;
         }
-        if (seed < 0) {
-          let seed= seed+M;
-        }
         return seed;
     }
 

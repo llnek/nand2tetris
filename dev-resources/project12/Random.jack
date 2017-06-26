@@ -14,6 +14,7 @@ class Random {
         /** return a random number in the range 0..32767 */
         let seed = seed + 20251;
         if (seed < 0) {
+//-1 -32767 -1 => -1 minus max -ve int => 32767 max +ve int
             let seed = seed - 32767 - 1;
         }
         return seed;

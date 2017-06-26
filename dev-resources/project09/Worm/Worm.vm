@@ -459,67 +459,118 @@ push argument 0
 pop pointer 0
 push constant 0
 return
-function Worm.move 0
+function Worm.move 1
 push argument 0
 pop pointer 0
+push constant 0
+pop this 3
+push this 7
+push static 1
+eq
+push this 7
+push static 0
+eq
+or
+push argument 1
+push static 3
+eq
+push argument 1
+push static 2
+eq
+or
+and
+push this 7
+push static 3
+eq
+push this 7
+push static 2
+eq
+or
 push argument 1
 push static 0
 eq
+push argument 1
+push static 1
+eq
+or
+and
+or
 if-goto IF_TRUE0
 goto IF_FALSE0
 label IF_TRUE0
 push pointer 0
-call Worm.up 1
+push argument 1
+call Worm.switchDir 2
 pop temp 0
+push argument 1
+pop this 7
+goto IF_END0
 label IF_FALSE0
-push argument 1
-push static 1
-eq
-if-goto IF_TRUE1
-goto IF_FALSE1
-label IF_TRUE1
 push pointer 0
-call Worm.down 1
+push this 7
+call Worm.switchDir 2
 pop temp 0
-label IF_FALSE1
-push argument 1
-push static 3
-eq
-if-goto IF_TRUE2
-goto IF_FALSE2
-label IF_TRUE2
+label IF_END0
 push pointer 0
-call Worm.left 1
+call Worm.shift 1
 pop temp 0
-label IF_FALSE2
-push argument 1
-push static 2
-eq
-if-goto IF_TRUE3
-goto IF_FALSE3
-label IF_TRUE3
-push pointer 0
-call Worm.right 1
+push constant 0
+push this 1
+add
+pop pointer 1
+push that 0
+pop local 0
+push static 6
+push local 0
+add
+push static 6
+push this 0
+add
+pop pointer 1
+push that 0
 pop temp 0
-label IF_FALSE3
+pop pointer 1
+push temp 0
+pop that 0
+push static 4
+push local 0
+add
+push static 4
+push this 0
+add
+pop pointer 1
+push that 0
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push static 5
+push local 0
+add
+push static 5
+push this 0
+add
+pop pointer 1
+push that 0
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push static 7
+push local 0
+add
+push static 7
+push this 0
+add
+pop pointer 1
+push that 0
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
 push constant 0
 return
-function Worm.up 0
-push argument 0
-pop pointer 0
-push constant 0
-return
-function Worm.down 0
-push argument 0
-pop pointer 0
-push constant 0
-return
-function Worm.right 0
-push argument 0
-pop pointer 0
-push constant 0
-return
-function Worm.left 1
+function Worm.switchDir 1
 push argument 0
 pop pointer 0
 push constant 0
@@ -528,109 +579,250 @@ add
 pop pointer 1
 push that 0
 pop local 0
+push argument 1
+push static 0
+eq
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
 push static 4
 push this 0
 add
 push static 4
 push local 0
-add
-pop pointer 1
-push that 0
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-push static 5
-push this 0
-add
-push static 5
-push local 0
-add
-pop pointer 1
-push that 0
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-push static 6
-push this 0
-add
-push static 6
-push local 0
-add
-pop pointer 1
-push that 0
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-push static 7
-push this 0
-add
-push static 7
-push local 0
-add
-pop pointer 1
-push that 0
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-push pointer 0
-call Worm.shift 1
-pop temp 0
-push static 6
-push local 0
-add
-push static 6
-push this 0
-add
-pop pointer 1
-push that 0
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-push static 4
-push local 0
-add
-push static 4
-push this 0
-add
-pop pointer 1
-push that 0
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-push static 5
-push local 0
-add
-push static 5
-push this 0
 add
 pop pointer 1
 push that 0
 push this 5
 sub
+push constant 1
+add
 pop temp 0
 pop pointer 1
 push temp 0
 pop that 0
-push static 7
-push local 0
-add
-push static 7
+push static 6
 push this 0
+add
+push static 4
+push local 0
 add
 pop pointer 1
 push that 0
-push this 5
+push constant 1
 sub
 pop temp 0
 pop pointer 1
 push temp 0
 pop that 0
+push static 5
+push this 0
+add
+push static 5
+push local 0
+add
+pop pointer 1
+push that 0
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push static 7
+push this 0
+add
+push static 7
+push local 0
+add
+pop pointer 1
+push that 0
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+label IF_FALSE0
+push argument 1
+push static 1
+eq
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push static 4
+push this 0
+add
+push static 6
+push local 0
+add
+pop pointer 1
+push that 0
+push constant 1
+add
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push static 6
+push this 0
+add
+push static 6
+push local 0
+add
+pop pointer 1
+push that 0
+push this 5
+add
+push constant 1
+sub
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push static 5
+push this 0
+add
+push static 5
+push local 0
+add
+pop pointer 1
+push that 0
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push static 7
+push this 0
+add
+push static 7
+push local 0
+add
+pop pointer 1
+push that 0
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+label IF_FALSE1
+push argument 1
+push static 2
+eq
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push static 4
+push this 0
+add
+push static 4
+push local 0
+add
+pop pointer 1
+push that 0
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push static 6
+push this 0
+add
+push static 6
+push local 0
+add
+pop pointer 1
+push that 0
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push static 5
+push this 0
+add
+push static 7
+push local 0
+add
+pop pointer 1
+push that 0
+push constant 1
+add
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push static 7
+push this 0
+add
+push static 7
+push local 0
+add
+pop pointer 1
+push that 0
+push this 5
+add
+push constant 1
+sub
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+label IF_FALSE2
+push argument 1
+push static 3
+eq
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push static 4
+push this 0
+add
+push static 4
+push local 0
+add
+pop pointer 1
+push that 0
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push static 6
+push this 0
+add
+push static 6
+push local 0
+add
+pop pointer 1
+push that 0
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push static 5
+push this 0
+add
+push static 5
+push local 0
+add
+pop pointer 1
+push that 0
+push this 5
+sub
+push constant 1
+add
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push static 7
+push this 0
+add
+push static 5
+push local 0
+add
+pop pointer 1
+push that 0
+push constant 1
+sub
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+label IF_FALSE3
 push constant 0
 return
 function Worm.shift 3
@@ -771,5 +963,40 @@ label WHILE_END0
 push constant 0
 not
 pop this 3
+push constant 0
+return
+function Worm.oobound 1
+push argument 0
+pop pointer 0
+push constant 0
+pop local 0
+label WHILE_EXP0
+push local 0
+push this 6
+lt
+not
+if-goto WHILE_END0
+push argument 1
+push local 0
+push this 1
+add
+pop pointer 1
+push that 0
+call Game.inbox 2
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push local 0
+push constant 1
+add
+pop local 0
+goto IF_END0
+label IF_FALSE0
+push constant 0
+not
+return
+label IF_END0
+goto WHILE_EXP0
+label WHILE_END0
 push constant 0
 return
