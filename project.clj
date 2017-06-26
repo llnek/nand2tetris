@@ -1,6 +1,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-(defproject io.czlab/tecs "1.0.0"
+(defproject io.czlab/tecs "1.0.2"
 
   :license {:url "http://www.eclipse.org/legal/epl-v10.html"
             :name "Eclipse Public License"}

@@ -9,7 +9,7 @@ The complete set of solutions for the [nand2tetris](http://nand2tetris.org/) cou
 
 Add the following dependency to your `project.clj` file:
 
-    [io.czlab/tecs "1.0.0"]
+    [io.czlab/tecs "1.0.2"]
 
 ## Documentation
 
