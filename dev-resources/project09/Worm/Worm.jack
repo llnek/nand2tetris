@@ -5,7 +5,6 @@ class Worm {
   static int TOP,LEFT,BOTTOM,RIGHT;
 
   field Array whead, wbody, wtail;
-  field boolean shifted;
   field int bufsz;
   field int girth;
   field int len;
@@ -15,7 +14,7 @@ class Worm {
    */
   constructor Worm ctor(Array canvas, int size, int where) {
     let dir= where;
-    let bufsz= 36;
+    let bufsz= 512;
     let girth= size;
 
     let NORTH=Game.north();
@@ -35,9 +34,15 @@ class Worm {
       let wbody[len] = Game.mkBox(0,0,0,0);
       let len= len+1;
     }
-    do init((canvas[RIGHT] - canvas[LEFT]) / 2,
-            (canvas[BOTTOM] - canvas[TOP]) / 2);
+    do init(((canvas[RIGHT] - canvas[LEFT]) / size / 2) * size,
+            ((canvas[BOTTOM] - canvas[TOP]) / size / 2) * size );
     return this;
+  }
+
+  /**
+   */
+  method Array bbox() {
+    return wbody[0];
   }
 
   /**
@@ -79,7 +84,6 @@ class Worm {
       let wbody[n]=a;
       let n=n+1;
     }
-    let shifted=false;
     return;
   }
 
@@ -105,6 +109,8 @@ class Worm {
     return;
   }
 
+  /**
+   */
   method void renderHead(){
     var Array a;
     let a= wbody[0];
@@ -113,15 +119,11 @@ class Worm {
     return;
   }
 
+  /**
+   */
   method void render() {
     var Array a;
     var int n;
-    if (shifted) {
-      do Screen.setColor(false);
-      let a= wtail;
-      do Screen.drawRectangle(a[LEFT],a[TOP],
-                              a[RIGHT],a[BOTTOM]);
-    }
     do Screen.setColor(true);
     do renderHead();
     let n=1;
@@ -134,20 +136,97 @@ class Worm {
     return;
   }
 
+  /**
+   */
   method void hide() {
     return;
   }
 
-  method void grow() {
+  /**
+   */
+  method void growVert(int len2) {
+    var Array t2,t1,z;
+    if (len2 = bufsz) {
+      do Sys.error(3);
+    }
+    let t2=wbody[len-2];
+    let t1=wbody[len-1];
+    let z=0;
+    if (t1[BOTTOM] = (t2[TOP] - 1)) {
+      //down
+      let z=wbody[len];
+      let z[TOP]=t1[TOP] - girth;
+      let z[BOTTOM]=t1[TOP]-1;
+      let z[RIGHT]=t1[RIGHT];
+      let z[LEFT]=t1[LEFT];
+    }
+    if (t1[TOP] = (t2[BOTTOM] + 1)) {
+      //up
+      let z=wbody[len];
+      let z[TOP]=t1[BOTTOM] +1;
+      let z[BOTTOM]=t1[BOTTOM] + girth;
+      let z[RIGHT]=t1[RIGHT];
+      let z[LEFT]=t1[LEFT];
+    }
+    if (z = 0) {
+      do Sys.error(3);
+    }
+    let len=len+1;
     return;
   }
 
+  /**
+   */
+  method void growHorz(int len2) {
+    var Array t2,t1,z;
+    if (len2 = bufsz) {
+      do Sys.error(3);
+    }
+    let t2=wbody[len-2];
+    let t1=wbody[len-1];
+    let z=0;
+    if (t1[RIGHT] = (t2[LEFT] - 1)) {
+      //+>
+      let z=wbody[len];
+      let z[TOP]=t1[TOP];
+      let z[BOTTOM]=t1[BOTTOM];
+      let z[RIGHT]=t1[LEFT]-1;
+      let z[LEFT]=t1[LEFT]-girth;
+    }
+    if (t1[LEFT] = (t2[RIGHT] + 1)) {
+      //<+
+      let z=wbody[len];
+      let z[TOP]=t1[TOP];
+      let z[BOTTOM]=t1[BOTTOM];
+      let z[RIGHT]=t1[RIGHT] + girth;
+      let z[LEFT]=t1[RIGHT]+1;
+    }
+    if (z = 0) {
+      do Sys.error(3);
+    }
+    let len=len+1;
+    return;
+  }
+
+  /**
+   */
+  method void grow() {
+    var Array a,b;
+    let a=wbody[len-1];
+    let b=wbody[len-2];
+    if ((a[TOP] = b[TOP]) &
+        (a[BOTTOM] = b[BOTTOM])) {
+      do growHorz(len+1);
+    } else {
+      do growVert(len+1);
+    }
+    return;
+  }
 
   /**
    */
   method void move(int key) {
     var Array a;
-    let shifted=false;
     if ((((dir = SOUTH) | (dir = NORTH)) &
         ((key = WEST) | (key = EAST))) |
         (((dir = WEST) | (dir = EAST)) &
@@ -168,18 +247,20 @@ class Worm {
     return;
   }
 
+  /**
+   */
   method void switchDir(int key){
     var Array a;
     let a = wbody[0];
     if (key = NORTH) {
-      let whead[TOP]= (a[TOP] - girth) + 1;
+      let whead[TOP]= a[TOP] - girth ;
       let whead[BOTTOM]= a[TOP]-1;
       let whead[LEFT]= a[LEFT];
       let whead[RIGHT]= a[RIGHT];
     }
     if (key = SOUTH) {
       let whead[TOP]= a[BOTTOM] +1;
-      let whead[BOTTOM]= (a[BOTTOM] + girth) - 1;
+      let whead[BOTTOM]= a[BOTTOM] + girth;
       let whead[LEFT]= a[LEFT];
       let whead[RIGHT]= a[RIGHT];
     }
@@ -187,17 +268,19 @@ class Worm {
       let whead[TOP]= a[TOP];
       let whead[BOTTOM]= a[BOTTOM];
       let whead[LEFT]= a[RIGHT]+1;
-      let whead[RIGHT]= (a[RIGHT] + girth) - 1;
+      let whead[RIGHT]= a[RIGHT] + girth;
     }
     if (key = WEST) {
       let whead[TOP]= a[TOP];
       let whead[BOTTOM]= a[BOTTOM];
-      let whead[LEFT]= (a[LEFT] - girth) + 1;
+      let whead[LEFT]= a[LEFT] - girth;
       let whead[RIGHT]= a[LEFT] - 1;
     }
     return;
   }
 
+  /**
+   */
   method void shift() {
     var Array a,c;
     var int n;
@@ -216,10 +299,55 @@ class Worm {
       let c[RIGHT]=a[RIGHT];
       let n=n-1;
     }
-    let shifted=true;
+    do postShift(wtail);
     return;
   }
 
+  /**
+   */
+  method void postShift(Array a) {
+    do Screen.setColor(false);
+    do Screen.drawRectangle(a[LEFT],a[TOP],
+                            a[RIGHT],a[BOTTOM]);
+    return;
+  }
+
+  /**
+   */
+  method boolean overlapSelf(int cur) {
+    var Array c, a;
+    var int n;
+    let c= wbody[cur];
+    let n=0;
+    while (n < len) {
+      if (n = cur) {} else {
+        let a= wbody[n];
+        if (Game.inbox(a,c)) {
+          return true;
+        }
+      }
+      let n=n+1;
+    }
+    return false;
+  }
+
+  /**
+   */
+  method boolean overlap() {
+    var int n;
+    let n=0;
+    while (n < len) {
+      if (~ overlapSelf(n)) {
+        let n=n+1;
+      } else {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   */
   method boolean oobound(Array canvas) {
     var int n;
     let n=0;

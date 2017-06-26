@@ -3,16 +3,16 @@
 class Game {
 
   static int NORTH, SOUTH, EAST, WEST;
-  static int WALL_SIZE, WORM_SIZE;
+  static int GRID_SIZE;
   static int TOP,LEFT,BOTTOM,RIGHT;
 
   //=> array indexes
   //0,1,2,3
+  field int rows,cols, score;
   field boolean gameOver;
-  field int score;
   field Array canvas;
   field Worm worm;
-  field Food food;
+  field Munchy food;
 
   /**
    */
@@ -62,13 +62,11 @@ class Game {
   function int left() { return LEFT; }
   function int right() { return RIGHT; }
 
-
   /**
    */
   constructor Game ctor() {
 
-    let WORM_SIZE=8;
-    let WALL_SIZE=8;
+    let GRID_SIZE=8;
 
     let TOP=0;
     let LEFT=1;
@@ -89,28 +87,33 @@ class Game {
    */
   method void initCanvas() {
     // screen= 256 x 512
+    // grid of 32 x 64 [8]
     var int t,l,b,r;
     let t=0;
     let l=0;
     let r=512;
-    let b=22 * 11; //230;//256;
+    let b=30 * GRID_SIZE;
     do Screen.clearScreen();
     do Screen.setColor(true);
 
     //top line
-    do Screen.drawRectangle(0,0, r-1, WALL_SIZE-1);
+    do Screen.drawRectangle(0,0, r-1, GRID_SIZE-1);
     // bottom line
-    do Screen.drawRectangle(0,b-WALL_SIZE, r-1,b-1);
+    do Screen.drawRectangle(0,b-GRID_SIZE, r-1,b-1);
     //left line
-    do Screen.drawRectangle(0,0, WALL_SIZE-1,b-1);
+    do Screen.drawRectangle(0,0, GRID_SIZE-1,b-1);
     //right line
-    do Screen.drawRectangle(r-WALL_SIZE, 0, r-1, b-1);
+    do Screen.drawRectangle(r-GRID_SIZE, 0, r-1, b-1);
 
     let canvas=Array.new(4);
-    let canvas[TOP]= t + WALL_SIZE;
-    let canvas[LEFT]= l + WALL_SIZE;
-    let canvas[RIGHT]= r - WALL_SIZE - 1;
-    let canvas[BOTTOM]= b -WALL_SIZE - 1;
+    let canvas[TOP]= t + GRID_SIZE;
+    let canvas[LEFT]= l + GRID_SIZE;
+    let canvas[RIGHT]= r - GRID_SIZE - 1;
+    let canvas[BOTTOM]= b -GRID_SIZE - 1;
+
+    let rows= 1 + ((canvas[BOTTOM] - canvas[TOP]) / GRID_SIZE);
+    let cols= 1 + ((canvas[RIGHT] - canvas[LEFT]) / GRID_SIZE);
+
     return;
   }
 
@@ -145,31 +148,28 @@ class Game {
     let score = 0;
     do LCGRandom.setSeed(17011);
     do initCanvas();
-    let worm= Worm.ctor(canvas, WORM_SIZE, WEST);
-    let food= Food.ctor(WORM_SIZE);
+    let worm= Worm.ctor(canvas, GRID_SIZE, WEST);
+    let food= Munchy.ctor(GRID_SIZE);
     do gameLoop();
     return;
   }
 
+  /**
+   */
   method void randFood() {
-    var int r, x, y, div, rem;
+    var int r, x, y;
     let r= LCGRandom.rand();
-    if (r < 512) {
-      let div = 512 / r;
-      let rem = 512 - (r * div);
-    } else {
-      let div = r / 512;
-      let rem = r - (512 * div);
-    }
-    let x=rem;
-    if (r < 256) {
-      let div = 256 / r;
-      let rem = 256 - (r * div);
-    } else {
-      let div = r/ 256;
-      let rem = r - (256 * div);
-    }
-    let y=rem;
+    let r = LCGRandom.mod(r, rows);
+    if (r < 1) { let r = 23; }
+    if (~ (r < rows)) { let r= 23; }
+    let y= GRID_SIZE * r;
+
+    let r= LCGRandom.rand();
+    let r = LCGRandom.mod(r, cols);
+    if (r < 1) { let r = 47; }
+    if (~ (r < cols)) { let r= 47; }
+    let x= GRID_SIZE * r;
+
     if (food.position(canvas, x, y)) {
       do food.show();
     } else {
@@ -189,7 +189,7 @@ class Game {
       let key = input();
       do update(key);
       do render();
-      do Sys.wait(160);
+      do Sys.wait(200);
     }
 
     do endScene();
@@ -205,7 +205,8 @@ class Game {
   /**
    */
   method boolean moveOK() {
-    if (worm.oobound(canvas)) {
+    if (worm.oobound(canvas) |
+        worm.overlap()) {
       return false;
     } else {
       return true;
@@ -218,21 +219,13 @@ class Game {
 
     do worm.move(key);
 
-    if (key= NORTH) {
-      do food.hide();
-      do randFood();
-    }
-
     if (~ moveOK()) { let gameOver=true; } else {
-/*
-      if (collide(worm.bbox(),
-                  fruit.bbox())) {
+      if (collide(worm.bbox(), food.bbox())) {
         do updateScore(1);
-        do fruit.hide();
+        do food.hide();
         do worm.grow();
-        do fruit.regen();
+        do randFood();
       }
-*/
     }
 
     return;

@@ -1,7 +1,9 @@
 /**
  */
 class Main {
+
   static Game game;
+
   /**
    */
   function void main() {
